@@ -684,6 +684,7 @@ if(HPX_USE_APEX)
   set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${ITTNOTIFY_BINARY_DIR}/libittnotify.so)
   hpx_include_sys_directories(${ITTNOTIFY_SOURCE_DIR})
   hpx_link_sys_directories(${ITTNOTIFY_BINARY_DIR})
+  hpx_add_config_define(HPX_HAVE_ITTNOTIFY 1)
 endif()
 
 ################################################################################
@@ -799,7 +800,7 @@ endif()
 ################################################################################
 hpx_option(HPX_HAVE_ITTNOTIFY BOOL "Bind to Intel Amplifier Tool (default: OFF)" OFF ADVANCED)
 
-if(HPX_HAVE_ITTNOTIFY)
+if(HPX_HAVE_ITTNOTIFY AND NOT HPX_USE_APEX)
   find_package(HPX_Amplifier)
   if(AMPLIFIER_FOUND)
     hpx_info("itt" "Binding to Intel Amplifier tool is enabled.")
