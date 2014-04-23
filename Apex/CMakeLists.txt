@@ -1,5 +1,5 @@
-# Create a library called "Apex" which includes the source file "apex.cxx". 
-# The extension is already found. Any number of sources could be listed here. 
+# Create a library called "Apex" which includes the source file "apex.cxx".
+# The extension is already found. Any number of sources could be listed here.
 
 hpx_info("apex" "Will build APEX")
 
@@ -20,6 +20,7 @@ if(TAU_FOUND)
     hpx_info("apex" "Building APEX with TAU support")
     add_library (ApexStatic STATIC Apex.cpp ThreadInstance.cpp EventListener.cpp Handler.cpp ConcurrencyHandler.cpp PolicyHandler.cpp TauListener.cpp)
     add_library (ApexShared SHARED Apex.cpp ThreadInstance.cpp EventListener.cpp Handler.cpp ConcurrencyHandler.cpp PolicyHandler.cpp TauListener.cpp)
+    add_definitions( -DAPEX_HAVE_TAU )
 else()
     hpx_info("apex" "Building APEX without TAU support")
     add_library (ApexStatic STATIC Apex.cpp ThreadInstance.cpp EventListener.cpp Handler.cpp ConcurrencyHandler.cpp PolicyHandler.cpp)
