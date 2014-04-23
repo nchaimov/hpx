@@ -1,3 +1,9 @@
+//  Copyright (c) 2014 University of Oregon
+//
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
 // apex main class
 #ifndef APEX_HPP
 #define APEX_HPP
@@ -15,7 +21,7 @@ namespace apex {
 class Apex {
 private:
 // private constructors cannot be called
-  Apex() : m_argc(0), m_argv(NULL), m_node_id(0) {_initialize();}; 
+  Apex() : m_argc(0), m_argv(NULL), m_node_id(0) {_initialize();};
   Apex(int argc, char**argv) : m_argc(argc), m_argv(argv) {_initialize();};
   Apex(Apex const&){};             // copy constructor is private
   Apex& operator=(Apex const& a){ return const_cast<Apex&>(a); };  // assignment operator is private
