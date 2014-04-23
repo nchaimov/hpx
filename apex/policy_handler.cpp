@@ -3,8 +3,8 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "PolicyHandler.hpp"
-#include "ThreadInstance.hpp"
+#include "policy_handler.hpp"
+#include "thread_instance.hpp"
 
 #include <iostream>
 
@@ -12,28 +12,28 @@ using namespace std;
 
 namespace apex {
 
-PolicyHandler::PolicyHandler (void) : Handler() { 
-  _init(); 
+policy_handler::policy_handler (void) : handler() {
+  _init();
 }
 
-PolicyHandler::PolicyHandler (unsigned int period) : Handler(period) { 
-  _init(); 
+policy_handler::policy_handler (unsigned int period) : handler(period) {
+  _init();
 }
 
-void PolicyHandler::_handler(void) {
+void policy_handler::_handler(void) {
   return;
 }
 
-void PolicyHandler::_init(void) {
-  _timer.async_wait(boost::bind(&PolicyHandler::_handler, this));
+void policy_handler::_init(void) {
+  _timer.async_wait(boost::bind(&policy_handler::_handler, this));
   run();
   return;
 }
 
-void PolicyHandler::onEvent(EventData* eventData) {
-  unsigned int tid = ThreadInstance::getID();
+void policy_handler::on_event(event_data* event_data_) {
+  unsigned int tid = thread_instance::get_id();
   if (!_terminate) {
-    switch(eventData->eventType) {
+    switch(event_data_->event_type_) {
     case STARTUP: {
     	cerr << tid << ": STARTUP" << endl;
     	break;

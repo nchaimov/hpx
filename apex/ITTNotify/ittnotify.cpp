@@ -6,13 +6,13 @@
 #include "ittnotify.h"
 #include <stdlib.h>
 #include <string.h>
-#include "Apex.hpp"
+#include "apex.hpp"
 
 #if 0
 #include <iostream>
 #define APEX_TRACER {cout << __FUNCTION__ << " ["<< __FILE__ << ":" << __LINE__ << "]" << endl;}
 #else
-#define APEX_TRACER 
+#define APEX_TRACER
 #endif
 
 //#ifdef __cplusplus
@@ -21,39 +21,39 @@
 void __itt_frame_begin_v3(__itt_domain const* frame, __itt_id* id) { APEX_TRACER }
 void __itt_frame_end_v3(__itt_domain const* frame, __itt_id* id) { APEX_TRACER }
 void __itt_id_create(__itt_domain const*, __itt_id id) { APEX_TRACER }
-void __itt_id_create_ex(__itt_domain const*, 
+void __itt_id_create_ex(__itt_domain const*,
      __itt_clock_domain* clock_domain, UINT64 timestamp, __itt_id* id) { APEX_TRACER }
 void __itt_id_destroy(const __itt_domain * domain, __itt_id* id) { APEX_TRACER }
-void __itt_id_destroy_ex(__itt_domain* domain, 
+void __itt_id_destroy_ex(__itt_domain* domain,
      __itt_clock_domain* clock_domain, UINT64 timestamp, __itt_id* id) { APEX_TRACER }
 __itt_id __itt_id_make(void*, unsigned long) { APEX_TRACER return __itt_null; }
 void __itt_metadata_add (const __itt_domain * domain,
       __itt_id id, __itt_string_handle * name, __itt_marker_scope scope) { APEX_TRACER }
-void _itt_metadata_add_with_scope(const __itt_domain * domain, 
+void _itt_metadata_add_with_scope(const __itt_domain * domain,
       __itt_scope scope, __itt_string_handle *key, __itt_metadata_type type,
       size_t count, void *data) { APEX_TRACER }
 void __itt_metadata_str_add (const __itt_domain * domain,
       __itt_id id, __itt_string_handle * key, const char * data, size_t length) { APEX_TRACER }
-void _itt_metadata_str_add_with_scope(const __itt_domain * domain, 
+void _itt_metadata_str_add_with_scope(const __itt_domain * domain,
       __itt_scope scope, __itt_string_handle *key, const char * data, size_t length) { APEX_TRACER }
-void __itt_relation_add (const __itt_domain * domain, __itt_id head, 
+void __itt_relation_add (const __itt_domain * domain, __itt_id head,
       __itt_relation relation, __itt_id tail) { APEX_TRACER }
-void __itt_relation_add_to_current (const __itt_domain * domain, 
+void __itt_relation_add_to_current (const __itt_domain * domain,
       __itt_relation relation, __itt_id tail) { APEX_TRACER }
 void __itt__set_track(__itt_track * track) { APEX_TRACER }
-void __itt_task_begin_ex(__itt_domain* domain, __itt_clock_domain* clock_domain, 
+void __itt_task_begin_ex(__itt_domain* domain, __itt_clock_domain* clock_domain,
       UINT64 timestamp, __itt_id id, __itt_id parentid, __itt_string_handle *name) { APEX_TRACER }
-void __itt_task_begin_fn(const __itt_domain * domain, __itt_id taskid, 
+void __itt_task_begin_fn(const __itt_domain * domain, __itt_id taskid,
       __itt_id parentid, void * fn) { APEX_TRACER }
 void __itt_task_end_ex(__itt_domain const*) { APEX_TRACER }
-void __itt_task_group(const __itt_domain * domain, __itt_id id, 
+void __itt_task_group(const __itt_domain * domain, __itt_id id,
       __itt_id parentid, __itt_string_handle * name) { APEX_TRACER }
-__itt_track_group* __itt_track_group_create(__itt_string_handle* name, 
+__itt_track_group* __itt_track_group_create(__itt_string_handle* name,
       __itt_track_group_type type) { APEX_TRACER return NULL; }
-__itt_track* __itt_track_create(__itt_track_group* track_group, 
+__itt_track* __itt_track_create(__itt_track_group* track_group,
       __itt_string_handle* name, __itt_track_type track_type) { APEX_TRACER return NULL; }
 
-__itt_domain* __itt_domain_create(char const* name) { 
+__itt_domain* __itt_domain_create(char const* name) {
   APEX_TRACER
   __itt_domain *domain = (__itt_domain*)(malloc(sizeof(__itt_domain)));
   domain->nameA = strdup(name);

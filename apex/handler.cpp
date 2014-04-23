@@ -3,7 +3,11 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include "handler.hpp"
 
-// the configured options and settings for Apex
-#define Apex_VERSION_MAJOR @Apex_VERSION_MAJOR@
-#define Apex_VERSION_MINOR @Apex_VERSION_MINOR@
+namespace apex {
+
+boost::asio::io_service handler::_io;
+
+}
+

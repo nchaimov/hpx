@@ -4,8 +4,8 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
-#include "ConcurrencyHandler.hpp"
-#include "ThreadInstance.hpp"
+#include "concurrency_handler.hpp"
+#include "thread_instance.hpp"
 #include <iostream>
 #include <map>
 #include <iterator>
@@ -17,40 +17,40 @@ using namespace std;
 
 namespace apex {
 
-ConcurrencyHandler::ConcurrencyHandler (void) : Handler() { 
-  _init(); 
+concurrency_handler::concurrency_handler (void) : handler() {
+  _init();
 }
 
-ConcurrencyHandler::ConcurrencyHandler (char *option) : Handler(), _option(atoi(option)) { 
-  _init(); 
+concurrency_handler::concurrency_handler (char *option) : handler(), _option(atoi(option)) {
+  _init();
 }
 
-ConcurrencyHandler::ConcurrencyHandler (unsigned int period) : Handler(period) { 
-  _init(); 
+concurrency_handler::concurrency_handler (unsigned int period) : handler(period) {
+  _init();
 }
 
-ConcurrencyHandler::ConcurrencyHandler (unsigned int period, char *option) : Handler(period), _option(atoi(option)) { 
-  _init(); 
+concurrency_handler::concurrency_handler (unsigned int period, char *option) : handler(period), _option(atoi(option)) {
+  _init();
 }
 
-void ConcurrencyHandler::_handler(void) {
+void concurrency_handler::_handler(void) {
   //cout << "HANDLER: " << endl;
   map<string, unsigned int> *counts = new(map<string, unsigned int>);
   stack<string>* tmp;
   boost::mutex* mut;
-  for (unsigned int i = 0 ; i < _eventStack.size() ; i++) {
-    if (_option > 1 && !ThreadInstance::mapIDToWorker(i)) {
+  for (unsigned int i = 0 ; i < _event_stack.size() ; i++) {
+    if (_option > 1 && !thread_instance::map_id_to_worker(i)) {
       continue;
     }
-    tmp = getEventStack(i);
+    tmp = get_event_stack(i);
     if (tmp->size() > 0) {
-	  mut = getEventStackMutex(i);
+	  mut = get_event_stack_mutex(i);
       mut->lock();
       string func = tmp->top();
       mut->unlock();
-      _functionMutex.lock();
+      _function_mutex.lock();
       _functions.insert(func);
-      _functionMutex.unlock();
+      _function_mutex.unlock();
       if (counts->find(func) == counts->end()) {
         (*counts)[func] = 1;
       } else {
@@ -63,53 +63,53 @@ void ConcurrencyHandler::_handler(void) {
   return;
 }
 
-void ConcurrencyHandler::_init(void) {
-  addThread(0);
-  _timer.async_wait(boost::bind(&ConcurrencyHandler::_handler, this));
+void concurrency_handler::_init(void) {
+  add_thread(0);
+  _timer.async_wait(boost::bind(&concurrency_handler::_handler, this));
   run();
   return;
 }
 
-void ConcurrencyHandler::onEvent(EventData* eventData) {
-  stack<string>* myStack;
-  boost::mutex* myMut;
+void concurrency_handler::on_event(event_data* event_data_) {
+  stack<string>* my_stack;
+  boost::mutex* my_mut;
   if (!_terminate) {
-    switch(eventData->eventType) {
+    switch(event_data_->event_type_) {
 
       case START_EVENT:
       {
-        TimerEventData *starter = (TimerEventData*)eventData;
-        myStack = getEventStack(starter->threadID);
-        myMut = getEventStackMutex(starter->threadID);
-        myMut->lock();
-        myStack->push(*(starter->timerName));
-        myMut->unlock();
+        timer_event_data *starter = (timer_event_data*)event_data_;
+        my_stack = get_event_stack(starter->thread_id);
+        my_mut = get_event_stack_mutex(starter->thread_id);
+        my_mut->lock();
+        my_stack->push(*(starter->timer_name));
+        my_mut->unlock();
         break;
       }
 
       case STOP_EVENT:
       {
-        TimerEventData *stopper = (TimerEventData*)eventData;
-        myStack = getEventStack(stopper->threadID);
-        myMut = getEventStackMutex(stopper->threadID);
-        myMut->lock();
-        myStack->pop();
-        myMut->unlock();
+        timer_event_data *stopper = (timer_event_data*)event_data_;
+        my_stack = get_event_stack(stopper->thread_id);
+        my_mut = get_event_stack_mutex(stopper->thread_id);
+        my_mut->lock();
+        my_stack->pop();
+        my_mut->unlock();
         break;
       }
 
       case NEW_THREAD:
       {
-        NewThreadEventData *newthread = (NewThreadEventData*)eventData;
-        addThread(newthread->threadID);
+        new_thread_event_data *newthread = (new_thread_event_data*)event_data_;
+        add_thread(newthread->thread_id);
         break;
       }
 
       case SHUTDOWN:
       {
-        ShutdownEventData *shutdown = (ShutdownEventData*)eventData;
-        _terminate = true;   
-        outputSamples(shutdown->nodeID);
+        shutdown_event_data *shutdown = (shutdown_event_data*)event_data_;
+        _terminate = true;
+        output_samples(shutdown->node_id);
         break;
       }
 
@@ -123,36 +123,36 @@ void ConcurrencyHandler::onEvent(EventData* eventData) {
   return;
 }
 
-inline stack<string>* ConcurrencyHandler::getEventStack(unsigned int tid) {
+inline stack<string>* concurrency_handler::get_event_stack(unsigned int tid) {
   stack<string>* tmp;
-  _vectorMutex.lock();
-  tmp = this->_eventStack[tid];
-  _vectorMutex.unlock();
+  _vector_mutex.lock();
+  tmp = this->_event_stack[tid];
+  _vector_mutex.unlock();
   return tmp;
 }
 
-inline boost::mutex* ConcurrencyHandler::getEventStackMutex(unsigned int tid) {
+inline boost::mutex* concurrency_handler::get_event_stack_mutex(unsigned int tid) {
   boost::mutex* tmp;
-  _vectorMutex.lock();
-  tmp = this->_stackMutex[tid];
-  _vectorMutex.unlock();
+  _vector_mutex.lock();
+  tmp = this->_stack_mutex[tid];
+  _vector_mutex.unlock();
   return tmp;
 }
 
-inline void ConcurrencyHandler::reset(void) {
+inline void concurrency_handler::reset(void) {
   if (!_terminate) {
     _timer.expires_at(_timer.expires_at() + boost::posix_time::microseconds(_period));
-    _timer.async_wait(boost::bind(&ConcurrencyHandler::_handler, this));
+    _timer.async_wait(boost::bind(&concurrency_handler::_handler, this));
   }
 }
 
-inline void ConcurrencyHandler::addThread(unsigned int tid) { 
-  _vectorMutex.lock();
-  while(_eventStack.size() <= tid) {
-    _eventStack.push_back(new stack<string>); 
-    _stackMutex.push_back(new boost::mutex);
+inline void concurrency_handler::add_thread(unsigned int tid) {
+  _vector_mutex.lock();
+  while(_event_stack.size() <= tid) {
+    _event_stack.push_back(new stack<string>);
+    _stack_mutex.push_back(new boost::mutex);
   }
-  _vectorMutex.unlock();
+  _vector_mutex.unlock();
 }
 
 string* demangle(string timer_name) {
@@ -172,24 +172,24 @@ string* demangle(string timer_name) {
   return demangled;
 }
 
-bool sortFunctions(pair<string,int> first, pair<string,int> second) {
+bool sort_functions(pair<string,int> first, pair<string,int> second) {
   if (first.second > second.second)
     return true;
   return false;
 }
 
-void ConcurrencyHandler::outputSamples(int nodeID) {
+void concurrency_handler::output_samples(int node_id) {
   //cout << _states.size() << " samples seen:" << endl;
   ofstream myfile;
   stringstream datname;
-  datname << "concurrency." << nodeID << ".dat"; 
-  myfile.open(datname.str().c_str()); 
-  _functionMutex.lock();
+  datname << "concurrency." << node_id << ".dat";
+  myfile.open(datname.str().c_str());
+  _function_mutex.lock();
   // limit ourselves to 5 functions.
-  map<string, int> funcCount;
+  map<string, int> func_count;
   // initialize the map
   for (set<string>::iterator it=_functions.begin(); it!=_functions.end(); ++it) {
-    funcCount[*it] = 0;
+    func_count[*it] = 0;
   }
   // count all function instances
   for (unsigned int i = 0 ; i < _states.size() ; i++) {
@@ -197,23 +197,23 @@ void ConcurrencyHandler::outputSamples(int nodeID) {
       if (_states[i]->find(*it) == _states[i]->end()) {
         continue;
       } else {
-        funcCount[*it] = funcCount[*it] + (*(_states[i]))[*it];
+        func_count[*it] = func_count[*it] + (*(_states[i]))[*it];
       }
     }
   }
   // sort the map
-  vector<pair<string,int> > myVec(funcCount.begin(), funcCount.end());
-  sort(myVec.begin(),myVec.end(),&sortFunctions);
-  set<string> topX;
-  for (vector<pair<string, int> >::iterator it=myVec.begin(); it!=myVec.end(); ++it) {
-	//if (topX.size() < 15 && (*it).first != "APEX THREAD MAIN")
-	if (topX.size() < 15)
-      topX.insert((*it).first);
+  vector<pair<string,int> > my_vec(func_count.begin(), func_count.end());
+  sort(my_vec.begin(),my_vec.end(),&sort_functions);
+  set<string> top_x;
+  for (vector<pair<string, int> >::iterator it=my_vec.begin(); it!=my_vec.end(); ++it) {
+	//if (top_x.size() < 15 && (*it).first != "APEX THREAD MAIN")
+	if (top_x.size() < 15)
+      top_x.insert((*it).first);
   }
 
   // output the header
   for (set<string>::iterator it=_functions.begin(); it!=_functions.end(); ++it) {
-	if (topX.find(*it) != topX.end()) {
+	if (top_x.find(*it) != top_x.end()) {
 	  string* tmp = demangle(*it);
       myfile << "\"" << *tmp << "\"\t";
 	  delete (tmp);
@@ -221,10 +221,10 @@ void ConcurrencyHandler::outputSamples(int nodeID) {
   }
   myfile << "\"other\"" << endl;
 
-  unsigned int maxY = 0;
-  unsigned int maxX = _states.size();
-  for (unsigned int i = 0 ; i < maxX ; i++) {
-    unsigned int tmpMax = 0;
+  unsigned int max_Y = 0;
+  unsigned int max_X = _states.size();
+  for (unsigned int i = 0 ; i < max_X ; i++) {
+    unsigned int tmp_max = 0;
 	int other = 0;
     for (set<string>::iterator it=_functions.begin(); it!=_functions.end(); ++it) {
 	  // this is the idle event.
@@ -236,27 +236,27 @@ void ConcurrencyHandler::outputSamples(int nodeID) {
         value = (*(_states[i]))[*it];
       }
 	  // is this timer in the top X?
-	  if (topX.find(*it) == topX.end()) {
+	  if (top_x.find(*it) == top_x.end()) {
 	    other = other + value;
 	  } else {
         myfile << (*(_states[i]))[*it] << "\t";
-        tmpMax += (*(_states[i]))[*it];
+        tmp_max += (*(_states[i]))[*it];
 	  }
     }
     myfile << other << "\t" << endl;
-    tmpMax += other;
-    if (tmpMax > maxY) maxY = tmpMax;
+    tmp_max += other;
+    if (tmp_max > max_Y) max_Y = tmp_max;
   }
-  _functionMutex.unlock();
+  _function_mutex.unlock();
   myfile.close();
 
   stringstream plotname;
-  plotname << "concurrency." << nodeID << ".gnuplot";
-  myfile.open(plotname.str().c_str()); 
+  plotname << "concurrency." << node_id << ".gnuplot";
+  myfile.open(plotname.str().c_str());
   myfile << "set key outside bottom center invert box" << endl;
   myfile << "unset xtics" << endl;
-  myfile << "set xrange[0:" << maxX << "]" << endl;
-  myfile << "set yrange[0:" << maxY << "]" << endl;
+  myfile << "set xrange[0:" << max_X << "]" << endl;
+  myfile << "set yrange[0:" << max_Y << "]" << endl;
   myfile << "set xlabel \"Time\"" << endl;
   myfile << "set ylabel \"Concurrency\"" << endl;
   myfile << "# Select histogram data" << endl;
@@ -267,9 +267,9 @@ void ConcurrencyHandler::outputSamples(int nodeID) {
   myfile << "set boxwidth 1.0 relative" << endl;
   myfile << "set palette rgb 33,13,10" << endl;
   myfile << "unset colorbox" << endl;
-  myfile << "plot for [COL=1:" << topX.size()+1;
+  myfile << "plot for [COL=1:" << top_x.size()+1;
   myfile << "] '" << datname.str().c_str();
-  myfile << "' using COL:xticlabels(1) palette frac COL/" << topX.size()+1;
+  myfile << "' using COL:xticlabels(1) palette frac COL/" << top_x.size()+1;
   myfile << ". title columnheader" << endl;
   myfile.close();
 }

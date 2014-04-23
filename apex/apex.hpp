@@ -11,35 +11,35 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
-#include "Handler.hpp"
-#include "EventListener.hpp"
+#include "handler.hpp"
+#include "event_listener.hpp"
 
-using namespace std;
+//using namespace std;
 
 namespace apex {
 
-class Apex {
+class apex {
 private:
 // private constructors cannot be called
-  Apex() : m_argc(0), m_argv(NULL), m_node_id(0) {_initialize();};
-  Apex(int argc, char**argv) : m_argc(argc), m_argv(argv) {_initialize();};
-  Apex(Apex const&){};             // copy constructor is private
-  Apex& operator=(Apex const& a){ return const_cast<Apex&>(a); };  // assignment operator is private
-  static Apex* m_pInstance;
+  apex() : m_argc(0), m_argv(NULL), m_node_id(0) {_initialize();};
+  apex(int argc, char**argv) : m_argc(argc), m_argv(argv) {_initialize();};
+  apex(apex const&){};             // copy constructor is private
+  apex& operator=(apex const& a){ return const_cast<apex&>(a); };  // assignment operator is private
+  static apex* m_pInstance;
   int m_argc;
   char** m_argv;
   int m_node_id;
   bool m_profiling;
   void _initialize();
-  vector<EventListener*> listeners;
+  std::vector<event_listener*> listeners;
 public:
   string* m_my_locality;
-  static Apex* Instance(); // singleton instance
-  static Apex* Instance(int argc, char** argv); // singleton instance
-  void setNodeID(int id);
-  int getNodeID(void);
-  void notifyListeners(EventData* eventData);
-  ~Apex();
+  static apex* instance(); // singleton instance
+  static apex* instance(int argc, char** argv); // singleton instance
+  void set_node_id(int id);
+  int get_node_id(void);
+  void notify_listeners(event_data* event_data_);
+  ~apex();
 };
 
 void init(void);

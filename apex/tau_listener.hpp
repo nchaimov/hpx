@@ -6,20 +6,20 @@
 #ifndef TAUHANDLER_HPP
 #define TAUHANDLER_HPP
 
-#include "EventListener.hpp"
+#include "event_listener.hpp"
 
 using namespace std;
 
 namespace apex {
 
-class TauListener : public EventListener {
+class tau_listener : public event_listener {
 private:
   void _init(void);
   bool _terminate;
 public:
-  TauListener (void);
-  ~TauListener (void) { };
-  void onEvent(EventData* eventData);
+  tau_listener (void);
+  ~tau_listener (void) { };
+  void on_event(event_data* event_data_);
 };
 
 }
