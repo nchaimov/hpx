@@ -48,8 +48,8 @@ INSTALL(FILES apex.h apex.hpp handler.hpp event_listener.hpp DESTINATION include
 
 INSTALL(TARGETS apexShared apexStatic
   RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib/hpx
+  ARCHIVE DESTINATION lib/hpx
 )
 
 add_subdirectory(ITTNotify)
