@@ -672,7 +672,7 @@ find_package(HPX_PAPI)
 ################################################################################
 find_package(HPX_TAU)
 #find_package(HPX_APEX)
-if(HPX_USE_APEX)
+if(HPX_HAVE_APEX)
   add_subdirectory(apex)
   hpx_info("apex" "Apex source dir: ${APEX_SOURCE_DIR}")
   hpx_info("apex" "Apex binary dir: ${APEX_BINARY_DIR}")
