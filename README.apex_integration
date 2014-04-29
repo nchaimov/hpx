@@ -1,0 +1,19 @@
+Copyright (c) 2014 University of Oregon
+
+Distributed under the Boost Software License, Version 1.0. (See accompanying
+file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+
+
+HPX with APEX is known to build with
+- BOOST 1.53.0
+- gcc 4.8.1
+- TAU 2.23.1 configured with pthread support
+
+To build, create a build directory outside of the source tree.
+From the build directory, run
+
+cmake $PATH_TO_HPX_APEX_SOURCE -DTAU_ROOT=$PATH_TO_TAU -DBOOST_ROOT=$PATH_TO_BOOST
+      -DHPX_HAVE_APEX -DCMAKE_INSTALL_PREFIX=$PATH_TO_HPX_INSTALL
+
+
