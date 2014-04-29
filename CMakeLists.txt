@@ -600,7 +600,7 @@ else()
 endif()
 
 hpx_option(HPX_THREAD_MAINTAIN_QUEUE_WAITTIME BOOL
-  "Enable collecting queue wait times for threads (default: ON)" ON ADVANCED)
+  "Enable collecting queue wait times for threads (default: OFF)" OFF ADVANCED)
 if(HPX_THREAD_MAINTAIN_QUEUE_WAITTIME)
   hpx_add_config_define(HPX_THREAD_MAINTAIN_QUEUE_WAITTIME 1)
 else()
@@ -608,8 +608,8 @@ else()
 endif()
 
 hpx_option(HPX_THREAD_MAINTAIN_IDLE_RATES BOOL
-    "Enable measuring the percentage of overhead times spent in the scheduler (default: ON)"
-    ON ADVANCED)
+    "Enable measuring the percentage of overhead times spent in the scheduler (default: OFF)"
+    OFF ADVANCED)
 if(HPX_THREAD_MAINTAIN_IDLE_RATES)
   hpx_add_config_define(HPX_THREAD_MAINTAIN_IDLE_RATES 1)
   hpx_option(HPX_THREAD_MAINTAIN_CREATION_AND_CLEANUP_RATES BOOL
@@ -642,13 +642,13 @@ else()
   hpx_add_config_define(HPX_THREAD_MAINTAIN_STEALING_COUNTS 0)
 endif()
 
-hpx_option(HPX_THREAD_MAINTAIN_THREAD_DATA BOOL
+hpx_option(HPX_THREAD_MAINTAIN_LOCAL_STORAGE BOOL
   "Enable thread local storage for all HPX threads (default: ON)"
   ON ADVANCED)
-if(HPX_THREAD_MAINTAIN_THREAD_DATA)
-  hpx_add_config_define(HPX_THREAD_MAINTAIN_THREAD_DATA 1)
+if(HPX_THREAD_MAINTAIN_LOCAL_STORAGE)
+  hpx_add_config_define(HPX_THREAD_MAINTAIN_LOCAL_STORAGE 1)
 else()
-  hpx_add_config_define(HPX_THREAD_MAINTAIN_THREAD_DATA 0)
+  hpx_add_config_define(HPX_THREAD_MAINTAIN_LOCAL_STORAGE 0)
 endif()
 
 
@@ -990,6 +990,7 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
       set(HPX_MALLOC_DEFAULT "tbbmalloc")
   else()
     set(HPX_MALLOC_DEFAULT "TCMalloc")
+#    set(HPX_MALLOC_DEFAULT "jemalloc")
   endif()
 else()
   set(HPX_MALLOC_DEFAULT "system")
