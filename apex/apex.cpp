@@ -290,27 +290,37 @@ void set_node_id(int id) {
 
 void track_power(void) {
   APEX_TRACER
+#ifdef APEX_HAVE_TAU
   TAU_TRACK_POWER();
+#endif
 }
 
 void track_power_here(void) {
   APEX_TRACER
+#ifdef APEX_HAVE_TAU
   TAU_TRACK_POWER_HERE();
+#endif
 }
 
 void enable_tracking_power(void) {
   APEX_TRACER
+#ifdef APEX_HAVE_TAU
   TAU_ENABLE_TRACKING_POWER();
+#endif
 }
 
 void disable_tracking_power(void) {
   APEX_TRACER
+#ifdef APEX_HAVE_TAU
   TAU_DISABLE_TRACKING_POWER();
+#endif
 }
 
 void set_interrupt_interval(int seconds) {
   APEX_TRACER
+#ifdef APEX_HAVE_TAU
   TAU_SET_INTERRUPT_INTERVAL(seconds);
+#endif
 }
 
 void finalize() {
