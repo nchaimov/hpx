@@ -14,6 +14,6 @@ To build, create a build directory outside of the source tree.
 From the build directory, run
 
 cmake $PATH_TO_HPX_APEX_SOURCE -DTAU_ROOT=$PATH_TO_TAU -DBOOST_ROOT=$PATH_TO_BOOST
-      -DHPX_HAVE_APEX -DCMAKE_INSTALL_PREFIX=$PATH_TO_HPX_INSTALL
+      -DHPX_HAVE_APEX=1 -DCMAKE_INSTALL_PREFIX=$PATH_TO_HPX_INSTALL
 
 
