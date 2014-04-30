@@ -85,6 +85,7 @@ int apex::get_node_id() {
 void apex::_initialize() {
   APEX_TRACER
   this->m_pInstance = this;
+  this->m_policy_handler = nullptr;
 #ifdef APEX_HAVE_RCR
     uint64_t waitTime = 1000000000L; // in nanoseconds, for nanosleep
     energy_daemon_init(waitTime);
@@ -98,7 +99,8 @@ void apex::_initialize() {
 #endif
   option = getenv("APEX_POLICY");
   if (option != NULL) {
-    listeners.push_back(new policy_handler());
+    this->m_policy_handler = new policy_handler();
+    listeners.push_back(this->m_policy_handler);
   }
   option = getenv("APEX_CONCURRENCY");
   if (option != NULL && atoi(option) > 0) {
@@ -143,6 +145,10 @@ void apex::notify_listeners(event_data* event_data_)
       listeners[i]->on_event(event_data_);
     }
   }
+}
+
+policy_handler * apex::get_policy_handler(void) const {
+  return this->m_policy_handler;
 }
 
 void init() {
@@ -364,6 +370,15 @@ void register_thread(string name) {
   }
 }
 
+int register_event_policy(const std::set<_event_type> & when,
+    bool (*test_function)(void* arg1), void (*action_function)(void* arg2)) {
+  APEX_TRACER
+  int id = -1;
+  policy_handler * handler = apex::instance()->get_policy_handler();
+  if(handler != nullptr) {
+    handler->register_policy(when, test_function, action_function);  
+  }
+}
 
 } // apex namespace
 

@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include "handler.hpp"
 #include "event_listener.hpp"
+#include "policy_handler.hpp"
 
 //using namespace std;
 
@@ -31,6 +32,7 @@ private:
   int m_node_id;
   bool m_profiling;
   void _initialize();
+  policy_handler * m_policy_handler;
   std::vector<event_listener*> listeners;
 public:
   string* m_my_locality;
@@ -39,6 +41,7 @@ public:
   void set_node_id(int id);
   int get_node_id(void);
   void notify_listeners(event_data* event_data_);
+  policy_handler * get_policy_handler(void) const;
   ~apex();
 };
 
@@ -57,6 +60,8 @@ void track_power_here(void);
 void enable_tracking_power(void);
 void disable_tracking_power(void);
 void set_interrupt_interval(int seconds);
+int register_event_policy(const std::set<_event_type> & when,
+  bool (*test_function)(void* arg1), void (*action_function)(void* arg2));
 }
 
 #endif //APEX_HPP

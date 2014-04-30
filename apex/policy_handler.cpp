@@ -25,9 +25,76 @@ void policy_handler::_handler(void) {
 }
 
 void policy_handler::_init(void) {
+  next_id = 0;
   _timer.async_wait(boost::bind(&policy_handler::_handler, this));
   run();
   return;
+}
+            
+int policy_handler::register_policy(const std::set<_event_type> & when,
+    bool (*test_function)(void* arg1), 
+    void (*action_function)(void* arg2)) {
+  int id = next_id++;
+  policy_instance * instance = new policy_instance(id, test_function,
+    action_function);
+  for(event_type type : when) {
+    switch(type) {
+      case STARTUP: {
+        startup_mutex.lock();
+        startup_policies.push_back(instance);
+        startup_mutex.unlock();
+        break;
+      }
+      case SHUTDOWN: {
+        shutdown_mutex.lock();
+        shutdown_policies.push_back(instance);
+        shutdown_mutex.unlock();
+        break;
+      } 
+      case NEW_NODE: {
+        new_node_mutex.lock();
+        new_node_policies.push_back(instance);
+        new_node_mutex.unlock();
+        break;
+      } 
+      case NEW_THREAD: {
+        new_thread_mutex.lock();
+        new_thread_policies.push_back(instance);
+        new_thread_mutex.unlock();
+        break;
+      } 
+      case START_EVENT: {
+        start_event_mutex.lock();
+        start_event_policies.push_back(instance);
+        start_event_mutex.unlock();
+        break;
+      } 
+      case STOP_EVENT: {
+        stop_event_mutex.lock();
+        stop_event_policies.push_back(instance);
+        stop_event_mutex.unlock();
+        break;
+      } 
+      case SAMPLE_VALUE: {
+        sample_value_mutex.lock();
+        sample_value_policies.push_back(instance);
+        sample_value_mutex.unlock();
+        break;
+      } 
+    }
+  }
+  return id;
+  
+}
+
+void policy_handler::call_policies(const std::list<policy_instance*> & policies, 
+                   event_data* event_data_) {
+  for(const policy_instance * policy : policies) {
+    const bool result = policy->test_function(event_data_);
+    if(result) {
+      policy->action_function(event_data_);
+    }
+  }                               
 }
 
 void policy_handler::on_event(event_data* event_data_) {
@@ -35,38 +102,59 @@ void policy_handler::on_event(event_data* event_data_) {
   if (!_terminate) {
     switch(event_data_->event_type_) {
     case STARTUP: {
-    	cerr << tid << ": STARTUP" << endl;
+        startup_mutex.lock_shared();
+        const std::list<policy_instance*> policies(startup_policies);
+        startup_mutex.unlock_shared();
+        call_policies(policies, event_data_);
     	break;
     }
     case SHUTDOWN: {
     	_terminate = true;
-    	cerr << tid << ": SHUTDOWN" << endl;
+        shutdown_mutex.lock_shared();
+        const std::list<policy_instance*> policies(shutdown_policies);
+        shutdown_mutex.unlock_shared();
+        call_policies(policies, event_data_);
     	break;
     }
     case NEW_NODE: {
-    	cerr << tid << ": NEW_NODE" << endl;
+        new_node_mutex.lock_shared();
+        const std::list<policy_instance*> policies(new_node_policies);
+        new_node_mutex.unlock_shared();
+        call_policies(policies, event_data_);
     	break;
     }
     case NEW_THREAD: {
-    	cerr << tid << ": NEW_THREAD" << endl;
+        new_thread_mutex.lock_shared();
+        const std::list<policy_instance*> policies(new_thread_policies);
+        new_thread_mutex.unlock_shared();
+        call_policies(policies, event_data_);
     	break;
     }
     case START_EVENT: {
-    	cerr << tid << ": START_EVENT" << endl;
+        start_event_mutex.lock_shared();
+        const std::list<policy_instance*> policies(start_event_policies);
+        start_event_mutex.unlock_shared();
+        call_policies(policies, event_data_);
     	break;
     }
     case STOP_EVENT: {
-    	cerr << tid << ": STOP_EVENT" << endl;
+        stop_event_mutex.lock_shared();
+        const std::list<policy_instance*> policies(stop_event_policies);
+        stop_event_mutex.unlock_shared();
+        call_policies(policies, event_data_);
     	break;
     }
     case SAMPLE_VALUE: {
-    	cerr << tid << ": SAMPLE_EVENT" << endl;
+        sample_value_mutex.lock_shared();
+        const std::list<policy_instance*> policies(sample_value_policies);
+        sample_value_mutex.unlock_shared();
+        call_policies(policies, event_data_);
     	break;
     }
-
-    }
-  }
+    } //end switch
+  } // end if
   return;
 }
 
-}
+} // end namespace apex
+

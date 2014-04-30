@@ -23,6 +23,7 @@ configure_file (
     "${APEX_BINARY_DIR}/apex_config.h"
 )
 
+add_definitions( -std=c++11 )
 if(TAU_FOUND)
     hpx_info("apex" "Building APEX with TAU support")
     add_library (apexStatic STATIC apex.cpp thread_instance.cpp event_listener.cpp handler.cpp concurrency_handler.cpp policy_handler.cpp tau_listener.cpp)
