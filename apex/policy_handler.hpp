@@ -45,6 +45,7 @@ private:
   std::list<policy_instance*> start_event_policies;
   std::list<policy_instance*> stop_event_policies;
   std::list<policy_instance*> sample_value_policies;
+  std::list<policy_instance*> periodic_policies;
   boost::shared_mutex startup_mutex;
   boost::shared_mutex shutdown_mutex;
   boost::shared_mutex new_node_mutex;
@@ -52,6 +53,7 @@ private:
   boost::shared_mutex start_event_mutex;
   boost::shared_mutex stop_event_mutex;
   boost::shared_mutex sample_value_mutex;
+  boost::shared_mutex periodic_mutex;
   void call_policies(const std::list<policy_instance*> & policies,
                      event_data * event_data_);
   std::atomic_int next_id;
@@ -64,6 +66,7 @@ public:
                       bool (*test_function)(void* arg1),
                       void (*action_function)(void* arg2));
   void _handler(void);
+  void reset(void);
 };
 
 }

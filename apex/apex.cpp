@@ -151,6 +151,14 @@ policy_handler * apex::get_policy_handler(void) const {
   return this->m_policy_handler;
 }
 
+policy_handler * apex::get_policy_handler(int period) {
+  char * option = getenv("APEX_POLICY");
+  if(option != nullptr && period_handlers.count(period) == 0) {
+    period_handlers[period] = new policy_handler(period);
+  }
+  return period_handlers[period];
+}
+
 void init() {
   APEX_TRACER
   int argc = 1;
@@ -376,8 +384,22 @@ int register_event_policy(const std::set<_event_type> & when,
   int id = -1;
   policy_handler * handler = apex::instance()->get_policy_handler();
   if(handler != nullptr) {
-    handler->register_policy(when, test_function, action_function);  
+    id = handler->register_policy(when, test_function, action_function);
   }
+  return id;
+}
+
+
+int register_periodic_policy(int period,
+    bool (*test_function)(void* arg1), void (*action_function)(void* arg2)) {
+  APEX_TRACER
+  int id = -1;
+  policy_handler * handler = apex::instance()->get_policy_handler(period);
+  if(handler != nullptr) {
+    std::set<_event_type> when = {PERIODIC};
+    id = handler->register_policy(when, test_function, action_function);
+  }
+
 }
 
 } // apex namespace

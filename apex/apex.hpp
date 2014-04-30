@@ -33,6 +33,7 @@ private:
   bool m_profiling;
   void _initialize();
   policy_handler * m_policy_handler;
+  std::map<int, policy_handler*> period_handlers;
   std::vector<event_listener*> listeners;
 public:
   string* m_my_locality;
@@ -42,6 +43,7 @@ public:
   int get_node_id(void);
   void notify_listeners(event_data* event_data_);
   policy_handler * get_policy_handler(void) const;
+  policy_handler * get_policy_handler(int period);
   ~apex();
 };
 
@@ -62,6 +64,8 @@ void disable_tracking_power(void);
 void set_interrupt_interval(int seconds);
 int register_event_policy(const std::set<_event_type> & when,
   bool (*test_function)(void* arg1), void (*action_function)(void* arg2));
+int register_periodic_policy(int period, bool (*test_function)(void* arg1),
+  void (*action_function)(void* arg2));
 }
 
 #endif //APEX_HPP

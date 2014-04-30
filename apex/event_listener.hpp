@@ -21,7 +21,8 @@ typedef enum _event_type {
   NEW_THREAD,
   START_EVENT,
   STOP_EVENT,
-  SAMPLE_VALUE
+  SAMPLE_VALUE,
+  PERIODIC
 } event_type;
 
 /* Class for holding data relevant to generic event */
@@ -78,6 +79,12 @@ public:
   string* thread_name;
   new_thread_event_data(string thread_name);
   ~new_thread_event_data();
+};
+
+class periodic_event_data : public event_data {
+public:
+  periodic_event_data();
+  ~periodic_event_data();
 };
 
 /* Abstract class for creating an Event Listener class */

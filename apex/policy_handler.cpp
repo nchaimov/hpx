@@ -21,7 +21,9 @@ policy_handler::policy_handler (unsigned int period) : handler(period) {
 }
 
 void policy_handler::_handler(void) {
-  return;
+  periodic_event_data data;
+  this->on_event(&data);
+  this->reset();
 }
 
 void policy_handler::_init(void) {
@@ -30,9 +32,16 @@ void policy_handler::_init(void) {
   run();
   return;
 }
-            
+
+inline void policy_handler::reset(void) {
+  if (!_terminate) {
+    _timer.expires_at(_timer.expires_at() + boost::posix_time::microseconds(_period));
+    _timer.async_wait(boost::bind(&policy_handler::_handler, this));
+  }
+}
+
 int policy_handler::register_policy(const std::set<_event_type> & when,
-    bool (*test_function)(void* arg1), 
+    bool (*test_function)(void* arg1),
     void (*action_function)(void* arg2)) {
   int id = next_id++;
   policy_instance * instance = new policy_instance(id, test_function,
@@ -50,51 +59,58 @@ int policy_handler::register_policy(const std::set<_event_type> & when,
         shutdown_policies.push_back(instance);
         shutdown_mutex.unlock();
         break;
-      } 
+      }
       case NEW_NODE: {
         new_node_mutex.lock();
         new_node_policies.push_back(instance);
         new_node_mutex.unlock();
         break;
-      } 
+      }
       case NEW_THREAD: {
         new_thread_mutex.lock();
         new_thread_policies.push_back(instance);
         new_thread_mutex.unlock();
         break;
-      } 
+      }
       case START_EVENT: {
         start_event_mutex.lock();
         start_event_policies.push_back(instance);
         start_event_mutex.unlock();
         break;
-      } 
+      }
       case STOP_EVENT: {
         stop_event_mutex.lock();
         stop_event_policies.push_back(instance);
         stop_event_mutex.unlock();
         break;
-      } 
+      }
       case SAMPLE_VALUE: {
         sample_value_mutex.lock();
         sample_value_policies.push_back(instance);
         sample_value_mutex.unlock();
         break;
-      } 
+      }
+      case PERIODIC: {
+        periodic_mutex.lock();
+        periodic_policies.push_back(instance);
+        periodic_mutex.unlock();
+        break;
+      }
+
     }
   }
   return id;
-  
+
 }
 
-void policy_handler::call_policies(const std::list<policy_instance*> & policies, 
+void policy_handler::call_policies(const std::list<policy_instance*> & policies,
                    event_data* event_data_) {
   for(const policy_instance * policy : policies) {
     const bool result = policy->test_function(event_data_);
     if(result) {
       policy->action_function(event_data_);
     }
-  }                               
+  }
 }
 
 void policy_handler::on_event(event_data* event_data_) {
@@ -148,6 +164,13 @@ void policy_handler::on_event(event_data* event_data_) {
         sample_value_mutex.lock_shared();
         const std::list<policy_instance*> policies(sample_value_policies);
         sample_value_mutex.unlock_shared();
+        call_policies(policies, event_data_);
+    	break;
+    }
+    case PERIODIC: {
+        periodic_mutex.lock_shared();
+        const std::list<policy_instance*> policies(periodic_policies);
+        periodic_mutex.unlock_shared();
         call_policies(policies, event_data_);
     	break;
     }

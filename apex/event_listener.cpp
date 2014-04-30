@@ -64,4 +64,11 @@ new_thread_event_data::~new_thread_event_data() {
   delete(thread_name);
 }
 
+periodic_event_data::periodic_event_data() {
+  this->thread_id = thread_instance::get_id();
+  this->event_type_ = PERIODIC;
+}
+
+periodic_event_data::~periodic_event_data() {}
+
 }
