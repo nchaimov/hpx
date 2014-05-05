@@ -1,20 +1,32 @@
 //  Copyright (c) 2014 Hartmut Kaiser
-//  Copyright (c) 2014 Bryce Adelstein-Lelbach
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// This is the third in a series of examples demonstrating the development of a
+// fully distributed solver for a simple 1D heat distribution problem.
+//
+// This example takes the code from example one and introduces a partitioning
+// of the 1D grid into groups of grid partitions which are handled at the same time.
+// The purpose is to be able to control the amount of work performed. The
+// example is still fully serial, no parallelization is performed.
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/hpx.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-struct cell
+double k = 0.5;     // heat transfer coefficient
+double dt = 1.;     // time step
+double dx = 1.;     // grid spacing
+
+///////////////////////////////////////////////////////////////////////////////
+struct partition
 {
-    cell(std::size_t size)
+    partition(std::size_t size)
       : data_(size)
     {}
 
-    cell(std::size_t size, double initial_value)
+    partition(std::size_t size, double initial_value)
       : data_(size)
     {
         double base_value = double(initial_value * size);
@@ -31,7 +43,7 @@ private:
     std::vector<double> data_;
 };
 
-std::ostream& operator<<(std::ostream& os, cell const& c)
+std::ostream& operator<<(std::ostream& os, partition const& c)
 {
     os << "{";
     for (std::size_t i = 0; i != c.size(); ++i)
@@ -45,8 +57,7 @@ std::ostream& operator<<(std::ostream& os, cell const& c)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-typedef std::vector<cell> space;        // data for one time step
-typedef std::vector<space> spacetime;   // all of stored time steps
+typedef std::vector<partition> space;        // data for one time step
 
 ///////////////////////////////////////////////////////////////////////////////
 inline std::size_t idx(std::size_t i, std::size_t size)
@@ -56,16 +67,16 @@ inline std::size_t idx(std::size_t i, std::size_t size)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our operator:
-//   f(t+1, i) = (f(t, i-1) + f(t, i) + f(t, i+1)) / 3
-inline double heat(double a, double b, double c)
+inline double heat(double left, double middle, double right)
 {
-    return (a + b + c) / 3.;
+    return middle + (k*dt/dx*dx) * (left - 2*middle + right);
 }
 
-cell heat_part(cell const& left, cell const& middle, cell const& right)
+partition heat_part(partition const& left, partition const& middle,
+    partition const& right)
 {
     std::size_t size = middle.size();
-    cell next(size);
+    partition next(size);
 
     next[0] = heat(left[size-1], middle[0], middle[1]);
 
@@ -85,14 +96,14 @@ int hpx_main(boost::program_options::variables_map& vm)
     boost::uint64_t np = vm["np"].as<boost::uint64_t>();   // Number of partitions.
 
     // U[t][i] is the state of position i at time t.
-    spacetime U(2);
+    std::vector<space> U(2);
     for (space& s: U)
         s.reserve(np);
 
     // Initial conditions:
     //   f(0, i) = i
     for (std::size_t i = 0; i != np; ++i)
-        U[0][i] = cell(nx, double(i));
+        U[0][i] = partition(nx, double(i));
 
     for (std::size_t t = 0; t != nt; ++t)
     {
@@ -123,6 +134,12 @@ int main(int argc, char* argv[])
          "Number of time steps")
         ("np", value<boost::uint64_t>()->default_value(10),
          "Number of partitions")
+        ("k", value<double>(&k)->default_value(0.5),
+         "Heat transfer coefficient (default: 0.5)")
+        ("dt", value<double>(&dt)->default_value(1.0),
+         "Timestep unit (default: 1.0[s])")
+        ("dx", value<double>(&dx)->default_value(1.0),
+         "Local x dimension")
     ;
 
     // Initialize and run HPX

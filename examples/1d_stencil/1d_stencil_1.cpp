@@ -1,16 +1,25 @@
 //  Copyright (c) 2014 Hartmut Kaiser
-//  Copyright (c) 2014 Bryce Adelstein-Lelbach
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// This is the first in a series of examples demonstrating the development of a
+// fully distributed solver for a simple 1D heat distribution problem.
+//
+// This example provides a serial base line implementation. No parallelization
+// is performed.
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/hpx.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
-typedef double cell;
-typedef std::vector<cell> space;
-typedef std::vector<space> spacetime;
+double k = 0.5;     // heat transfer coefficient
+double dt = 1.;     // time step
+double dx = 1.;     // grid spacing
+
+///////////////////////////////////////////////////////////////////////////////
+typedef double partition;
+typedef std::vector<partition> space;
 
 ///////////////////////////////////////////////////////////////////////////////
 inline std::size_t idx(std::size_t i, std::size_t size)
@@ -20,10 +29,9 @@ inline std::size_t idx(std::size_t i, std::size_t size)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our operator:
-//   f(t+1, i) = (f(t, i-1) + f(t, i) + f(t, i+1)) / 3
-inline double heat(double a, double b, double c)
+inline double heat(double left, double middle, double right)
 {
-    return (a + b + c) / 3.;
+    return middle + (k*dt/dx*dx) * (left - 2*middle + right);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,7 +41,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     boost::uint64_t nx = vm["nx"].as<boost::uint64_t>();   // Number of grid points.
 
     // U[t][i] is the state of position i at time t.
-    spacetime U(2);
+    std::vector<space> U(2);
     for (space& s : U)
         s.resize(nx);
 
@@ -70,6 +78,12 @@ int main(int argc, char* argv[])
          "Local x dimension")
         ("nt", value<boost::uint64_t>()->default_value(45),
          "Number of time steps")
+        ("k", value<double>(&k)->default_value(0.5),
+         "Heat transfer coefficient (default: 0.5)")
+        ("dt", value<double>(&dt)->default_value(1.0),
+         "Timestep unit (default: 1.0[s])")
+        ("dx", value<double>(&dx)->default_value(1.0),
+         "Local x dimension")
     ;
 
     // Initialize and run HPX

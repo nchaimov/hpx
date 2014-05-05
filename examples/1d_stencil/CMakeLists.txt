@@ -1,3 +1,4 @@
+# Copyright (c) 2014 Hartmut Kaiser
 # Copyright (c) 2011 Bryce Lelbach
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -7,7 +8,10 @@ set(example_programs
     1d_stencil_1
     1d_stencil_2
     1d_stencil_3
-    1d_stencil_4)
+    1d_stencil_4
+    1d_stencil_5
+    1d_stencil_6
+    1d_stencil_7)
 
 foreach(example_program ${example_programs})
 

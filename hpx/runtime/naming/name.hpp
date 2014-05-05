@@ -841,13 +841,22 @@ namespace hpx { namespace traits
     {
         static naming::id_type call(naming::gid_type const& rhs)
         {
-            return naming::id_type(rhs, naming::id_type::managed);
+            bool has_credits = naming::detail::has_credits(rhs);
+            return naming::id_type(rhs,
+                has_credits ?
+                    naming::id_type::managed :
+                    naming::id_type::unmanaged);
         }
     };
 
     template <>
     struct promise_local_result<naming::gid_type>
       : boost::mpl::identity<naming::id_type>
+    {};
+
+    template <>
+    struct promise_remote_result<naming::id_type>
+      : boost::mpl::identity<naming::gid_type>
     {};
 
     // we need to specialize this template to allow for automatic conversion of
@@ -863,7 +872,11 @@ namespace hpx { namespace traits
             result.reserve(rhs.size());
             BOOST_FOREACH(naming::gid_type const& r, rhs)
             {
-                result.push_back(naming::id_type(r, naming::id_type::managed));
+                bool has_credits = naming::detail::has_credits(r);
+                result.push_back(naming::id_type(r,
+                    has_credits ?
+                        naming::id_type::managed :
+                        naming::id_type::unmanaged));
             }
             return result;
         }
@@ -872,6 +885,11 @@ namespace hpx { namespace traits
     template <>
     struct promise_local_result<std::vector<naming::gid_type> >
       : boost::mpl::identity<std::vector<naming::id_type> >
+    {};
+
+    template <>
+    struct promise_remote_result<std::vector<naming::id_type> >
+      : boost::mpl::identity<std::vector<naming::gid_type> >
     {};
 }}
 
