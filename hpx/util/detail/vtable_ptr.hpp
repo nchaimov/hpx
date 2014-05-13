@@ -53,8 +53,8 @@
 
 #define N BOOST_PP_ITERATION()
 
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
+
     ///////////////////////////////////////////////////////////////////////////
     template <typename Function>
     struct init_registration;
@@ -62,16 +62,20 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       BOOST_PP_ENUM_TRAILING_PARAMS(N, typename A)
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(BOOST_PP_ENUM_PARAMS(N, A))
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(BOOST_PP_ENUM_PARAMS(N, A))
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -81,7 +85,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(BOOST_PP_ENUM_PARAMS(N, A))
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
 
@@ -130,20 +135,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       BOOST_PP_ENUM_TRAILING_PARAMS(N, typename A)
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(BOOST_PP_ENUM_PARAMS(N, A))
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(BOOST_PP_ENUM_PARAMS(N, A))
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
 
@@ -153,7 +161,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       BOOST_PP_ENUM_TRAILING_PARAMS(N, typename A)
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -167,13 +176,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(BOOST_PP_ENUM_PARAMS(N, A))
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(BOOST_PP_ENUM_PARAMS(N, A))
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -186,19 +197,28 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(BOOST_PP_ENUM_PARAMS(N, A))
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(BOOST_PP_ENUM_PARAMS(N, A))
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(BOOST_PP_ENUM_PARAMS(N, A))
-              , void, void
+              , void
+              , void
             >
             base_type;
+
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
 
         vtable_ptr() BOOST_NOEXCEPT
         {
@@ -209,25 +229,22 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
 
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
+
     template <
         typename R
       BOOST_PP_ENUM_TRAILING_PARAMS(N, typename A)
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(BOOST_PP_ENUM_PARAMS(N, A)), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 
 }}
@@ -235,3 +252,4 @@ namespace boost { namespace serialization
 #undef N
 
 #endif
+

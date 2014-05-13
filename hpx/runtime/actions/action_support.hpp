@@ -27,9 +27,8 @@
 #include <hpx/traits/action_decorate_function.hpp>
 #include <hpx/traits/action_decorate_continuation.hpp>
 #include <hpx/traits/action_schedule_thread.hpp>
-#include <hpx/traits/future_traits.hpp>
-#include <hpx/traits/is_future.hpp>
 #include <hpx/traits/type_size.hpp>
+#include <hpx/traits/is_future.hpp>
 #include <hpx/runtime/get_lva.hpp>
 #include <hpx/runtime/threads/thread_helpers.hpp>
 #include <hpx/runtime/threads/thread_init_data.hpp>
@@ -43,18 +42,17 @@
 #include <hpx/util/detail/count_num_args.hpp>
 #include <hpx/util/static.hpp>
 #include <hpx/lcos/async_fwd.hpp>
-#include <hpx/lcos/future.hpp>
 
 #if defined(HPX_HAVE_SECURITY)
 #include <hpx/traits/action_capability_provider.hpp>
 #endif
 
 #include <boost/version.hpp>
+#include <boost/fusion/include/vector.hpp>
 #include <boost/fusion/include/at.hpp>
-#include <boost/fusion/include/at_c.hpp>
-#include <boost/fusion/include/for_each.hpp>
 #include <boost/fusion/include/size.hpp>
-#include <boost/fusion/include/transform_view.hpp>
+#include <boost/fusion/include/for_each.hpp>
+#include <boost/fusion/include/at_c.hpp>
 #include <boost/ref.hpp>
 #include <boost/foreach.hpp>
 #include <boost/serialization/access.hpp>
@@ -207,74 +205,6 @@ namespace hpx { namespace actions
                 return *this;
             }
         };
-
-        ///////////////////////////////////////////////////////////////////////
-        template <typename Future>
-        struct serializable_ready_future_wrapper
-        {
-            typedef typename util::decay<Future>::type future_type;
-
-            explicit serializable_ready_future_wrapper(Future& future)
-              : future_(future)
-            {}
-
-            // serialization support
-            template <typename Archive>
-            void load(Archive& ar, unsigned)
-            {
-                using traits::future_access;
-                future_access<future_type>::load(ar, future_);
-            }
-
-            template <typename Archive>
-            void save(Archive& ar, unsigned) const
-            {
-                using traits::future_access;
-                future_access<future_type>::save(ar, future_);
-            }
-
-            BOOST_SERIALIZATION_SPLIT_MEMBER();
-
-            Future& future_;
-        };
-
-        struct serializable_arguments
-        {
-            template <typename, typename Enable = void>
-            struct result;
-
-            template <typename This, typename T>
-            struct result<This(T&), typename boost::disable_if<
-                traits::is_future<typename util::decay<T>::type> >::type>
-            {
-                typedef T& type;
-            };
-
-            template <typename This, typename T>
-            struct result<This(T&), typename boost::enable_if<
-                traits::is_future<typename util::decay<T>::type> >::type>
-            {
-                typedef serializable_ready_future_wrapper<T> type;
-            };
-
-            template <typename T>
-            BOOST_FORCEINLINE typename boost::lazy_disable_if<
-                traits::is_future<typename util::decay<T>::type>,
-                result<serializable_arguments(T&)>
-            >::type operator()(T& v) const
-            {
-                return v;
-            }
-
-            template <typename T>
-            BOOST_FORCEINLINE typename boost::lazy_enable_if<
-                traits::is_future<typename util::decay<T>::type>,
-                result<serializable_arguments(T&)>
-            >::type operator()(T& v) const
-            {
-                return serializable_ready_future_wrapper<T>(v);
-            }
-        };
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -319,7 +249,7 @@ namespace hpx { namespace actions
         /// \note This \a get_thread_function will be invoked to retrieve the
         ///       thread function for an action which has to be invoked without
         ///       continuations.
-        virtual threads::thread_function_type
+        virtual HPX_STD_FUNCTION<threads::thread_function_type>
             get_thread_function(naming::address::address_type lva) = 0;
 
         /// The \a get_thread_function constructs a proper thread function for
@@ -337,7 +267,7 @@ namespace hpx { namespace actions
         /// \note This \a get_thread_function will be invoked to retrieve the
         ///       thread function for an action which has to be invoked with
         ///       continuations.
-        virtual threads::thread_function_type
+        virtual HPX_STD_FUNCTION<threads::thread_function_type>
             get_thread_function(continuation_type& cont,
                 naming::address::address_type lva) = 0;
 
@@ -475,9 +405,6 @@ namespace hpx { namespace actions
     template <typename Action>
     struct transfer_action : base_action
     {
-        HPX_MOVABLE_BUT_NOT_COPYABLE(transfer_action);
-
-    public:
         typedef typename Action::component_type component_type;
         typedef typename Action::derived_type derived_type;
         typedef typename Action::result_type result_type;
@@ -583,7 +510,7 @@ namespace hpx { namespace actions
         /// \note This \a get_thread_function will be invoked to retrieve the
         ///       thread function for an action which has to be invoked without
         ///       continuations.
-        threads::thread_function_type
+        HPX_STD_FUNCTION<threads::thread_function_type>
         get_thread_function(naming::address::address_type lva)
         {
             return derived_type::construct_thread_function(lva,
@@ -605,7 +532,7 @@ namespace hpx { namespace actions
         /// \note This \a get_thread_function will be invoked to retrieve the
         ///       thread function for an action which has to be invoked with
         ///       continuations.
-        threads::thread_function_type
+        HPX_STD_FUNCTION<threads::thread_function_type>
         get_thread_function(continuation_type& cont,
             naming::address::address_type lva)
         {
@@ -795,10 +722,7 @@ namespace hpx { namespace actions
         // serialization support
         void load(hpx::util::portable_binary_iarchive & ar)
         {
-            boost::fusion::transform_view<
-                arguments_type, detail::serializable_arguments
-            > serializable_arguments(arguments_, detail::serializable_arguments());
-            util::serialize_sequence(ar, serializable_arguments);
+            util::serialize_sequence(ar, arguments_);
 
             // Always serialize the parent information to maintain binary
             // compatibility on the wire.
@@ -832,10 +756,7 @@ namespace hpx { namespace actions
 
         void save(hpx::util::portable_binary_oarchive & ar) const
         {
-            boost::fusion::transform_view<
-                arguments_type const, detail::serializable_arguments
-            > serializable_arguments(arguments_, detail::serializable_arguments());
-            util::serialize_sequence(ar, serializable_arguments);
+            util::serialize_sequence(ar, arguments_);
 
             // Always serialize the parent information to maintain binary
             // compatibility on the wire.
@@ -902,7 +823,7 @@ namespace hpx { namespace actions
     ///////////////////////////////////////////////////////////////////////////
     /// \tparam Component         component type
     /// \tparam Result            return type
-    /// \tparam Arguments         arguments (tuple)
+    /// \tparam Arguments         arguments (fusion vector)
     /// \tparam Derived           derived action class
     template <typename Component, typename Result,
         typename Arguments, typename Derived>
@@ -922,7 +843,7 @@ namespace hpx { namespace actions
 
         ///////////////////////////////////////////////////////////////////////
         template <typename Func, typename Arguments_>
-        static threads::thread_function_type
+        static HPX_STD_FUNCTION<threads::thread_function_type>
         construct_continuation_thread_function_void(
             continuation_type cont, Func && func, Arguments_ && args)
         {
@@ -933,7 +854,7 @@ namespace hpx { namespace actions
         }
 
         template <typename Func, typename Arguments_>
-        static threads::thread_function_type
+        static HPX_STD_FUNCTION<threads::thread_function_type>
         construct_continuation_thread_function(
             continuation_type cont, Func && func, Arguments_ && args)
         {

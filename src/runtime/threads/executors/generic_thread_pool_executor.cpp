@@ -22,7 +22,7 @@ namespace hpx { namespace threads { namespace executors { namespace detail
 
     threads::thread_state_enum
     generic_thread_pool_executor::thread_function_nullary(
-        closure_type func)
+        HPX_STD_FUNCTION<void()> const& func)
     {
         // execute the actual thread function
         func();
@@ -39,13 +39,13 @@ namespace hpx { namespace threads { namespace executors { namespace detail
     // Depending on the subclass implementation, this may block in some
     // situations.
     void generic_thread_pool_executor::add(
-        closure_type && f,
+        HPX_STD_FUNCTION<void()> && f,
         char const* desc, threads::thread_state_enum initial_state,
         bool run_now, threads::thread_stacksize stacksize, error_code& ec)
     {
         // create a new thread
         thread_init_data data(util::bind(
-            util::one_shot(&generic_thread_pool_executor::thread_function_nullary),
+            &generic_thread_pool_executor::thread_function_nullary,
             std::move(f)), desc);
         data.stacksize = threads::get_stack_size(stacksize);
 

@@ -10,7 +10,6 @@
 #include <hpx/util/coroutine/coroutine.hpp>
 #include <hpx/util/coroutine/detail/coroutine_traits.hpp>
 #include <hpx/util/detail/reset_function.hpp>
-#include <hpx/util/detail/unique_function.hpp>
 #include <hpx/runtime/naming/id_type.hpp>
 
 #include <utility>
@@ -241,7 +240,7 @@ namespace hpx { namespace util { namespace coroutines
             return !exited();
         }
 
-        hpx::util::detail::unique_function<signature_type> f_;
+        hpx::util::function_nonser<signature_type> f_;
         context_state state_;
         thread_id_repr_type id_;
 

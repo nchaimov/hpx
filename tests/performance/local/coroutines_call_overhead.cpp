@@ -138,6 +138,7 @@ struct kernel
     }
 
     bool operator!() const { return true; }
+    void clear() {}
 };
 
 double perform_2n_iterations()
@@ -293,3 +294,4 @@ int main(
     // Initialize and run HPX.
     return hpx::init(cmdline, argc, argv);
 }
+

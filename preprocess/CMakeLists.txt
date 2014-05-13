@@ -13,7 +13,6 @@ set(function_argument_limit_preprocessing_files
   "hpx/util/detail/define_bind_action_function_operators.hpp"
   "hpx/util/detail/define_bind_function_operators.hpp"
   "hpx/util/detail/function_template.hpp"
-  "hpx/util/detail/unique_function.hpp"
   "hpx/util/detail/get_table.hpp"
   "hpx/util/detail/get_empty_table.hpp"
   "hpx/util/detail/vtable.hpp"
@@ -25,8 +24,7 @@ set(function_argument_limit_preprocessing_files
   "hpx/util/deferred_call.hpp"
   "hpx/util/invoke.hpp"
   "hpx/util/invoke_fused.hpp"
-  "hpx/util/unwrapped.hpp"
-  "hpx/lcos/local/detail/invoke_when_ready.hpp")
+  "hpx/util/unwrapped.hpp")
 foreach(file ${function_argument_limit_preprocessing_files})
   hpx_partial_preprocess_header(${file} LIMIT HPX_LIMIT)
 endforeach()
@@ -53,9 +51,9 @@ set(action_argument_limit_preprocessing_files
   "hpx/lcos/async_colocated.hpp"
   "hpx/lcos/async_colocated_fwd.hpp"
   "hpx/lcos/broadcast.hpp"
+  "hpx/lcos/reduce.hpp"
   "hpx/lcos/packaged_action_constructors.hpp"
   "hpx/lcos/packaged_action_constructors_direct.hpp"
-  "hpx/lcos/reduce.hpp"
   "hpx/lcos/local/dataflow.hpp"
   "hpx/lcos/local/packaged_task.hpp"
   "hpx/runtime/actions/component_action_implementations.hpp"

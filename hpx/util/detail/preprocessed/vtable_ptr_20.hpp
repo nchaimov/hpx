@@ -8,24 +8,27 @@
 // Do not edit manually.
 
 
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R()
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R()
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -34,7 +37,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R()
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -76,20 +80,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R()
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R()
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -97,7 +104,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -111,13 +119,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R()
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R()
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -129,19 +139,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R()
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R()
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R()
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -151,43 +169,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -196,7 +214,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -238,20 +257,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -259,7 +281,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -273,13 +296,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -291,19 +316,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -313,43 +346,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -358,7 +391,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -400,20 +434,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -421,7 +458,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -435,13 +473,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -453,19 +493,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -475,43 +523,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -520,7 +568,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -562,20 +611,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -583,7 +635,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -597,13 +650,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -615,19 +670,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -637,43 +700,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -682,7 +745,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -724,20 +788,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -745,7 +812,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -759,13 +827,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -777,19 +847,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -799,43 +877,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -844,7 +922,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -886,20 +965,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -907,7 +989,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -921,13 +1004,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -939,19 +1024,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -961,43 +1054,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -1006,7 +1099,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -1048,20 +1142,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -1069,7 +1166,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -1083,13 +1181,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -1101,19 +1201,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -1123,43 +1231,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -1168,7 +1276,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -1210,20 +1319,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -1231,7 +1343,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -1245,13 +1358,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -1263,19 +1378,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -1285,43 +1408,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -1330,7 +1453,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -1372,20 +1496,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -1393,7 +1520,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -1407,13 +1535,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -1425,19 +1555,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -1447,43 +1585,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -1492,7 +1630,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -1534,20 +1673,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -1555,7 +1697,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -1569,13 +1712,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -1587,19 +1732,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -1609,43 +1762,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -1654,7 +1807,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -1696,20 +1850,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -1717,7 +1874,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -1731,13 +1889,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -1749,19 +1909,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -1771,43 +1939,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -1816,7 +1984,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -1858,20 +2027,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -1879,7 +2051,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -1893,13 +2066,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -1911,19 +2086,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -1933,43 +2116,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -1978,7 +2161,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -2020,20 +2204,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -2041,7 +2228,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -2055,13 +2243,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -2073,19 +2263,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -2095,43 +2293,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -2140,7 +2338,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -2182,20 +2381,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -2203,7 +2405,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -2217,13 +2420,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -2235,19 +2440,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -2257,43 +2470,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -2302,7 +2515,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -2344,20 +2558,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -2365,7 +2582,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -2379,13 +2597,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -2397,19 +2617,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -2419,43 +2647,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -2464,7 +2692,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -2506,20 +2735,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -2527,7 +2759,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -2541,13 +2774,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -2559,19 +2794,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -2581,43 +2824,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -2626,7 +2869,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -2668,20 +2912,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -2689,7 +2936,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -2703,13 +2951,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -2721,19 +2971,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -2743,43 +3001,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -2788,7 +3046,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -2830,20 +3089,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -2851,7 +3113,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -2865,13 +3128,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -2883,19 +3148,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -2905,43 +3178,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -2950,7 +3223,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -2992,20 +3266,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -3013,7 +3290,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -3027,13 +3305,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -3045,19 +3325,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -3067,43 +3355,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -3112,7 +3400,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -3154,20 +3443,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -3175,7 +3467,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -3189,13 +3482,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -3207,19 +3502,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -3229,43 +3532,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -3274,7 +3577,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -3316,20 +3620,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -3337,7 +3644,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -3351,13 +3659,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -3369,19 +3679,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -3391,43 +3709,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -3436,7 +3754,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -3478,20 +3797,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -3499,7 +3821,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -3513,13 +3836,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -3531,19 +3856,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -3553,43 +3886,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -3598,7 +3931,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -3640,20 +3974,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -3661,7 +3998,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -3675,13 +4013,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -3693,19 +4033,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -3715,43 +4063,43 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util { namespace detail {
     
     template <typename Function>
     struct init_registration;
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21 , typename A22
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
         >
     {
         typedef
@@ -3760,7 +4108,8 @@ namespace hpx { namespace util { namespace detail
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
             >
             base_type;
         vtable_ptr() BOOST_NOEXCEPT
@@ -3802,20 +4151,23 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21 , typename A22
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct init_registration<
         vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         >
     >
     {
         typedef vtable_ptr<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-          , IArchive, OArchive
+          , IArchive
+          , OArchive
           , Vtable
         > vtable_ptr_type;
         static automatic_function_registration<vtable_ptr_type> g;
@@ -3823,7 +4175,8 @@ namespace hpx { namespace util { namespace detail
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21 , typename A22
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     automatic_function_registration<
@@ -3837,13 +4190,15 @@ namespace hpx { namespace util { namespace detail
         init_registration<
             vtable_ptr<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-              , IArchive, OArchive
+              , IArchive
+              , OArchive
               , Vtable
             >
         >::g = automatic_function_registration<
                     vtable_ptr<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-                      , IArchive, OArchive
+                      , IArchive
+                      , OArchive
                       , Vtable
                     >
                 >();
@@ -3855,19 +4210,27 @@ namespace hpx { namespace util { namespace detail
     >
     struct vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-      , void, void
+      , void
+      , void
       , Vtable
-    > : util::detail::vtable_ptr_base<
+    >
+        : util::detail::vtable_ptr_base<
             R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-          , void, void
+          , void
+          , void
         >
     {
         typedef
             util::detail::vtable_ptr_base<
                 R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22)
-              , void, void
+              , void
+              , void
             >
             base_type;
+        virtual bool empty() const
+        {
+            return Vtable::empty;
+        }
         vtable_ptr() BOOST_NOEXCEPT
         {
             base_type::get_type = Vtable::get_type;
@@ -3877,22 +4240,19 @@ namespace hpx { namespace util { namespace detail
             base_type::copy = Vtable::copy;
             base_type::invoke = Vtable::invoke;
         }
-        virtual bool empty() const
-        {
-            return Vtable::empty;
-        }
     };
 }}}
-namespace boost { namespace serialization
-{
+namespace boost { namespace serialization {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12 , typename A13 , typename A14 , typename A15 , typename A16 , typename A17 , typename A18 , typename A19 , typename A20 , typename A21 , typename A22
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
       , typename Vtable
     >
     struct tracking_level<hpx::util::detail::vtable_ptr<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12 , A13 , A14 , A15 , A16 , A17 , A18 , A19 , A20 , A21 , A22), IArchive, OArchive, Vtable
-    > > : boost::mpl::int_<boost::serialization::track_never>
+    > >
+        : boost::mpl::int_<boost::serialization::track_never>
     {};
 }}

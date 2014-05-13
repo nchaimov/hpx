@@ -9,7 +9,6 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/util/assert.hpp>
 #include <hpx/util/function.hpp>
-#include <hpx/util/detail/reset_function.hpp>
 
 #include <utility>
 
@@ -56,7 +55,7 @@ namespace hpx { namespace lcos { namespace local
 
         void reset()
         {
-            util::detail::reset_function(cond_);
+            cond_.clear();
         }
 
         /// \brief Trigger this object.

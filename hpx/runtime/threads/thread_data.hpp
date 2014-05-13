@@ -125,7 +125,7 @@ namespace hpx { namespace threads
     class thread_data_base : private boost::noncopyable
     {
     public:
-        typedef thread_function_type function_type;
+        typedef HPX_STD_FUNCTION<thread_function_type> function_type;
 
         struct tag {};
         typedef util::spinlock_pool<tag> mutex_type;
@@ -876,7 +876,7 @@ namespace hpx { namespace threads
 
     private:
         typedef util::coroutines::stackless_coroutine<
-            thread_function_sig
+            thread_function_type
         > coroutine_type;
 
         coroutine_type coroutine_;

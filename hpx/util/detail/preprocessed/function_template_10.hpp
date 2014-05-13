@@ -8,32 +8,22 @@
 // Do not edit manually.
 
 
-namespace hpx { namespace util { namespace detail
-{
+namespace hpx { namespace util {
     template <
         typename R
       
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R()
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R()
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -42,6 +32,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R()
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -51,8 +53,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -71,14 +74,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -199,7 +202,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R()
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -207,7 +213,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R()
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()() const
         {
@@ -248,33 +257,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -283,6 +282,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -292,8 +303,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -312,14 +324,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -440,7 +452,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -448,7 +463,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0) const
         {
@@ -489,33 +507,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -524,6 +532,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -533,8 +553,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -553,14 +574,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -681,7 +702,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -689,7 +713,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1) const
         {
@@ -730,33 +757,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -765,6 +782,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -774,8 +803,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -794,14 +824,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -922,7 +952,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -930,7 +963,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2) const
         {
@@ -971,33 +1007,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -1006,6 +1032,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -1015,8 +1053,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -1035,14 +1074,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -1163,7 +1202,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -1171,7 +1213,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3) const
         {
@@ -1212,33 +1257,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -1247,6 +1282,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -1256,8 +1303,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -1276,14 +1324,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -1404,7 +1452,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -1412,7 +1463,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4) const
         {
@@ -1453,33 +1507,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -1488,6 +1532,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -1497,8 +1553,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -1517,14 +1574,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -1645,7 +1702,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -1653,7 +1713,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5) const
         {
@@ -1694,33 +1757,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -1729,6 +1782,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -1738,8 +1803,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -1758,14 +1824,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -1886,7 +1952,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -1894,7 +1963,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5 , A6)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5 , A6 a6) const
         {
@@ -1935,33 +2007,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -1970,6 +2032,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -1979,8 +2053,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -1999,14 +2074,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -2127,7 +2202,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -2135,7 +2213,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5 , A6 a6 , A7 a7) const
         {
@@ -2176,33 +2257,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -2211,6 +2282,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -2220,8 +2303,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -2240,14 +2324,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -2368,7 +2452,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -2376,7 +2463,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5 , A6 a6 , A7 a7 , A8 a8) const
         {
@@ -2417,33 +2507,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -2452,6 +2532,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -2461,8 +2553,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -2481,14 +2574,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -2609,7 +2702,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -2617,7 +2713,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5 , A6 a6 , A7 a7 , A8 a8 , A9 a9) const
         {
@@ -2658,33 +2757,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -2693,6 +2782,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -2702,8 +2803,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -2722,14 +2824,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -2850,7 +2952,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -2858,7 +2963,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5 , A6 a6 , A7 a7 , A8 a8 , A9 a9 , A10 a10) const
         {
@@ -2899,33 +3007,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -2934,6 +3032,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -2943,8 +3053,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -2963,14 +3074,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -3091,7 +3202,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -3099,7 +3213,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5 , A6 a6 , A7 a7 , A8 a8 , A9 a9 , A10 a10 , A11 a11) const
         {
@@ -3140,33 +3257,23 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
-namespace hpx { namespace util { namespace detail
-{
+}}
+namespace hpx { namespace util {
     template <
         typename R
       , typename A0 , typename A1 , typename A2 , typename A3 , typename A4 , typename A5 , typename A6 , typename A7 , typename A8 , typename A9 , typename A10 , typename A11 , typename A12
-      , typename IArchive, typename OArchive
+      , typename IArchive
+      , typename OArchive
     >
     struct function_base<
         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-      , IArchive, OArchive
+      , IArchive
+      , OArchive
     >
     {
-        typedef R result_type;
-        typedef
-            detail::vtable_ptr_virtbase<
-                IArchive, OArchive
-            > vtable_virtbase_type;
-        typedef
-            detail::vtable_ptr_base<
-                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-              , IArchive, OArchive
-            > vtable_ptr_type;
-        
         function_base() BOOST_NOEXCEPT
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {}
         ~function_base()
         {
@@ -3175,6 +3282,18 @@ namespace hpx { namespace util { namespace detail
                 vptr->static_delete(&object);
             }
         }
+        typedef R result_type;
+        typedef
+            detail::vtable_ptr_virtbase<
+                IArchive
+              , OArchive
+            > vtable_virtbase_type;
+        typedef
+            detail::vtable_ptr_base<
+                R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
+              , IArchive
+              , OArchive
+            > vtable_ptr_type;
         template <typename Functor>
         explicit function_base(
             Functor && f
@@ -3184,8 +3303,9 @@ namespace hpx { namespace util { namespace detail
                   , typename util::decay<Functor>::type
                 >::type
             >::type * = 0
-        ) : vptr(get_empty_table_ptr())
-          , object(0)
+        )
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             if (!detail::is_empty_function(f))
             {
@@ -3204,14 +3324,14 @@ namespace hpx { namespace util { namespace detail
             }
         }
         function_base(function_base const & other)
-          : vptr(get_empty_table_ptr())
-          , object(0)
+            : vptr(get_empty_table_ptr())
+            , object(0)
         {
             assign(other);
         }
         function_base(function_base && other) BOOST_NOEXCEPT
-          : vptr(other.vptr)
-          , object(other.object)
+            : vptr(other.vptr)
+            , object(other.object)
         {
             other.vptr = get_empty_table_ptr();
             other.object = 0;
@@ -3332,7 +3452,10 @@ namespace hpx { namespace util { namespace detail
         {
             return detail::get_empty_table<
                         R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-                    >::template get<IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         template <typename Functor>
         static vtable_ptr_type* get_table_ptr() BOOST_NOEXCEPT
@@ -3340,7 +3463,10 @@ namespace hpx { namespace util { namespace detail
             return detail::get_table<
                         Functor
                       , R(A0 , A1 , A2 , A3 , A4 , A5 , A6 , A7 , A8 , A9 , A10 , A11 , A12)
-                    >::template get<false, IArchive, OArchive>();
+                    >::template get<
+                        IArchive
+                      , OArchive
+                    >();
         }
         BOOST_FORCEINLINE R operator()(A0 a0 , A1 a1 , A2 a2 , A3 a3 , A4 a4 , A5 a5 , A6 a6 , A7 a7 , A8 a8 , A9 a9 , A10 a10 , A11 a11 , A12 a12) const
         {
@@ -3381,4 +3507,4 @@ namespace hpx { namespace util { namespace detail
         vtable_ptr_type *vptr;
         mutable void *object;
     };
-}}}
+}}
