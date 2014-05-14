@@ -641,6 +641,106 @@ namespace hpx
             return 0;
         }
 #endif
+#if defined(HPX_THROTTLE_SCHEDULER)
+        ///////////////////////////////////////////////////////////////////////
+        // local scheduler (one queue for each OS threads)
+        int run_throttle(startup_function_type const& startup,
+            shutdown_function_type const& shutdown,
+            util::command_line_handling& cfg, bool blocking)
+        {
+            ensure_high_priority_compatibility(cfg.vm_);
+            ensure_hierarchy_arity_compatibility(cfg.vm_);
+
+            bool numa_sensitive = false;
+            if (cfg.vm_.count("hpx:numa-sensitive"))
+                numa_sensitive = true;
+
+            std::size_t pu_offset = std::size_t(-1);
+            std::size_t pu_step = 1;
+            std::string affinity_domain("pu");
+            std::string affinity_desc;
+
+#if defined(HPX_HAVE_HWLOC) || defined(BOOST_WINDOWS)
+            if (cfg.vm_.count("hpx:pu-offset")) {
+                pu_offset = cfg.vm_["hpx:pu-offset"].as<std::size_t>();
+                if (pu_offset >= hpx::threads::hardware_concurrency()) {
+                    throw std::logic_error("Invalid command line option "
+                        "--hpx:pu-offset, value must be smaller than number of "
+                        "available processing units.");
+                }
+            }
+
+            if (cfg.vm_.count("hpx:pu-step")) {
+                pu_step = cfg.vm_["hpx:pu-step"].as<std::size_t>();
+                if (pu_step == 0 || pu_step >= hpx::threads::hardware_concurrency()) {
+                    throw std::logic_error("Invalid command line option "
+                        "--hpx:pu-step, value must be non-zero smaller than number of "
+                        "available processing units.");
+                }
+            }
+#endif
+#if defined(HPX_HAVE_HWLOC)
+            if (cfg.vm_.count("hpx:affinity")) {
+                affinity_domain = cfg.vm_["hpx:affinity"].as<std::string>();
+                if (0 != std::string("pu").find(affinity_domain) &&
+                    0 != std::string("core").find(affinity_domain) &&
+                    0 != std::string("numa").find(affinity_domain) &&
+                    0 != std::string("machine").find(affinity_domain))
+                {
+                    throw std::logic_error("Invalid command line option "
+                        "--hpx:affinity, value must be one of: pu, core, numa, "
+                        "or machine.");
+                }
+            }
+            if (cfg.vm_.count("hpx:bind")) {
+                if (cfg.vm_.count("hpx:pu-offset") ||
+                    cfg.vm_.count("hpx:pu-step") ||
+                    cfg.vm_.count("hpx:affinity"))
+                {
+                    throw std::logic_error("Command line option --hpx:bind "
+                        "should not be used with --hpx:pu-step, --hpx:pu-offset, "
+                        "or --hpx:affinity.");
+                }
+
+                std::vector<std::string> bind_affinity =
+                    cfg.vm_["hpx:bind"].as<std::vector<std::string> >();
+                BOOST_FOREACH(std::string const& s, bind_affinity)
+                {
+                    if (!affinity_desc.empty())
+                        affinity_desc += ";";
+                    affinity_desc += s;
+                }
+
+                numa_sensitive = true;
+            }
+#endif
+
+            // scheduling policy
+            typedef hpx::threads::policies::throttle_queue_scheduler<>
+                throttle_queue_policy;
+            throttle_queue_policy::init_parameter_type init(
+                cfg.num_threads_, 1000, numa_sensitive);
+            threads::policies::init_affinity_data affinity_init(
+                pu_offset, pu_step, affinity_domain, affinity_desc);
+
+            // Build and configure this runtime instance.
+            typedef hpx::runtime_impl<throttle_queue_policy> runtime_type;
+            HPX_STD_UNIQUE_PTR<hpx::runtime> rt(
+                new runtime_type(cfg.rtcfg_, cfg.mode_, cfg.num_threads_, init,
+                    affinity_init));
+
+            if (blocking) {
+                return run(*rt, cfg.hpx_main_f_, cfg.vm_, cfg.mode_, startup,
+                    shutdown);
+            }
+
+            // non-blocking version
+            start(*rt, cfg.hpx_main_f_, cfg.vm_, cfg.mode_, startup, shutdown);
+
+            rt.release();          // pointer to runtime is stored in TLS
+            return 0;
+        }
+#endif
 
 #if defined(HPX_STATIC_PRIORITY_SCHEDULER)
         ///////////////////////////////////////////////////////////////////////
@@ -1067,6 +1167,15 @@ namespace hpx
                 throw std::logic_error("Command line option --hpx:queuing=periodic "
                     "is not configured in this build. Please rebuild with "
                     "'cmake -DHPX_PERIODIC_PRIORITY_SCHEDULER=ON'.");
+#endif
+            }
+            else if (0 == std::string("throttle").find(cfg.queuing_)) {
+#if defined(HPX_THROTTLE_SCHEDULER)
+                result = detail::run_throttle(startup, shutdown, cfg, blocking);
+#else
+		throw std::logic_error("Command line option --hpx:queuing=throttle "
+				       "is not configured in this build. Please rebuild with "
+				       "'cmake -DHPX_THROTTLE_SCHEDULER=ON'.");
 #endif
             }
             else {

@@ -116,6 +116,16 @@ namespace hpx { namespace threads { namespace executors
     };
 #endif
 
+#if defined(HPX_THROTTLE_SCHEDULER)
+    struct HPX_EXPORT throttle_queue_executor : public scheduled_executor
+    {
+        throttle_queue_executor();
+
+        throttle_queue_executor(std::size_t max_punits,
+            std::size_t min_punits = 1);
+    };
+#endif
+
     struct HPX_EXPORT local_priority_queue_executor : public scheduled_executor
     {
         local_priority_queue_executor();
