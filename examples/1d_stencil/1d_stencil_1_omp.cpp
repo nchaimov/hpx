@@ -8,9 +8,16 @@
 //
 // This example provides a serial base line implementation. No parallelization
 // is performed.
+//
+// The only difference to 1d_stencil_1 is that this example uses OpenMP for
+// parallelizing the inner loop.
 
-#include <hpx/hpx_init.hpp>
-#include <hpx/hpx.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/program_options.hpp>
+#include <boost/chrono.hpp>
+
+#include <vector>
+#include <cstdlib>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Timer with nanosecond resolution
@@ -61,7 +68,9 @@ struct stepper
 
             next[0] = heat(current[nx-1], current[0], current[1]);
 
-            for (std::size_t i = 1; i != nx-1; ++i)
+            // Visual Studio requires OMP loop variables to be signed :/
+            # pragma omp parallel for
+            for (boost::int64_t i = 1; i < boost::int64_t(nx-1); ++i)
                 next[i] = heat(current[i-1], current[i], current[i+1]);
 
             next[nx-1] = heat(current[nx-2], current[nx-1], current[0]);
@@ -97,7 +106,7 @@ int hpx_main(boost::program_options::variables_map& vm)
     boost::uint64_t elapsed = now() - t;
     std::cout << "Elapsed time: " << elapsed / 1e9 << " [s]" << std::endl;
 
-    return hpx::finalize();
+    return 0;
 }
 
 int main(int argc, char* argv[])
@@ -119,6 +128,9 @@ int main(int argc, char* argv[])
          "Local x dimension")
     ;
 
-    // Initialize and run HPX
-    return hpx::init(desc_commandline, argc, argv);
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc_commandline), vm);
+    po::notify(vm);
+
+    return hpx_main(vm);
 }

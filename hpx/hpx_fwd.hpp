@@ -23,6 +23,9 @@
 #endif
 
 #if defined(BOOST_WINDOWS)
+#if !defined(WIN32)
+#  define WIN32
+#endif
 #include <winsock2.h>
 #include <windows.h>
 #endif
@@ -698,7 +701,7 @@ namespace hpx
 
         template <typename Action,
             typename Result = typename traits::promise_local_result<
-                typename Action::result_type>::type,
+                typename Action::remote_result_type>::type,
             typename DirectExecute = typename Action::direct_execution>
         class packaged_action;
 

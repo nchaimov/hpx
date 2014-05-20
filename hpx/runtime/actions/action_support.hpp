@@ -137,6 +137,12 @@ namespace hpx { namespace actions
             typedef Result type;
         };
 
+        template <>
+        struct remote_action_result<void>
+        {
+            typedef util::unused_type type;
+        };
+
         template <typename Result>
         struct remote_action_result<lcos::future<Result> >
         {
@@ -1007,7 +1013,7 @@ namespace hpx { namespace actions
 #if defined(HPX_HAVE_CXX11_DECLTYPE)
 #  define HPX_TYPEOF(x)       decltype(x)
 #  define HPX_TYPEOF_TPL(x)   decltype(x)
-#elif defined(HPX_GCC_VERSION) && (HPX_GCC_VERSION <= 40400)
+#elif defined(HPX_GCC44_WORKAROUND)
 #  define HPX_TYPEOF(x)       __typeof__(x)
 #  define HPX_TYPEOF_TPL(x)   __typeof__(x)
 #else
