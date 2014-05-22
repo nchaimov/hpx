@@ -803,7 +803,7 @@ endif()
 ################################################################################
 hpx_option(HPX_HAVE_ITTNOTIFY BOOL "Bind to Intel Amplifier Tool (default: OFF)" OFF ADVANCED)
 
-if(HPX_HAVE_ITTNOTIFY AND NOT HPX_USE_APEX)
+if(HPX_HAVE_ITTNOTIFY AND NOT HPX_HAVE_APEX)
   find_package(HPX_Amplifier)
   if(AMPLIFIER_FOUND)
     hpx_info("itt" "Binding to Intel Amplifier tool is enabled.")
