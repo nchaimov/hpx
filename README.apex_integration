@@ -14,6 +14,11 @@ To build, create a build directory outside of the source tree.
 From the build directory, run
 
 cmake $PATH_TO_HPX_APEX_SOURCE -DTAU_ROOT=$PATH_TO_TAU -DBOOST_ROOT=$PATH_TO_BOOST
-      -DHPX_HAVE_APEX=1 -DCMAKE_INSTALL_PREFIX=$PATH_TO_HPX_INSTALL
+      -DHPX_HAVE_APEX=1 -DCMAKE_INSTALL_PREFIX=$PATH_TO_HPX_INSTALL -DCMAKE_BUILD_TYPE=Debug
+
+You can also use CMAKE_BUILD_TYPEs of Release (optimization on, no debug info) or
+RelWithDebInfo (optimization on, debug info included). Note that if you are using
+Release or RelWithDebInfo, you must also specify -DHPX_THREAD_DEBUG_INFO=1, or all
+thread names will be reported to APEX as "<unknown>".
 
 
