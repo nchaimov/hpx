@@ -1791,11 +1791,11 @@ if(NOT HPX_NO_INSTALL)
       #make copy, so that we have intact symlink in CMAKE_BINARY_DIR
       execute_process(
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${script}" "${script_name}"
-	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/python/scripts")
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/python/scripts")
 
       execute_process(
         COMMAND "${CMAKE_COMMAND}" -E create_symlink "${script_name}" "${script_name_we}"
-	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/python/scripts")
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/python/scripts")
 
       install(FILES "${CMAKE_BINARY_DIR}/python/scripts/${script_name_we}" DESTINATION "bin")
     endforeach()
