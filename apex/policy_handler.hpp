@@ -13,6 +13,7 @@
 #include <map>
 #include <set>
 #include <list>
+#include <atomic>
 #include <boost/thread/shared_mutex.hpp>
 
 #ifdef SIGEV_THREAD_ID
