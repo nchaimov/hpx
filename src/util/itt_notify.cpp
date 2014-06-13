@@ -165,7 +165,10 @@ bool use_ittnotify_api = false;
     || (defined(__MWERKS__) && defined(_WIN32) && (__MWERKS__ >= 0x3000)) \
     || (defined(__ICL) && defined(_MSC_EXTENSIONS) && (_MSC_VER >= 1200))
 
+#if !defined(HPX_HAVE_APEX)
 #pragma comment(lib, "libittnotify.lib")
+#endif
+
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

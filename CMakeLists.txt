@@ -674,21 +674,6 @@ find_package(HPX_PAPI)
 # Apex event counters
 ################################################################################
 find_package(HPX_TAU)
-#find_package(HPX_APEX)
-if(HPX_HAVE_APEX)
-  add_subdirectory(apex)
-  hpx_info("apex" "Apex source dir: ${APEX_SOURCE_DIR}")
-  hpx_info("apex" "Apex binary dir: ${APEX_BINARY_DIR}")
-  set(APEX_FOUND TRUE)
-  set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${APEX_BINARY_DIR}/libapex.so)
-  hpx_include_sys_directories(${APEX_SOURCE_DIR})
-  hpx_link_sys_directories(${APEX_BINARY_DIR})
-  hpx_add_config_define(HPX_HAVE_APEX)
-  set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${ITTNOTIFY_BINARY_DIR}/libittnotify.so)
-  hpx_include_sys_directories(${ITTNOTIFY_SOURCE_DIR})
-  hpx_link_sys_directories(${ITTNOTIFY_BINARY_DIR})
-  hpx_add_config_define(HPX_HAVE_ITTNOTIFY 1)
-endif()
 
 ################################################################################
 # Valgrind support
@@ -1611,6 +1596,40 @@ endif()
 # Recurse into some subdirectories. This does not actually cause another cmake
 # executable to run. The same process will walk through the project's entire
 # directory structure.
+
+if(HPX_HAVE_APEX)
+  add_subdirectory(apex)
+  hpx_info("apex" "Apex source dir: ${APEX_SOURCE_DIR}")
+  hpx_info("apex" "Apex binary dir: ${APEX_BINARY_DIR}")
+
+  set(APEX_FOUND ON)
+
+  if(NOT MSVC)
+    set(apex_libraries
+        ${APEX_BINARY_DIR}/libapex.so
+        ${ITTNOTIFY_BINARY_DIR}/libittnotify.so)
+  else()
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+      set(apex_libraries
+        "${APEX_BINARY_DIR}/Debug/apex${CMAKE_DEBUG_POSTFIX}.lib"
+        "${ITTNOTIFY_BINARY_DIR}/Debug/ittnotify${CMAKE_DEBUG_POSTFIX}.lib")
+    else()
+      set(apex_libraries
+        "${APEX_BINARY_DIR}/${CMAKE_BUILD_TYPE}/apex.lib"
+        "${ITTNOTIFY_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ittnotify.lib")
+    endif()
+  endif()
+  set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${apex_libraries})
+
+  hpx_include_sys_directories(${APEX_SOURCE_DIR})
+  hpx_link_sys_directories(${APEX_BINARY_DIR})
+  hpx_add_config_define(HPX_HAVE_APEX)
+
+  hpx_include_sys_directories(${ITTNOTIFY_SOURCE_DIR})
+  hpx_link_sys_directories(${ITTNOTIFY_BINARY_DIR})
+  hpx_add_config_define(HPX_HAVE_ITTNOTIFY 1)
+endif()
+
 add_subdirectory(src)
 
 hpx_option(HPX_BUILD_EXAMPLES BOOL "Build HPX examples (default: ON)" ON ADVANCED)

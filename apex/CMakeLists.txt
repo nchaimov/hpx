@@ -23,31 +23,68 @@ configure_file (
     "${APEX_BINARY_DIR}/apex_config.h"
 )
 
-add_definitions( -std=c++11 )
+if(NOT MSVC)
+  add_definitions( -std=c++11 )
+else()
+  add_definitions(-D_WINDOWS)
+  add_definitions(-D_WIN32)
+  add_definitions(-D_WIN32_WINNT=0x0601)
+  add_definitions(-D_SCL_SECURE_NO_WARNINGS)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-D_SCL_SECURE_NO_DEPRECATE)
+  add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+  add_definitions(-D_CRT_NONSTDC_NO_WARNINGS)
+endif()
+
+set(apex_sources
+    apex.cpp
+    thread_instance.cpp
+    event_listener.cpp
+    handler.cpp
+    concurrency_handler.cpp
+    policy_handler.cpp)
+
 if(TAU_FOUND)
     hpx_info("apex" "Building APEX with TAU support")
-    add_library (apexStatic STATIC apex.cpp thread_instance.cpp event_listener.cpp handler.cpp concurrency_handler.cpp policy_handler.cpp tau_listener.cpp)
-    add_library (apexShared SHARED apex.cpp thread_instance.cpp event_listener.cpp handler.cpp concurrency_handler.cpp policy_handler.cpp tau_listener.cpp)
-    add_definitions( -DAPEX_HAVE_TAU )
+    set(apex_sources ${apex_sources}
+        tau_listener.cpp)
+
+    add_library (apexStatic STATIC ${apex_sources})
+    add_definitions(-DAPEX_HAVE_TAU)
+    if(NOT MSVC)
+      add_library (apexShared SHARED ${apex_sources})
+    else()
+      add_definitions(-DTAU_WINDOWS)
+      set(LIBS ${TAU_LIBRARY})
+    endif()
 else()
     hpx_info("apex" "Building APEX without TAU support")
-    add_library (apexStatic STATIC apex.cpp thread_instance.cpp event_listener.cpp handler.cpp concurrency_handler.cpp policy_handler.cpp)
-    add_library (apexShared SHARED apex.cpp thread_instance.cpp event_listener.cpp handler.cpp concurrency_handler.cpp policy_handler.cpp)
-endif()
-set_target_properties(apexStatic PROPERTIES OUTPUT_NAME apex)
-set_target_properties(apexShared PROPERTIES OUTPUT_NAME apex)
 
+    add_library (apexStatic STATIC ${apex_sources})
+    if(NOT MSVC)
+      add_library (apexShared SHARED ${apex_sources})
+    else()
+      add_definitions(-DTAU_WINDOWS)
+    endif()
+endif()
+
+set_target_properties(apexStatic PROPERTIES OUTPUT_NAME apex)
 target_link_libraries(apexStatic ${LIBS})
-target_link_libraries(apexShared ${LIBS})
+set(apex_install_targets ${apex_install_targets} apexStatic)
+
+if(NOT MSVC)
+  set_target_properties(apexShared PROPERTIES OUTPUT_NAME apex)
+  target_link_libraries(apexShared ${LIBS})
+  set(apex_install_targets apexShared)
+endif()
 
 # add the binary tree to the search path for include files
 # so that we will find ApexConfig.h
 include_directories("${PROJECT_BINARY_DIR}/apex")
 
-
 INSTALL(FILES apex.h apex.hpp handler.hpp event_listener.hpp DESTINATION include)
 
-INSTALL(TARGETS apexShared apexStatic
+INSTALL(TARGETS ${apex_install_targets}
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib/hpx
   ARCHIVE DESTINATION lib/hpx

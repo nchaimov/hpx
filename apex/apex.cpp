@@ -107,9 +107,9 @@ void apex::_initialize() {
     char* option2 = getenv("APEX_CONCURRENCY_PERIOD");
     if (option2 != NULL) {
       listeners.push_back(new concurrency_handler(atoi(option2), option));
-	} else {
+    } else {
       listeners.push_back(new concurrency_handler(option));
-	}
+    }
   }
   set_node_id(0);
 }
@@ -188,23 +188,6 @@ double version() {
   return APEX_VERSION_MAJOR + (APEX_VERSION_MINOR/10.0);
 }
 
-/*
-string* demangle(string timer_name) {
-  int     status;
-  string* demangled = NULL;
-  char *realname = abi::__cxa_demangle(timer_name.c_str(), 0, 0, &status);
-  if (status == 0) {
-    char* index = strstr(realname, "<");
-    if (index != NULL) {
-	  *index = 0; // terminate before templates for brevity
-	}
-    demangled = new string(realname);
-	free(realname);
-  }
-  return demangled;
-}
-*/
-
 void start(string timer_name) {
   APEX_TIMER_TRACER("start", timer_name)
   apex* instance = apex::instance(); // get the Apex static instance
@@ -217,7 +200,7 @@ void start(string timer_name) {
   demangled = demangle(timer_name);
   if (demangled != NULL) {
     eventData = new TimerEventData(START_EVENT, thread_instance::getID(), *demangled);
-	delete(demangled);
+    delete(demangled);
   } else {
     eventData = new TimerEventData(START_EVENT, thread_instance::getID(), timer_name);
   }
@@ -237,7 +220,7 @@ void stop(string timer_name) {
   string* demangled = demangle(timer_name);
   if (demangled != NULL) {
     eventData = new TimerEventData(STOP_EVENT, thread_instance::getID(), *demangled);
-	delete(demangled);
+    delete(demangled);
   } else {
     eventData = new TimerEventData(STOP_EVENT, thread_instance::getID(), timer_name);
   }
@@ -270,7 +253,7 @@ void sample_value(string name, double value) {
       // tokenize by / character
       char* token = strtok((char*)tmp_name.c_str(), "/");
       while (strstr(token, "worker-thread")==NULL) {
-      	token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
       }
       // strip the trailing close bracket
       token = strtok(token, "}");
@@ -399,7 +382,7 @@ int register_periodic_policy(int period,
     std::set<_event_type> when = {PERIODIC};
     id = handler->register_policy(when, test_function, action_function);
   }
-
+  return id;
 }
 
 } // apex namespace
