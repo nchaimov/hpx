@@ -115,9 +115,14 @@ void __itt_stack_caller_destroy(__itt_caller ctx) { APEX_TRACER };
 //#endif
 
 // assign some function pointers
+#if defined(_WINDOWS) || defined(_WIN32) || defined(WIN32)
+__itt_mark_type (*__itt_mark_createA_ptr_)(char const* name) = __itt_mark_create;
+int (*__itt_markA_ptr_)(__itt_mark_type mark, char const* par) = __itt_mark;
+#else
 __itt_mark_type (*__itt_mark_create_ptr_)(char const* name) = __itt_mark_create;
-int (*__itt_mark_off_ptr_)(__itt_mark_type mark) = __itt_mark_off;
 int (*__itt_mark_ptr_)(__itt_mark_type mark, char const* par) = __itt_mark;
+#endif
+int (*__itt_mark_off_ptr_)(__itt_mark_type mark) = __itt_mark_off;
 void (*__itt_stack_callee_enter_ptr_)(__itt_caller ctx) = __itt_stack_callee_enter;
 void (*__itt_stack_callee_leave_ptr_)(__itt_caller ctx) = __itt_stack_callee_leave;
 __itt_caller (*__itt_stack_caller_create_ptr_)() = __itt_stack_caller_create;
