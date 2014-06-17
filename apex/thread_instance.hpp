@@ -6,10 +6,10 @@
 #ifndef THREADINSTANCE_H
 #define THREADINSTANCE_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <strings.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cstring>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/atomic.hpp>

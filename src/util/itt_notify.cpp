@@ -18,20 +18,20 @@ bool use_ittnotify_api = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 #define HPX_INTERNAL_ITT_SYNC_CREATE(obj, type, name)                         \
-    if (use_ittnotify_api && __itt_sync_create_ptr) {                         \
+    if (use_ittnotify_api && __itt_sync_create_ptr != 0) {                    \
         __itt_sync_create_ptr(                                                \
             const_cast<void*>(static_cast<volatile void*>(obj)),              \
                 type, name, __itt_attr_mutex);                                \
     }                                                                         \
     /**/
 #define HPX_INTERNAL_ITT_SYNC(fname, obj)                                     \
-    if (use_ittnotify_api && __itt_ ## fname ## _ptr) {                       \
+    if (use_ittnotify_api && __itt_ ## fname ## _ptr != 0) {                  \
         __itt_ ## fname ## _ptr(                                              \
             const_cast<void*>(static_cast<volatile void*>(obj)));             \
     }                                                                         \
     /**/
 #define HPX_INTERNAL_ITT_SYNC_RENAME(obj, name)                               \
-    if (use_ittnotify_api && __itt_sync_rename_ptr) {                         \
+    if (use_ittnotify_api && __itt_sync_rename_ptr != 0) {                    \
         __itt_sync_rename_ptr(                                                \
             const_cast<void*>(static_cast<volatile void*>(obj)), name);       \
     }                                                                         \
@@ -39,71 +39,72 @@ bool use_ittnotify_api = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 #define HPX_INTERNAL_ITT_STACK_CREATE()                                       \
-    (use_ittnotify_api && __itt_stack_caller_create_ptr) ?                    \
+    (use_ittnotify_api && __itt_stack_caller_create_ptr != 0) ?               \
         __itt_stack_caller_create_ptr() : (__itt_caller)0                     \
     /**/
 #define HPX_INTERNAL_ITT_STACK_ENTER(ctx)                                     \
-    if (use_ittnotify_api && __itt_stack_callee_enter_ptr)                    \
+    if (use_ittnotify_api && __itt_stack_callee_enter_ptr != 0)               \
         __itt_stack_callee_enter_ptr(ctx);                                    \
     /**/
 #define HPX_INTERNAL_ITT_STACK_LEAVE(ctx)                                     \
-    if (use_ittnotify_api && __itt_stack_callee_leave_ptr)                    \
+    if (use_ittnotify_api && __itt_stack_callee_leave_ptr != 0)               \
         __itt_stack_callee_leave_ptr(ctx);                                    \
     /**/
 #define HPX_INTERNAL_ITT_STACK_DESTROY(ctx)                                   \
-    if (use_ittnotify_api && __itt_stack_caller_destroy_ptr && ctx != (__itt_caller)0) \
-        __itt_stack_caller_destroy_ptr(ctx);                                  \
+    if (use_ittnotify_api && __itt_stack_caller_destroy_ptr != 0 &&           \
+        ctx != (__itt_caller)0)                                               \
+            __itt_stack_caller_destroy_ptr(ctx);                              \
     /**/
 
 ///////////////////////////////////////////////////////////////////////////////
 #define HPX_INTERNAL_ITT_FRAME_BEGIN(domain, id)                              \
-    if (use_ittnotify_api && __itt_frame_begin_v3_ptr)                        \
+    if (use_ittnotify_api && __itt_frame_begin_v3_ptr != 0)                   \
         __itt_frame_begin_v3_ptr(domain, id);                                 \
     /**/
 #define HPX_INTERNAL_ITT_FRAME_END(domain, id)                                \
-    if (use_ittnotify_api && __itt_frame_end_v3_ptr)                          \
+    if (use_ittnotify_api && __itt_frame_end_v3_ptr != 0)                     \
         __itt_frame_end_v3_ptr(domain, id);                                   \
     /**/
 
 ///////////////////////////////////////////////////////////////////////////////
 #define HPX_INTERNAL_ITT_MARK_CREATE(name)                                    \
-    (use_ittnotify_api && __itt_mark_create_ptr) ?                            \
+    (use_ittnotify_api && __itt_mark_create_ptr != 0) ?                       \
         __itt_mark_create_ptr(name) : 0                                       \
     /**/
 #define HPX_INTERNAL_ITT_MARK_OFF(mark)                                       \
-    if (use_ittnotify_api && __itt_mark_off_ptr) __itt_mark_off_ptr(mark);    \
+    if (use_ittnotify_api && __itt_mark_off_ptr != 0) __itt_mark_off_ptr(mark); \
     /**/
 #define HPX_INTERNAL_ITT_MARK(mark, parameter)                                \
-    if (use_ittnotify_api && __itt_mark_ptr) __itt_mark_ptr(mark, parameter); \
+    if (use_ittnotify_api && __itt_mark_ptr != 0) __itt_mark_ptr(mark, parameter); \
     /**/
 
 ///////////////////////////////////////////////////////////////////////////////
 #define HPX_INTERNAL_ITT_THREAD_SET_NAME(name)                                \
-    if (use_ittnotify_api && __itt_thread_set_name_ptr)                       \
+    if (use_ittnotify_api && __itt_thread_set_name_ptr != 0)                  \
         __itt_thread_set_name_ptr(name);                                      \
     /**/
 #define HPX_INTERNAL_ITT_THREAD_IGNORE()                                      \
-    if (use_ittnotify_api && __itt_thread_ignore_ptr)                         \
+    if (use_ittnotify_api && __itt_thread_ignore_ptr != 0)                    \
         __itt_thread_ignore_ptr();                                            \
     /**/
 
 ///////////////////////////////////////////////////////////////////////////////
 #define HPX_INTERNAL_ITT_TASK_BEGIN(domain, name)                             \
-    if (use_ittnotify_api && __itt_task_begin_ptr)                            \
+    if (use_ittnotify_api && __itt_task_begin_ptr != 0)                       \
         __itt_task_begin_ptr(domain, __itt_null, __itt_null, name);           \
     /**/
 #define HPX_INTERNAL_ITT_TASK_END(domain)                                     \
-    if (use_ittnotify_api && __itt_task_end_ptr)                              \
+    if (use_ittnotify_api && __itt_task_end_ptr != 0)                         \
         __itt_task_end_ptr(domain);                                           \
     /**/
 
 #define HPX_INTERNAL_ITT_DOMAIN_CREATE(name)                                  \
-    (use_ittnotify_api && __itt_domain_create_ptr) ?                          \
+    (use_ittnotify_api && __itt_domain_create_ptr != 0) ?                     \
         __itt_domain_create_ptr(name) : 0                                     \
     /**/
 
 #define HPX_INTERNAL_ITT_STRING_HANDLE_CREATE(name)                           \
-    (use_ittnotify_api && __itt_string_handle_create_ptr) ?                   \
+    (use_ittnotify_api && __itt_string_handle_create_ptr != 0) ?              \
         __itt_string_handle_create_ptr(name) : 0                              \
     /**/
 
@@ -112,50 +113,50 @@ bool use_ittnotify_api = false;
     /**/
 
 #define HPX_INTERNAL_ITT_ID_CREATE(domain, id)                                \
-    if (use_ittnotify_api && __itt_id_create_ptr)                             \
+    if (use_ittnotify_api && __itt_id_create_ptr != 0)                        \
         __itt_id_create_ptr(domain, id);                                      \
     /**/
 #define HPX_INTERNAL_ITT_ID_DESTROY(id) delete id
 
 ///////////////////////////////////////////////////////////////////////////////
 #define HPX_INTERNAL_ITT_HEAP_FUNCTION_CREATE(name, domain)                   \
-    (use_ittnotify_api && __itt_heap_function_create_ptr) ?                   \
+    (use_ittnotify_api && __itt_heap_function_create_ptr != 0) ?              \
         __itt_heap_function_create_ptr(name, domain) : 0                      \
     /**/
 
 #define HPX_INTERNAL_HEAP_ALLOCATE_BEGIN(f, size, init)                       \
-    if (use_ittnotify_api && __itt_heap_allocate_begin_ptr)                   \
+    if (use_ittnotify_api && __itt_heap_allocate_begin_ptr != 0)              \
         __itt_heap_allocate_begin_ptr(f, size, init);                         \
     /**/
 #define HPX_INTERNAL_HEAP_ALLOCATE_END(f, addr, size, init)                   \
-    if (use_ittnotify_api && __itt_heap_allocate_end_ptr)                     \
+    if (use_ittnotify_api && __itt_heap_allocate_end_ptr != 0)                \
         __itt_heap_allocate_end_ptr(f, addr, size, init);                     \
     /**/
 
 #define HPX_INTERNAL_HEAP_FREE_BEGIN(f, addr)                                 \
-    if (use_ittnotify_api && __itt_heap_free_begin_ptr)                       \
+    if (use_ittnotify_api && __itt_heap_free_begin_ptr != 0)                  \
         __itt_heap_free_begin_ptr(f, addr);                                   \
     /**/
 #define HPX_INTERNAL_HEAP_FREE_END(f, addr)                                   \
-    if (use_ittnotify_api && __itt_heap_free_end_ptr)                         \
+    if (use_ittnotify_api && __itt_heap_free_end_ptr != 0)                    \
         __itt_heap_free_end_ptr(f, addr);                                     \
     /**/
 
 #define HPX_INTERNAL_HEAP_REALLOCATE_BEGIN(f, addr, size, init)               \
-    if (use_ittnotify_api && __itt_heap_reallocate_begin_ptr)                 \
+    if (use_ittnotify_api && __itt_heap_reallocate_begin_ptr != 0)            \
         __itt_heap_reallocate_begin_ptr(f, addr, size, init);                 \
     /**/
 #define HPX_INTERNAL_HEAP_REALLOCATE_END(f, addr, new_addr, size, init)       \
-    if (use_ittnotify_api && __itt_heap_reallocate_end_ptr)                   \
+    if (use_ittnotify_api && __itt_heap_reallocate_end_ptr != 0)              \
         __itt_heap_reallocate_end_ptr(f, addr, new_addr, size, init);         \
     /**/
 
 #define HPX_INTERNAL_INTERNAL_ACCESS_BEGIN()                                  \
-    if (use_ittnotify_api && __itt_heap_internal_access_begin_ptr)            \
+    if (use_ittnotify_api && __itt_heap_internal_access_begin_ptr != 0)       \
         __itt_heap_internal_access_begin_ptr();                               \
     /**/
 #define HPX_INTERNAL_INTERNAL_ACCESS_END()                                    \
-    if (use_ittnotify_api && __itt_heap_internal_access_end_ptr)              \
+    if (use_ittnotify_api && __itt_heap_internal_access_end_ptr != 0)         \
         __itt_heap_internal_access_end_ptr();                                 \
     /**/
 
@@ -165,7 +166,10 @@ bool use_ittnotify_api = false;
     || (defined(__MWERKS__) && defined(_WIN32) && (__MWERKS__ >= 0x3000)) \
     || (defined(__ICL) && defined(_MSC_EXTENSIONS) && (_MSC_VER >= 1200))
 
+#if !defined(HPX_HAVE_APEX)
 #pragma comment(lib, "libittnotify.lib")
+#endif
+
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

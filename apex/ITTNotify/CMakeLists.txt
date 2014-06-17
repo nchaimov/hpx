@@ -16,20 +16,33 @@ set(ITTNOTIFY_SOURCE_DIR ${ITTNOTIFY_SOURCE_DIR} PARENT_SCOPE)
 set(ITTNOTIFY_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(ITTNOTIFY_BINARY_DIR ${ITTNOTIFY_BINARY_DIR} PARENT_SCOPE)
 
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  set(ittnofify_library_dependencies
+      apex${CMAKE_DEBUG_POSTFIX} ${LIBS} ${Boost_LIBRARIES})
+else()
+  set(ittnofify_library_dependencies
+      apex ${LIBS} ${Boost_LIBRARIES})
+endif()
+
 # Create a library called "ittnotify" which includes the source file
 # "ittnotify.cpp".
 # The extension is already found. Any number of sources could be listed here.
-add_library (ittnotifyStatic STATIC ittnotify.cpp)
-add_library (ittnotifyShared SHARED ittnotify.cpp)
-set_target_properties (ittnotifyStatic PROPERTIES OUTPUT_NAME ittnotify)
-set_target_properties (ittnotifyShared PROPERTIES OUTPUT_NAME ittnotify)
+if(NOT MSVC)
+  add_library (ittnotifyShared SHARED ittnotify.cpp)
+  set_target_properties (ittnotifyShared PROPERTIES OUTPUT_NAME ittnotify)
+  target_link_libraries (ittnotifyShared ${ittnofify_library_dependencies})
+  add_dependencies (ittnotifyShared apexShared)
+  set(ittnotify_install_targets ittnotifyShared)
+endif()
 
 # target_link_libraries (ittnotifyStatic ${LIBS} ${Boost_LIBRARIES})
 # gcc on apple needs the apex library to link the dylib
 # if(APPLE)
-target_link_libraries (ittnotifyShared apex ${LIBS} ${Boost_LIBRARIES})
-add_dependencies (ittnotifyShared apexShared)
+add_library (ittnotifyStatic STATIC ittnotify.cpp)
+set_target_properties (ittnotifyStatic PROPERTIES OUTPUT_NAME ittnotify)
+target_link_libraries (ittnotifyStatic ${ittnofify_library_dependencies})
 add_dependencies (ittnotifyStatic apexStatic)
+set(ittnotify_install_targets ${ittnotify_install_targets} ittnotifyStatic)
 # else()
 # target_link_libraries (ittnotifyShared ${LIBS})
 # endif()
@@ -41,7 +54,7 @@ include_directories ("${PROJECT_BINARY_DIR}/apex")
 INSTALL(FILES ittnotify.h DESTINATION include)
 INSTALL(FILES legacy/ittnotify.h DESTINATION include/legacy)
 
-INSTALL(TARGETS ittnotifyShared ittnotifyStatic
+INSTALL(TARGETS ${ittnotify_install_targets}
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib/hpx
   ARCHIVE DESTINATION lib/hpx

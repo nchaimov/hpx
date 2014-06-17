@@ -189,11 +189,16 @@ void __itt_stack_callee_enter(__itt_caller ctx);
 void __itt_stack_callee_leave(__itt_caller ctx);
 void __itt_stack_caller_destroy(__itt_caller ctx);
 
+#if defined(_WINDOWS) || defined(_WIN32) || defined(WIN32)
+extern __itt_mark_type (*__itt_mark_createA_ptr_)(char const* name);
+extern int (*__itt_markA_ptr_)(__itt_mark_type mark, char const* par);
+#else
 extern __itt_mark_type (*__itt_mark_create_ptr_)(char const* name);
-extern int (*__itt_mark_off_ptr_)(__itt_mark_type mark);
 extern int (*__itt_mark_ptr_)(__itt_mark_type mark, char const* par);
-extern __itt_caller (*__itt_stack_callee_create_ptr_)();
-extern void (*__itt_stack_caller_enter_ptr_)(__itt_caller ctx);
+#endif
+extern int (*__itt_mark_off_ptr_)(__itt_mark_type mark);
+extern __itt_caller (*__itt_stack_caller_create_ptr_)();
+extern void (*__itt_stack_callee_enter_ptr_)(__itt_caller ctx);
 extern void (*__itt_stack_callee_leave_ptr_)(__itt_caller ctx);
 extern void (*__itt_stack_caller_destroy_ptr_)(__itt_caller ctx);
 
@@ -249,12 +254,12 @@ extern void (*__itt_stack_caller_destroy_ptr_)(__itt_caller ctx);
 
 #if 0
 #define __itt_mark_create_ptr __itt_mark_create
-#define __itt_mark_off_ptr __itt_mark_off
 #define __itt_mark_ptr __itt_mark
+#define __itt_mark_off_ptr __itt_mark_off
 #define __itt_stack_caller_destroy_ptr __itt_stack_caller_destroy
 #define __itt_stack_callee_leave_ptr __itt_stack_callee_leave
-#define __itt_stack_callee_enter_ptr __itt_stack_callee_enter
 #define __itt_stack_caller_create_ptr __itt_stack_caller_create
+#define __itt_stack_callee_enter_ptr __itt_stack_callee_enter
 #endif
 
 #endif // ITTNOTIFY_H
