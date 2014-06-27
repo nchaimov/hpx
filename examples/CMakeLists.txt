@@ -28,6 +28,7 @@ set(subdirs
     startup_shutdown
     thread_aware_timer
     throttle
+    apex
    )
 
 if(HPX_HAVE_CXX11_LAMBDAS)

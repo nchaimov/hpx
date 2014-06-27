@@ -1,12 +1,11 @@
-/
-G//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //  Copyright (c) 2011 Bryce Lelbach
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ////////////////////////////////////////////////////////////////////////////////
 
-/ggG/ Naive SMP version implemented with futures.
+// Naive SMP version implemented with futures.
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/include/actions.hpp>
@@ -89,20 +88,8 @@ int main(int argc, char* argv[])
           "n value for the Fibonacci function")
         ;
 
-    std::set<apex::event_type> when = {apex::STARTUP, apex::SHUTDOWN, apex::NEW_NODE, apex::NEW_THREAD,
-        apex::START_EVENT, apex::STOP_EVENT, apex::SAMPLE_VALUE};
-    apex::register_event_policy(when, [](void * e){return true;}, [](void * e){
-        apex::event_data * evt = (apex::event_data *) e;
-        switch(evt->event_type_) {
-            case apex::STARTUP: std::cout      << "Startup event" << std::endl; break;
-            case apex::SHUTDOWN: std::cout     << "Shutdown event" << std::endl; break;
-            case apex::NEW_NODE: std::cout     << "New node event" << std::endl; break;
-            case apex::NEW_THREAD: std::cout   << "New thread event" << std::endl; break;
-            case apex::START_EVENT: std::cout  << "Start event" << std::endl; break;
-            case apex::STOP_EVENT: std::cout   << "Stop event" << std::endl; break;
-            case apex::SAMPLE_VALUE: std::cout << "Sample value event" << std::endl; break;
-            default: std::cout << "Unknown event" << std::endl;
-        }
+    apex::register_periodic_policy(1000, [](void * e){return true;}, [](void * e){
+            std::cout      << "Periodic policy" << std::endl;
     });
 
 
