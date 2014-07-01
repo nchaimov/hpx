@@ -42,7 +42,8 @@ set(apex_sources
     event_listener.cpp
     handler.cpp
     concurrency_handler.cpp
-    policy_handler.cpp)
+    policy_handler.cpp
+    RCR.bb.cpp)
 
 if(TAU_FOUND)
     hpx_info("apex" "Building APEX with TAU support")

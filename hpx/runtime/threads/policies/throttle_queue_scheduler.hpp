@@ -18,6 +18,8 @@
 #include <hpx/runtime/threads/policies/thread_queue.hpp>
 #include <hpx/runtime/threads/policies/affinity_data.hpp>
 #include <hpx/runtime/threads/policies/scheduler_base.hpp>
+#include <apex/apex.hpp>
+#include <apex/RCRblackboard.hpp>
 
 #include <boost/noncopyable.hpp>
 #include <boost/atomic.hpp>
@@ -26,6 +28,16 @@
 #include <hpx/config/warnings_prefix.hpp>
 
 #include <stdio.h>
+
+static bool apex_init = false;
+static int foo1 = 0;
+static RCRblackboard RCR;
+static volatile int64_t ** energy;
+static int64_t * savedEnergy;
+static struct timeval startts, curts;
+static int64_t maxThreads, minThreads;
+
+//#include <climits>
 
 // TODO: add branch prediction and function heat
 
@@ -39,7 +51,7 @@ namespace hpx { namespace threads { namespace policies
     // startup code
     extern bool minimal_deadlock_detection;
 #endif
-
+    static int apex_current_desired_active_threads = INT_MAX;
     ///////////////////////////////////////////////////////////////////////////
     /// The local_queue_scheduler maintains exactly one queue of work
     /// items (threads) per OS thread, where this OS thread pulls its next work
@@ -77,7 +89,7 @@ namespace hpx { namespace threads { namespace policies
               : num_queues_(1),
                 max_queue_thread_count_(max_thread_count),
                 numa_sensitive_(false)
-            {}
+	  {}
 
             init_parameter(std::size_t num_queues,
                     std::size_t max_queue_thread_count = max_thread_count,
@@ -85,7 +97,7 @@ namespace hpx { namespace threads { namespace policies
               : num_queues_(num_queues),
                 max_queue_thread_count_(max_queue_thread_count),
                 numa_sensitive_(numa_sensitive)
-            {}
+	  {}
 
             std::size_t num_queues_;
             std::size_t max_queue_thread_count_;
@@ -99,6 +111,7 @@ namespace hpx { namespace threads { namespace policies
             max_queue_thread_count_(init.max_queue_thread_count_),
             queues_(init.num_queues_),
             curr_queue_(0),
+	    queue_count_(init.num_queues_),
             numa_sensitive_(init.numa_sensitive_),
 #if !defined(HPX_NATIVE_MIC)        // we know that the MIC has one NUMA domain only
             steals_in_numa_domain_(init.num_queues_),
@@ -113,6 +126,9 @@ namespace hpx { namespace threads { namespace policies
 #endif
         {
 	  printf("starting Throttling Scheduler\n");
+          apex_current_desired_active_threads = queue_count_;
+          apex_current_threads = queue_count_;
+
             if (!deferred_initialization)
             {
                 BOOST_ASSERT(init.num_queues_ != 0);
@@ -286,37 +302,144 @@ namespace hpx { namespace threads { namespace policies
                 num_thread %= queue_size;
 
             HPX_ASSERT(num_thread < queue_size);
+	    set(active_, num_thread);
             return queues_[num_thread]->create_thread(data, initial_state,
                 run_now, ec);
         }
 
-      int apex_active_threads() {return 16;}
-      void TTthrottle(std::size_t num_thread, bool add_thread){ 
+        bool TTthrottle(std::size_t num_thread, int add_thread){ 
                 mask_cref_type this_numa_domain = numa_domain_masks_[num_thread];
 		std::size_t count_this_numa_domain = 0;
 		std::size_t count_other_numa_domain = 0;
 		std::size_t queues_size = queues_.size();
-	    
-                // steal thread from other queue
-                for (std::size_t i = 1; i !=  queues_size; ++i) // looking at everybody but me
-                {
-		  std::size_t const idx = (i + num_thread) % queues_size;
-		  if (test(this_numa_domain, idx) ) { // same numa domain as me
-		    if (test(active_,num_thread)) count_this_numa_domain++;
+
+
+		if (apex_init == false) {
+		  apex_init = true;
+
+		  // Initialize Blackboard
+		  bool ret = RCR.initBlackBoard();
+		  if (ret == false) {
+		    fprintf(stderr,"Error reading shared memory region\n");
+		    exit(1);
 		  }
-		  else if (test(active_,num_thread)) count_other_numa_domain++;
+		  // Blackboard counters (energy for now)
+		  int size = RCR.getNumOfNodes()*RCR.getNumOfSockets();
+		  energy = (volatile int64_t**)malloc(sizeof(int64_t*)*size);
+		  savedEnergy = (int64_t*)malloc(sizeof(int64_t*)*size);
 		  
+		  int n,s;
+		  for(n = 0; n < RCR.getNumOfNodes(); n++){
+		    for(s = 0; s < RCR.getNumOfSockets(); s++){		      
+		      energy[s]= RCR.getSocketMeter(ENERGY_STATUS, n, s);
+		      if (!energy[s]) {
+			std::cerr << "Error: Failed to find ENERGY_STATUS socket " << s << std::endl;
+			exit(1);
+		      }
+		    }
+		  }
+		  gettimeofday(&startts, NULL);
+
+		  // set up max thread and throttled thread count values
+		  {
+		    char* option = NULL;
+		    option = getenv("HPX_THROTTLE_MAX");
+		    if (option != NULL) {
+		      maxThreads = atoi(option);
+		    }
+		    else maxThreads = 16;
+		    option = getenv("HPX_THROTTLE_MIN");
+		    if (option != NULL) {
+		      minThreads = atoi(option);
+		    }
+		    else minThreads = 12;
+		  }
+
+		  // set up periodic counter check to drive throttling model
+		  apex::register_periodic_policy(1000, [](void * e){return true;}, [](void * e){
+		      // apex::register_event_policy(when, [](void * e){return true;}, [](void * e){
+		      apex::event_data * evt = (apex::event_data *) e;
+		      switch(evt->event_type_) {
+
+			// on startup set active threads to number of active queues
+			//    print message telling me that thottling active
+		      case apex::STARTUP: 
+			std::cout  << "Throttling active" << std::endl; 
+			break;
+
+			// once shutdown initiated try to complete as fast as possible
+			//     set active threads to number of active queues
+		      case apex::SHUTDOWN:
+			std::cout  << "Throttling shutdown" << std::endl; 
+			//apex_current_desired_active_threads = init.num_queues_; 
+			break;
+
+			// add node -- do nothing at moment
+		      case apex::NEW_NODE: 
+			std::cout  << "add node" << std::endl; 
+			break;
+			// add thread -- do nothing at moment
+
+		      case apex::NEW_THREAD: 
+			std::cout  << "add thread" << std::endl; 
+			break;
+
+			// start event -- do nothing at moment (do I really want to be making the
+			//     throttle adjustment here? -- on RCRdaemon events?)
+		      case apex::START_EVENT: 
+			std::cout  << "event start" << std::endl; 
+			break;
+
+			// stop event -- do nothing at moment
+		      case apex::STOP_EVENT:
+			std::cout  << "event stop" << std::endl; 
+			break;
+
+			// read sample -- check to see if memory utilization has changed since last sample
+			//     and reset perferred active threads if needed
+		      case apex::SAMPLE_VALUE: 
+			std::cout  << "sample value" << std::endl; 
+			apex_current_desired_active_threads=1;
+			break;
+
+			// read sample -- check to see if memory utilization has changed since last sample
+			//     and reset perferred active threads if needed
+		      case apex::PERIODIC: 
+			{
+			  double watts = 0.0;
+			  double time = 0.0;
+			  int64_t totalEnergy = 0;
+			  gettimeofday(&curts, NULL);
+			  time = (curts.tv_sec+curts.tv_usec/1000000.0)-(startts.tv_sec+startts.tv_usec/1000000.0);
+			  startts = curts;
+			  int n,s;
+			  for(n = 0; n < RCR.getNumOfNodes(); n++){
+			    for(s = 0; s < RCR.getNumOfSockets(); s++){
+			      int64_t e = *energy[s];
+			      totalEnergy += e - savedEnergy[s];
+			      savedEnergy[s] = e;
+			    }
+			  }
+			  watts = totalEnergy/(time * 100000.0);
+			
+			  if (watts > 80.0) { // throttle -- should be environment varaible value
+			    apex_current_desired_active_threads=minThreads;
+			  }
+			  else if (watts < 50.0) { 
+			    apex_current_desired_active_threads=maxThreads;
+			  }
+			}
+			break;
+			
+		      default: std::cout << "Unknown event " << evt->event_type_  << std::endl;
+		      }
+		    });
 		}
 
-		// right now I have active in each numa domain and I have know whether 
-		// threads need to be added or deleted
-		if (add_thread) { // need more threads
-		  if(count_other_numa_domain >= count_this_numa_domain) set(active_, num_thread);
-		}
-		else {  // want fewer threads
-		  if(count_this_numa_domain >= count_other_numa_domain) set(active_, num_thread);
-		}
-      }
+
+		if (num_thread < apex_current_desired_active_threads) return true;
+		else return false;
+        }
 
         /// Return the next thread to be executed, return false if none is
         /// available
@@ -328,16 +451,10 @@ namespace hpx { namespace threads { namespace policies
             {
                 HPX_ASSERT(num_thread < queues_size);
 
-		
-		//test		if (num_thread >= apex_active_threads()) return false;//throttle the thread count 
-		// down from the top -- i.e. uneven load
-		// better
-		if (queues_size != apex_active_threads()) { // number of active has changed
-       		  TTthrottle(num_thread, queues_size>apex_active_threads()); // change number of threads -- either more or less
-		} 
-		if (!test(active_, num_thread)) return false; // this thread not active 
-		
+		bool ret = TTthrottle(num_thread, apex_current_threads<apex_current_desired_active_threads); // am I throttled?
+		if (!ret) return false;  // throttled --  don't grap any work  
 
+		// grab work if available
                 thread_queue_type* q = queues_[num_thread];
                 bool result = q->get_next_thread(thrd);
 
@@ -353,7 +470,7 @@ namespace hpx { namespace threads { namespace policies
                 if (have_staged)
                     return false;
             }
-
+	    /*
             if (numa_sensitive_)
             {
                 mask_cref_type this_numa_domain = numa_domain_masks_[num_thread];
@@ -381,6 +498,7 @@ namespace hpx { namespace threads { namespace policies
             }
 
             else // not NUMA-sensitive
+	    */
             {
                 for (std::size_t i = 1; i != queues_size; ++i)
                 {
@@ -742,7 +860,10 @@ namespace hpx { namespace threads { namespace policies
         std::size_t max_queue_thread_count_;
         std::vector<thread_queue_type*> queues_;
         boost::atomic<std::size_t> curr_queue_;
+        int queue_count_ = 0;
+        bool apex_current_threads = 0;
         bool numa_sensitive_;
+
       //#if defined (HPX_THROTTLE_SCHEDULER)
         mask_type active_;
       //#endif
