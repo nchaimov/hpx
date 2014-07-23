@@ -641,7 +641,7 @@ namespace hpx
             return 0;
         }
 #endif
-#if defined(HPX_THROTTLE_SCHEDULER)
+#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
         ///////////////////////////////////////////////////////////////////////
         // local scheduler (one queue for each OS threads)
         int run_throttle(startup_function_type const& startup,
@@ -1170,12 +1170,12 @@ namespace hpx
 #endif
             }
             else if (0 == std::string("throttle").find(cfg.queuing_)) {
-#if defined(HPX_THROTTLE_SCHEDULER)
+#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
                 result = detail::run_throttle(startup, shutdown, cfg, blocking);
 #else
-		throw std::logic_error("Command line option --hpx:queuing=throttle "
-				       "is not configured in this build. Please rebuild with "
-				       "'cmake -DHPX_THROTTLE_SCHEDULER=ON'.");
+        throw std::logic_error("Command line option --hpx:queuing=throttle "
+                       "is not configured in this build. Please rebuild with "
+                       "'cmake -DHPX_THROTTLE_SCHEDULER=ON'.");
 #endif
             }
             else {

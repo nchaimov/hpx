@@ -6,10 +6,16 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/util/io_service_pool.hpp>
 #include <hpx/runtime/threads/resource_manager.hpp>
+#if defined(HPX_LOCAL_SCHEDULER)
 #include <hpx/runtime/threads/policies/local_queue_scheduler.hpp>
+#endif
 #include <hpx/runtime/threads/policies/local_priority_queue_scheduler.hpp>
+#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
 #include <hpx/runtime/threads/policies/throttle_queue_scheduler.hpp>
+#endif
+#if defined(HPX_STATIC_PRIORITY_SCHEDULER)
 #include <hpx/runtime/threads/policies/static_priority_queue_scheduler.hpp>
+#endif
 #include <hpx/runtime/threads/detail/scheduling_loop.hpp>
 #include <hpx/runtime/threads/detail/create_thread.hpp>
 #include <hpx/runtime/threads/detail/set_thread_state.hpp>
@@ -409,7 +415,7 @@ namespace hpx { namespace threads { namespace executors
     {}
 #endif
 
-#if defined(HPX_THROTTLE_SCHEDULER)
+#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
     ///////////////////////////////////////////////////////////////////////////
     throttle_queue_executor::throttle_queue_executor()
       : scheduled_executor(new detail::thread_pool_executor<
