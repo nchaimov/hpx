@@ -206,7 +206,7 @@ namespace hpx
                      >
             class HPX_EXPORT local_queue_scheduler;
 
-#if defined(HPX_THROTTLE_SCHEDULER)
+#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
             template <typename Mutex = boost::mutex
                     , typename PendingQueuing = lockfree_fifo
                     , typename StagedQueuing = lockfree_fifo

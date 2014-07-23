@@ -9,7 +9,7 @@ endif()
 
 hpx_find_package(RCR
   LIBRARIES rcrtool librcrtool
-  LIBRARY_PATHS . 
-  HEADERS rcrBlackboard.hpp 
+  LIBRARY_PATHS .
+  HEADERS RCRblackboard.hpp
   HEADER_PATHS protobuf)
 

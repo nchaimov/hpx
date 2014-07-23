@@ -1733,7 +1733,7 @@ template class HPX_EXPORT hpx::threads::threadmanager_impl<
     hpx::threads::policies::callback_notifier>;
 #endif
 
-#if defined(HPX_THROTTLE_SCHEDULER)
+#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
 #include <hpx/runtime/threads/policies/throttle_queue_scheduler.hpp>
 template class HPX_EXPORT hpx::threads::threadmanager_impl<
     hpx::threads::policies::throttle_queue_scheduler<>,

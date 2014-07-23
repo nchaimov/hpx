@@ -34,6 +34,7 @@ else()
   add_definitions(-D_SCL_SECURE_NO_DEPRECATE)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
   add_definitions(-D_CRT_NONSTDC_NO_WARNINGS)
+  add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
 
 set(apex_sources
@@ -42,8 +43,14 @@ set(apex_sources
     event_listener.cpp
     handler.cpp
     concurrency_handler.cpp
-    policy_handler.cpp
-    RCR.bb.cpp)
+    policy_handler.cpp)
+
+find_package(HPX_RCR)
+
+if(HAVE_RCR)
+  hpx_add_config_define(HPX_HAVE_RCR 1)
+  set(apex_sources ${apex_sources} RCR.bb.cpp)
+endif()
 
 if(TAU_FOUND)
     hpx_info("apex" "Building APEX with TAU support")
