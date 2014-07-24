@@ -1606,9 +1606,15 @@ if(HPX_HAVE_APEX)
   set(APEX_FOUND ON)
 
   if(NOT MSVC)
-    set(apex_libraries
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+      set(apex_libraries
+        ${APEX_BINARY_DIR}/libapex${CMAKE_DEBUG_POSTFIX}.so
+        ${ITTNOTIFY_BINARY_DIR}/libittnotify${CMAKE_DEBUG_POSTFIX}.so)
+    else()
+      set(apex_libraries
         ${APEX_BINARY_DIR}/libapex.so
         ${ITTNOTIFY_BINARY_DIR}/libittnotify.so)
+    endif()
   else()
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
       set(apex_libraries
