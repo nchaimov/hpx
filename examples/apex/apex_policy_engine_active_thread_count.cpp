@@ -72,7 +72,7 @@ id_type get_counter_id() {
 
 void setup_counters() {
     try {
-		id_type id = get_counter_id();
+        id_type id = get_counter_id();
         // We need to explicitly start all counters before we can use them. For
         // certain counters this could be a no-op, in which case start will return
         // 'false'.
@@ -84,7 +84,7 @@ void setup_counters() {
     catch(hpx::exception const& e) {
         std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
     }
-	counters_initialized = true;
+    counters_initialized = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -113,14 +113,14 @@ int hpx_main(boost::program_options::variables_map& vm)
 bool test_function(void * argument) {
     if (!counters_initialized) return false;
     try {
-		id_type id = get_counter_id();
-	    counter_value value1 = performance_counter::get_value(id);
+        id_type id = get_counter_id();
+        counter_value value1 = performance_counter::get_value(id);
         std::cout << "Active threads " << value1.get_value<int>() << std::endl;
-		if (value1.get_value<int>() % 2 == 1) {
-		  return true;
-	    } else {
-		  return false;
-	    }
+        if (value1.get_value<int>() % 2 == 1) {
+          return true;
+        } else {
+          return false;
+        }
     }
     catch(hpx::exception const& e) {
         std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
@@ -135,7 +135,7 @@ void action_function(void * argument) {
 void register_policies() {
     //std::set<apex::event_type> when = {apex::START_EVENT};
     //apex::register_event_policy(when, &test_function, &action_function);
-    apex::register_periodic_policy(10000, &test_function, &action_function);
+    apex::register_periodic_policy(1000, &test_function, &action_function);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
