@@ -13,16 +13,16 @@
 #include <map>
 #include <set>
 #include <list>
-#include <atomic>
+
+#include <boost/atomic/atomic.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/shared_ptr.hpp>
 
 #ifdef SIGEV_THREAD_ID
 #ifndef sigev_notify_thread_id
 #define sigev_notify_thread_id _sigev_un._tid
 #endif /* ifndef sigev_notify_thread_id */
 #endif /* ifdef SIGEV_THREAD_ID */
-
-using namespace std;
 
 namespace apex {
 
@@ -38,26 +38,29 @@ struct policy_instance {
 
 class policy_handler : public handler, public event_listener {
 private:
+  typedef boost::shared_mutex mutex_type;
+
   void _init(void);
-  std::list<policy_instance*> startup_policies;
-  std::list<policy_instance*> shutdown_policies;
-  std::list<policy_instance*> new_node_policies;
-  std::list<policy_instance*> new_thread_policies;
-  std::list<policy_instance*> start_event_policies;
-  std::list<policy_instance*> stop_event_policies;
-  std::list<policy_instance*> sample_value_policies;
-  std::list<policy_instance*> periodic_policies;
-  boost::shared_mutex startup_mutex;
-  boost::shared_mutex shutdown_mutex;
-  boost::shared_mutex new_node_mutex;
-  boost::shared_mutex new_thread_mutex;
-  boost::shared_mutex start_event_mutex;
-  boost::shared_mutex stop_event_mutex;
-  boost::shared_mutex sample_value_mutex;
-  boost::shared_mutex periodic_mutex;
-  void call_policies(const std::list<policy_instance*> & policies,
-                     event_data * event_data_);
-  std::atomic_int next_id;
+  std::list<boost::shared_ptr<policy_instance> > startup_policies;
+  std::list<boost::shared_ptr<policy_instance> > shutdown_policies;
+  std::list<boost::shared_ptr<policy_instance> > new_node_policies;
+  std::list<boost::shared_ptr<policy_instance> > new_thread_policies;
+  std::list<boost::shared_ptr<policy_instance> > start_event_policies;
+  std::list<boost::shared_ptr<policy_instance> > stop_event_policies;
+  std::list<boost::shared_ptr<policy_instance> > sample_value_policies;
+  std::list<boost::shared_ptr<policy_instance> > periodic_policies;
+  mutex_type startup_mutex;
+  mutex_type shutdown_mutex;
+  mutex_type new_node_mutex;
+  mutex_type new_thread_mutex;
+  mutex_type start_event_mutex;
+  mutex_type stop_event_mutex;
+  mutex_type sample_value_mutex;
+  mutex_type periodic_mutex;
+  void call_policies(
+    const std::list<boost::shared_ptr<policy_instance> > & policies,
+    event_data * event_data_);
+  boost::atomic_int next_id;
 public:
   policy_handler (void);
   policy_handler (unsigned int period);
