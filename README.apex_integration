@@ -22,3 +22,52 @@ Release or RelWithDebInfo, you must also specify -DHPX_THREAD_DEBUG_INFO=1, or a
 thread names will be reported to APEX as "<unknown>".
 
 
+=========================================================================
+FULL INSTRUCTIONS:
+=========================================================================
+
+To configure/build TAU:
+-------------------------------------------------------------------------
+wget http://tau.uoregon.edu/tau.tgz
+tar -xvzf tau.tgz
+cd tau-2.x.x
+./configure  -pthread -tag=hpx -prefix=$HOME/install/tau \
+-bfd=download -unwind=download -iowrapper
+make install
+
+To configure HPX:
+-------------------------------------------------------------------------
+
+After getting the source code from git, follow the instructions below.
+These instructions will work on Hermione, other machines will have 
+different paths to installed libraries.
+
+-------------------------------------------------------------------------
+# contents of a sourceme.sh file....
+# set configuration parameters
+export TAU_ROOT=$HOME/install/tau
+export BOOST_ROOT=/opt/boost/1.55.0-release
+export HPX_HAVE_ITTNOTIFY=1
+
+# set runtime parameters
+export APEX_POLICY=1
+export APEX_TAU=1
+export HPX_HAVE_ITTNOTIFY=1
+
+alias confighpxapex='cmake -DTCMALLOC_ROOT=/usr \
+-DBOOST_ROOT=$BOOST_ROOT \
+-DCMAKE_BUILD_TYPE=Debug \
+-DCMAKE_INSTALL_PREFIX=. \
+-DHPX_HAVE_APEX=1 \
+-DTAU_ROOT=$TAU_ROOT \
+..'
+-------------------------------------------------------------------------
+
+source sourceme.sh
+mkdir build
+cd build
+confighpxapex
+make 
+make install
+make examples.apex
+make examples.miniGhost
