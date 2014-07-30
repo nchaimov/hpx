@@ -26,15 +26,27 @@ thread names will be reported to APEX as "<unknown>".
 FULL INSTRUCTIONS:
 =========================================================================
 
+-------------------------------------------------------------------------
+To configure/build PAPI:
+-------------------------------------------------------------------------
+wget http://icl.cs.utk.edu/projects/papi/downloads/papi-5.3.2.tar.gz
+tar -xvzf papi-5.3.2.tar.gz
+cd papi-5.3.2/src
+./configure --prefix=$HOME/install/papi-5.3.2
+make
+make install
+
+-------------------------------------------------------------------------
 To configure/build TAU:
 -------------------------------------------------------------------------
 wget http://tau.uoregon.edu/tau.tgz
 tar -xvzf tau.tgz
 cd tau-2.x.x
 ./configure  -pthread -tag=hpx -prefix=$HOME/install/tau \
--bfd=download -unwind=download -iowrapper
+-bfd=download -unwind=download -iowrapper -papi=$HOME/install/papi-5.3.2
 make install
 
+-------------------------------------------------------------------------
 To configure HPX:
 -------------------------------------------------------------------------
 
@@ -71,3 +83,16 @@ make
 make install
 make examples.apex
 make examples.miniGhost
+
+-------------------------------------------------------------------------
+To run and collect hardware counters for each HPX task:
+-------------------------------------------------------------------------
+# select some combination of counters
+export TAU_METRICS=TIME:PAPI_TOT_INS:PAPI_L2_TCM
+./bin/mini_ghost --hpx:threads 12
+# check the total instructions
+cd MULTI__PAPI_TOT_INS
+$TAU_ROOT/x86_64/bin/pprof
+# check the L2 cache misses
+cd MULTI__PAPI_L2_TCM
+$TAU_ROOT/x86_64/bin/pprof
