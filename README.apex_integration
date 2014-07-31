@@ -82,7 +82,7 @@ confighpxapex
 make 
 make install
 make examples.apex
-make examples.miniGhost
+make examples.mini_ghost
 
 -------------------------------------------------------------------------
 To run and collect hardware counters for each HPX task:
