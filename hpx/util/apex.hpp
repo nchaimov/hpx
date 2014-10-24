@@ -20,7 +20,7 @@ namespace hpx { namespace util
     {
         if (use_ittnotify_api)
         {
-            apex::init();
+            apex::init(NULL);
             apex::set_node_id(hpx::get_locality_id());
         }
     }
@@ -32,27 +32,29 @@ namespace hpx { namespace util
     }
 
     struct apex_wrapper
-    {
+    {                      
+        
         apex_wrapper(char const* const name)
           : name_(name)
         {
             if (use_ittnotify_api)
-                apex::start(name_);
+                profiler_ = apex::start(name_);
         }
         ~apex_wrapper()
         {
             if (use_ittnotify_api)
-                apex::stop(name_);
+                apex::stop(profiler_);
         }
 
         char const* const name_;
+        void * profiler_;
     };
 
     struct apex_wrapper_init
     {
         apex_wrapper_init(int argc, char **argv)
         {
-            apex::init(argc, argv);
+            apex::init(argc, argv, NULL);
         }
         ~apex_wrapper_init()
         {
