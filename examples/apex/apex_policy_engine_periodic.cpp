@@ -10,7 +10,7 @@
 #include <hpx/hpx_init.hpp>
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
-#include <apex/apex.hpp>
+#include <apex.hpp>
 
 #include <iostream>
 
@@ -74,6 +74,13 @@ int hpx_main(boost::program_options::variables_map& vm)
 }
 //]
 
+void register_policy(void) {
+    apex::register_periodic_policy(1000, [](apex_context const& context) {
+        std::cout << "Periodic policy!" << std::endl;        
+        return true;
+    });
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //[fib_main
 int main(int argc, char* argv[])
@@ -88,10 +95,7 @@ int main(int argc, char* argv[])
           "n value for the Fibonacci function")
         ;
 
-    apex::register_periodic_policy(1000, [](void * e){return true;}, [](void * e){
-            std::cout      << "Periodic policy" << std::endl;
-    });
-
+    hpx::register_startup_function(register_policy);
 
     // Initialize and run HPX
     return hpx::init(desc_commandline, argc, argv);

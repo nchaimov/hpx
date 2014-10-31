@@ -12,7 +12,7 @@
 #include <hpx/include/performance_counters.hpp>
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
-#include <apex/apex.hpp>
+#include <apex.hpp>
 
 #include <iostream>
 
@@ -28,6 +28,8 @@ boost::uint64_t fibonacci(boost::uint64_t n);
 // invocation to work.
 HPX_PLAIN_ACTION(fibonacci, fibonacci_action);
 //]
+
+hpx::naming::id_type counter_id;
 
 ///////////////////////////////////////////////////////////////////////////////
 //[fib_func
@@ -80,6 +82,7 @@ void setup_counters() {
         std::cout << "Counters initialized! " << id << std::endl;
         counter_value value = performance_counter::get_value(id);
         std::cout << "Active threads " << value.get_value<int>() << std::endl;
+        counter_id = id;
     }
     catch(hpx::exception const& e) {
         std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
@@ -110,32 +113,27 @@ int hpx_main(boost::program_options::variables_map& vm)
 }
 //]
 
-bool test_function(void * argument) {
+bool test_function(apex_context const& context) {
     if (!counters_initialized) return false;
-    try {
-        id_type id = get_counter_id();
-        counter_value value1 = performance_counter::get_value(id);
-        std::cout << "Active threads " << value1.get_value<int>() << std::endl;
+    //try {
+        //id_type id = get_counter_id();
+        counter_value value1 = performance_counter::get_value(counter_id);
         if (value1.get_value<int>() % 2 == 1) {
           return true;
         } else {
           return false;
         }
-    }
-    catch(hpx::exception const& e) {
-        std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
-        return false;
-    }
-}
-
-void action_function(void * argument) {
-    std::cout << "Active threads odd" << std::endl;
+    //}
+    //catch(hpx::exception const& e) {
+    //    std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
+    //    return false;
+    //}
 }
 
 void register_policies() {
     //std::set<apex::event_type> when = {apex::START_EVENT};
-    //apex::register_event_policy(when, &test_function, &action_function);
-    apex::register_periodic_policy(1000, &test_function, &action_function);
+    //apex::register_policy(START_EVENT, test_function);
+    apex::register_periodic_policy(1000, test_function);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

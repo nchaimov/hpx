@@ -4,6 +4,8 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/hpx_fwd.hpp>
+#include <hpx/include/runtime.hpp>
+#include <iostream>
 
 #ifdef HPX_HAVE_APEX
 #include <apex.hpp>
