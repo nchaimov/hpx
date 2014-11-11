@@ -17,7 +17,7 @@ HPX commit.
 
 If you are going to be making changes in the submodule, you should
 be running at least git 1.8.2. Earlier versions check out the correct
-commit in an "undetached head" state which makes it easy to lose
+commit in an "detached head" state which makes it easy to lose
 local changes accidentally.
 
 *** git submodule Tutorial ***

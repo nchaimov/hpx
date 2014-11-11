@@ -115,7 +115,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
 bool test_function(apex_context const& context) {
     if (!counters_initialized) return false;
-    //try {
+    try {
         //id_type id = get_counter_id();
         counter_value value1 = performance_counter::get_value(counter_id);
         if (value1.get_value<int>() % 2 == 1) {
@@ -123,11 +123,11 @@ bool test_function(apex_context const& context) {
         } else {
           return false;
         }
-    //}
-    //catch(hpx::exception const& e) {
-    //    std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
-    //    return false;
-    //}
+    }
+    catch(hpx::exception const& e) {
+        std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 void register_policies() {
