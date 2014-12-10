@@ -30,7 +30,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace threads { namespace policies
 {
-#if HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
     ///////////////////////////////////////////////////////////////////////////
     // We globally control whether to do minimal deadlock detection using this
     // global bool variable. It will be set once by the runtime configuration
@@ -146,7 +146,7 @@ namespace hpx { namespace threads { namespace policies
 
         bool numa_sensitive() const { return numa_sensitive_; }
 
-#if HPX_THREAD_MAINTAIN_CREATION_AND_CLEANUP_RATES
+#ifdef HPX_THREAD_MAINTAIN_CREATION_AND_CLEANUP_RATES
         boost::uint64_t get_creation_time(bool reset)
         {
             boost::uint64_t time = 0;
@@ -179,7 +179,7 @@ namespace hpx { namespace threads { namespace policies
         }
 #endif
 
-#if HPX_THREAD_MAINTAIN_STEALING_COUNTS
+#ifdef HPX_THREAD_MAINTAIN_STEALING_COUNTS
         std::size_t get_num_pending_misses(std::size_t num_thread, bool reset)
         {
             std::size_t num_pending_misses = 0;
@@ -340,11 +340,11 @@ namespace hpx { namespace threads { namespace policies
         ///////////////////////////////////////////////////////////////////////
         // create a new thread and schedule it if the initial state is equal to
         // pending
-        thread_id_type create_thread(thread_init_data& data,
+        void create_thread(thread_init_data& data, thread_id_type* id,
             thread_state_enum initial_state, bool run_now, error_code& ec,
             std::size_t num_thread)
         {
-#if HPX_THREAD_MAINTAIN_TARGET_ADDRESS
+#ifdef HPX_THREAD_MAINTAIN_TARGET_ADDRESS
             // try to figure out the NUMA node where the data lives
             if (numa_sensitive_ && std::size_t(-1) == num_thread) {
                 mask_cref_type mask =
@@ -365,16 +365,27 @@ namespace hpx { namespace threads { namespace policies
             // now create the thread
             if (data.priority == thread_priority_critical) {
                 std::size_t num = num_thread % high_priority_queues_.size();
-                return high_priority_queues_[num]->create_thread(data,
+                high_priority_queues_[num]->create_thread(data, id,
                     initial_state, run_now, ec);
+                return;
             }
-            else if (data.priority == thread_priority_low) {
-                return low_priority_queue_.create_thread(data, initial_state,
+
+            if (data.priority == thread_priority_boost) {
+                data.priority = thread_priority_normal;
+                std::size_t num = num_thread % high_priority_queues_.size();
+                high_priority_queues_[num]->create_thread(data, id,
+                    initial_state, run_now, ec);
+                return;
+            }
+
+            if (data.priority == thread_priority_low) {
+                low_priority_queue_.create_thread(data, id, initial_state,
                     run_now, ec);
+                return;
             }
 
             HPX_ASSERT(num_thread < queue_size);
-            return queues_[num_thread]->create_thread(data, initial_state,
+            queues_[num_thread]->create_thread(data, id, initial_state,
                 run_now, ec);
         }
 
@@ -384,8 +395,9 @@ namespace hpx { namespace threads { namespace policies
             boost::int64_t& idle_loop_count, threads::thread_data_base*& thrd)
         {
             std::size_t queues_size = queues_.size();
+            std::size_t high_priority_queues = high_priority_queues_.size();
 
-            if (num_thread < high_priority_queues_.size())
+            if (num_thread < high_priority_queues)
             {
                 thread_queue_type* q = high_priority_queues_[num_thread];
                 bool result = q->get_next_thread(thrd);
@@ -427,10 +439,11 @@ namespace hpx { namespace threads { namespace policies
 
                     HPX_ASSERT(idx != num_thread);
 
-                    if (!test(this_numa_domain, idx) && !test(numa_domain, idx))
+                    if (!test(this_numa_domain, idx) && !test(numa_domain, idx)) //-V560 //-V600 //-V111
                         continue;
 
-                    if (idx < high_priority_queues_.size())
+                    if (idx < high_priority_queues &&
+                        num_thread < high_priority_queues)
                     {
                         thread_queue_type* q = high_priority_queues_[idx];
                         if (q->get_next_thread(thrd))
@@ -460,7 +473,8 @@ namespace hpx { namespace threads { namespace policies
 
                     HPX_ASSERT(idx != num_thread);
 
-                    if (idx < high_priority_queues_.size())
+                    if (idx < high_priority_queues &&
+                        num_thread < high_priority_queues)
                     {
                         thread_queue_type* q = high_priority_queues_[idx];
                         if (q->get_next_thread(thrd))
@@ -491,7 +505,9 @@ namespace hpx { namespace threads { namespace policies
             if (std::size_t(-1) == num_thread)
                 num_thread = ++curr_queue_ % queues_.size();
 
-            if (priority == thread_priority_critical) {
+            if (priority == thread_priority_critical ||
+                priority == thread_priority_boost)
+            {
                 std::size_t num = num_thread % high_priority_queues_.size();
                 high_priority_queues_[num]->schedule_thread(thrd);
             }
@@ -507,7 +523,22 @@ namespace hpx { namespace threads { namespace policies
         void schedule_thread_last(threads::thread_data_base* thrd, std::size_t num_thread,
             thread_priority priority = thread_priority_normal)
         {
-            local_priority_queue_scheduler::schedule_thread(thrd, num_thread, priority);
+            if (std::size_t(-1) == num_thread)
+                num_thread = ++curr_queue_ % queues_.size();
+
+            if (priority == thread_priority_critical ||
+                priority == thread_priority_boost)
+            {
+                std::size_t num = num_thread % high_priority_queues_.size();
+                high_priority_queues_[num]->schedule_thread(thrd, true);
+            }
+            else if (priority == thread_priority_low) {
+                low_priority_queue_.schedule_thread(thrd, true);
+            }
+            else {
+                HPX_ASSERT(num_thread < queues_.size());
+                queues_[num_thread]->schedule_thread(thrd, true);
+            }
         }
 
         /// Destroy the passed thread as it has been terminated
@@ -598,6 +629,7 @@ namespace hpx { namespace threads { namespace policies
                 case thread_priority_normal:
                     return queues_[num_thread]->get_thread_count(state);
 
+                case thread_priority_boost:
                 case thread_priority_critical:
                     {
                         if (num_thread < high_priority_queues_.size())
@@ -628,6 +660,8 @@ namespace hpx { namespace threads { namespace policies
 
                     for (std::size_t i = 0; i != queues_.size(); ++i)
                         count += queues_[i]->get_thread_count(state);
+
+                    break;
                 }
 
             case thread_priority_low:
@@ -640,6 +674,7 @@ namespace hpx { namespace threads { namespace policies
                     break;
                 }
 
+            case thread_priority_boost:
             case thread_priority_critical:
                 {
                     for (std::size_t i = 0; i != high_priority_queues_.size(); ++i)
@@ -659,7 +694,7 @@ namespace hpx { namespace threads { namespace policies
             return count;
         }
 
-#if HPX_THREAD_MAINTAIN_QUEUE_WAITTIME
+#ifdef HPX_THREAD_MAINTAIN_QUEUE_WAITTIME
         ///////////////////////////////////////////////////////////////////////
         // Queries the current average thread wait time of the queues.
         boost::int64_t get_average_thread_wait_time(
@@ -782,13 +817,15 @@ namespace hpx { namespace threads { namespace policies
                 running, idle_loop_count, added) && result;
             if (0 != added) return result;
 
+            std::size_t high_priority_queues = high_priority_queues_.size();
+
             if (numa_sensitive_)
             {
                 // steal work items: first try to steal from other cores in
                 // the same NUMA node
 
 #if !defined(HPX_NATIVE_MIC)        // we know that the MIC has one NUMA domain only
-                if (test(steals_in_numa_domain_, num_thread))
+                if (test(steals_in_numa_domain_, num_thread)) //-V600 //-V111
 #endif
                 {
                     mask_cref_type numa_domain_mask =
@@ -800,10 +837,11 @@ namespace hpx { namespace threads { namespace policies
 
                         HPX_ASSERT(idx != num_thread);
 
-                        if (!test(numa_domain_mask, topology_.get_pu_number(idx)))
+                        if (!test(numa_domain_mask, topology_.get_pu_number(idx))) //-V600
                             continue;
 
-                        if (idx < high_priority_queues_.size())
+                        if (idx < high_priority_queues &&
+                            num_thread < high_priority_queues)
                         {
                             result = high_priority_queues_[num_thread]->
                                 wait_or_add_new(running, idle_loop_count,
@@ -833,7 +871,7 @@ namespace hpx { namespace threads { namespace policies
 
 #if !defined(HPX_NATIVE_MIC)        // we know that the MIC has one NUMA domain only
                 // if nothing found, ask everybody else
-                if (test(steals_outside_numa_domain_, num_thread))
+                if (test(steals_outside_numa_domain_, num_thread)) //-V600 //-V111
                 {
                     mask_cref_type numa_domain_mask =
                         outside_numa_domain_masks_[num_thread];
@@ -844,10 +882,11 @@ namespace hpx { namespace threads { namespace policies
 
                         HPX_ASSERT(idx != num_thread);
 
-                        if (!test(numa_domain_mask, topology_.get_pu_number(idx)))
+                        if (!test(numa_domain_mask, topology_.get_pu_number(idx))) //-V600
                             continue;
 
-                        if (idx < high_priority_queues_.size())
+                        if (idx < high_priority_queues &&
+                            num_thread < high_priority_queues)
                         {
                             result = high_priority_queues_[num_thread]->
                                 wait_or_add_new(running, idle_loop_count,
@@ -885,7 +924,8 @@ namespace hpx { namespace threads { namespace policies
 
                     HPX_ASSERT(idx != num_thread);
 
-                    if (idx < high_priority_queues_.size())
+                    if (idx < high_priority_queues &&
+                        num_thread < high_priority_queues)
                     {
                         result = high_priority_queues_[num_thread]->
                             wait_or_add_new(running, idle_loop_count, added,
@@ -912,7 +952,7 @@ namespace hpx { namespace threads { namespace policies
                 }
             }
 
-#if HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
             // no new work is available, are we deadlocked?
             if (HPX_UNLIKELY(minimal_deadlock_detection && LHPX_ENABLED(error)))
             {

@@ -18,9 +18,7 @@
 #include <hpx/runtime/agas/namespace_action_code.hpp>
 #include <hpx/runtime/components/component_type.hpp>
 #include <hpx/runtime/components/server/fixed_component_base.hpp>
-#include <hpx/runtime/naming/locality.hpp>
 #include <hpx/util/insert_checked.hpp>
-#include <hpx/util/merging_map.hpp>
 #include <hpx/util/logging.hpp>
 #include <hpx/util/high_resolution_clock.hpp>
 #include <hpx/lcos/local/mutex.hpp>
@@ -28,8 +26,6 @@
 #include <map>
 
 #include <boost/format.hpp>
-#include <boost/fusion/include/vector.hpp>
-#include <boost/fusion/include/at_c.hpp>
 
 namespace hpx { namespace agas
 {
@@ -117,12 +113,7 @@ struct HPX_EXPORT primary_namespace
 
     typedef std::pair<gva, boost::uint32_t> gva_table_data_type;
     typedef std::map<naming::gid_type, gva_table_data_type> gva_table_type;
-
-    typedef util::merging_map<naming::gid_type, boost::int64_t>
-        refcnt_table_type;
-
-    typedef std::pair<refcnt_table_type::iterator, refcnt_table_type::iterator>
-        refcnt_match;
+    typedef std::map<naming::gid_type, boost::int64_t> refcnt_table_type;
     // }}}
 
   private:
@@ -132,7 +123,6 @@ struct HPX_EXPORT primary_namespace
     gva_table_type gvas_;
     refcnt_table_type refcnts_;
     std::string instance_name_;
-    naming::locality locality_;
     naming::gid_type next_id_;      // next available gid
     boost::uint32_t locality_id_;   // our locality id
 
@@ -224,7 +214,8 @@ struct HPX_EXPORT primary_namespace
     /// Dump the credit counts of all matching ranges. Expects that \p l
     /// is locked.
     void dump_refcnt_matches(
-        refcnt_match match
+        refcnt_table_type::iterator lower_it
+      , refcnt_table_type::iterator upper_it
       , naming::gid_type const& lower
       , naming::gid_type const& upper
       , mutex_type::scoped_lock& l
@@ -341,26 +332,18 @@ struct HPX_EXPORT primary_namespace
       , error_code& ec
         );
 
-    /// TODO/REVIEW: Do we ensure that a GID doesn't get reinserted into the
-    /// table after it's been decremented to 0 and destroyed? How do we do this
-    /// efficiently?
-    ///
-    /// The new decrement algorithm (decrement_sweep handles 0-2,
-    /// kill_non_blocking or kill_sync handles 3):
-    ///
-    ///    0.) Apply the decrement across the entire keyspace.
-    ///    1.) Search for dead objects (e.g. objects with a reference count of
-    ///        0) by iterating over the keyspace.
-    ///    2.) Resolve the dead objects (retrieve the GVA, adjust for partial
-    ///        matches) and remove them from the reference counting table.
-    ///    3.) Kill the dead objects (fire-and-forget semantics).
+    ///////////////////////////////////////////////////////////////////////////
+    struct free_entry
+    {
+        free_entry(agas::gva gva, naming::gid_type gid,
+                boost::uint32_t locality_id)
+          : gva_(gva), gid_(gid), locality_id_(locality_id)
+        {}
 
-    typedef boost::fusion::vector4<
-        gva                 // gva
-      , naming::gid_type    // gid
-      , naming::gid_type    // count
-      , boost::uint32_t     // locality_id
-    > free_entry;
+        agas::gva gva_;
+        naming::gid_type gid_;
+        boost::uint32_t locality_id_;
+    };
 
     void resolve_free_list(
         mutex_type::scoped_lock& l
@@ -409,8 +392,7 @@ struct HPX_EXPORT primary_namespace
 
     static parcelset::policies::message_handler* get_message_handler(
         parcelset::parcelhandler* ph
-      , naming::locality const& loc
-      , parcelset::connection_type t
+      , parcelset::locality const& loc
       , parcelset::parcel const& p
         );
 
@@ -437,13 +419,12 @@ namespace hpx { namespace traits
     {
         static parcelset::policies::message_handler* call(
             parcelset::parcelhandler* ph
-          , naming::locality const& loc
-          , parcelset::connection_type t
+          , parcelset::locality const& loc
           , parcelset::parcel const& p
             )
         {
             return agas::server::primary_namespace::get_message_handler(
-                ph, loc, t, p);
+                ph, loc, p);
         }
     };
 

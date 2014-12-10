@@ -6,7 +6,7 @@
 set(example_programs
    )
 
-if(HPX_HAVE_CXX11_LAMBDAS)
+if(HPX_WITH_CXX11_LAMBDAS)
   set(example_programs
       ${example_programs}
       future_reduce)
@@ -23,7 +23,7 @@ foreach(example_program ${example_programs})
   add_hpx_executable(${example_program}
                      SOURCES ${sources}
                      ${${example_program}_FLAGS}
-                     FOLDER "Examples/future_reduce/${example_program}")
+                     FOLDER "Examples/FutureReduce")
 
   # add a custom target for this example
   add_hpx_pseudo_target(examples.future_reduce.${example_program})

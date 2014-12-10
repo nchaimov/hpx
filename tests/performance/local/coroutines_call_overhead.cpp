@@ -9,6 +9,7 @@
 #include <hpx/hpx.hpp>
 
 #include <boost/format.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/random.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -73,9 +74,9 @@ void print_results(
                 "## 5:WTIME_CS:Walltime/Context Switch [nano-seconds]\n"
                 ;
 
+/*
         boost::uint64_t const last_index = 5;
 
-/*
         for (boost::uint64_t i = 0; i < counter_shortnames.size(); ++i)
         {
             cout << "## "
@@ -94,7 +95,7 @@ void print_results(
     boost::uint64_t const os_thread_count = hpx::get_os_thread_count();
 
     double w_T = iterations*payload*os_thread_count*1e-6;
-    double E = w_T/w_M;
+//     double E = w_T/w_M;
     double O = w_M-w_T;
 
 /*
@@ -130,9 +131,9 @@ void print_results(
 ///////////////////////////////////////////////////////////////////////////////
 struct kernel
 {
-    thread_state_enum operator()(thread_state_ex_enum)
+    thread_state_enum operator()(thread_state_ex_enum) const
     {
-        worker_timed(payload);
+        worker_timed(payload * 1000);
 
         return pending;
     }

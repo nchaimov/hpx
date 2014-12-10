@@ -27,13 +27,13 @@
 //  HPX_VERSION_DATE   YYYYMMDD is the date of the release
 //                               (estimated release date for master branch)
 //
-#define HPX_VERSION_FULL         0x000909
+#define HPX_VERSION_FULL         0x000910
 
 #define HPX_VERSION_MAJOR        0
 #define HPX_VERSION_MINOR        9
-#define HPX_VERSION_SUBMINOR     9
+#define HPX_VERSION_SUBMINOR     10
 
-#define HPX_VERSION_DATE         20141110
+#define HPX_VERSION_DATE         20150320
 
 #if !defined(HPX_AGAS_VERSION)
     #define HPX_AGAS_VERSION 0x30
@@ -135,10 +135,19 @@ namespace hpx
     // library, forcing to resolve the variable HPX_CHECK_VERSION.
     namespace
     {
+
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wunused-function"
 #endif
+
+#if defined(__GNUG__) && !defined(__INTEL_COMPILER)
+#  if defined(HPX_GCC_DIAGNOSTIC_PRAGMA_CONTEXTS)
+#    pragma GCC diagnostic push
+#  endif
+#  pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
         // Note: this function is never executed.
         char const* check_hpx_version()
         {
@@ -147,9 +156,17 @@ namespace hpx
             };
             return versions[0];
         }
+
+#if defined(__GNUG__) && !defined(__INTEL_COMPILER)
+#if defined(HPX_GCC_DIAGNOSTIC_PRAGMA_CONTEXTS)
+#pragma GCC diagnostic pop
+#endif
+#endif
+
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif
+
     }
 #endif
 

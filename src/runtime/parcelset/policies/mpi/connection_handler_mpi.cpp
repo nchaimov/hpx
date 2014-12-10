@@ -6,9 +6,8 @@
 
 #include <hpx/config/defines.hpp>
 
-#if defined(HPX_HAVE_PARCELPORT_MPI)
+#if defined(HPX_PARCELPORT_MPI)
 #include <mpi.h>
-#include <hpx/runtime/naming/locality.hpp>
 #include <hpx/runtime/parcelset/policies/mpi/connection_handler.hpp>
 #include <hpx/runtime/parcelset/policies/mpi/sender.hpp>
 #include <hpx/runtime/parcelset/policies/mpi/receiver.hpp>
@@ -16,6 +15,7 @@
 #include <hpx/lcos/local/spinlock.hpp>
 #include <hpx/util/mpi_environment.hpp>
 #include <hpx/util/runtime_configuration.hpp>
+#include <hpx/util/safe_lexical_cast.hpp>
 
 #include <boost/assign/std/vector.hpp>
 #include <boost/shared_ptr.hpp>
@@ -28,6 +28,17 @@ namespace hpx
 
 namespace hpx { namespace parcelset { namespace policies { namespace mpi
 {
+    parcelset::locality parcelport_address(util::runtime_configuration const & ini)
+    {
+        // load all components as described in the configuration information
+        return
+            parcelset::locality(
+                locality(
+                    util::mpi_environment::rank()
+                )
+            );
+    }
+
     std::vector<std::string> connection_handler::runtime_configuration()
     {
         std::vector<std::string> lines;
@@ -50,7 +61,7 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
     connection_handler::connection_handler(util::runtime_configuration const& ini,
             HPX_STD_FUNCTION<void(std::size_t, char const*)> const& on_start_thread,
             HPX_STD_FUNCTION<void()> const& on_stop_thread)
-      : base_type(ini, on_start_thread, on_stop_thread)
+      : base_type(ini, parcelport_address(ini), on_start_thread, on_stop_thread)
       , stopped_(false)
       , handling_messages_(false)
       , next_tag_(1)
@@ -61,9 +72,7 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
                 "this parcelport was instantiated to represent an unexpected "
                 "locality type: " + get_connection_type_name(here_.get_type()));
         }
-        std::string use_io_pool =
-            ini.get_entry("hpx.parcel.mpi.use_io_pool", "1");
-        if(boost::lexical_cast<int>(use_io_pool) == 0)
+        if(hpx::util::get_entry_as<int>(ini, "hpx.parcel.mpi.use_io_pool", "1") == 0)
         {
             use_io_pool_ = false;
         }
@@ -71,6 +80,21 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
 
     connection_handler::~connection_handler()
     {
+    }
+
+    parcelset::locality connection_handler::agas_locality(util::runtime_configuration const & ini) const
+    {
+        return
+            parcelset::locality(
+                locality(
+                    util::mpi_environment::enabled() ? 0 : -1
+                )
+            );
+    }
+
+    parcelset::locality connection_handler::create_locality() const
+    {
+        return parcelset::locality(locality());
     }
 
     bool connection_handler::do_run()
@@ -109,14 +133,14 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
         if(!hpx::is_starting() && !use_io_pool_)
         {
             hpx::applier::register_thread_nullary(
-                HPX_STD_BIND(&connection_handler::handle_messages, this),
+                util::bind(&connection_handler::handle_messages, this),
                 "mpi::connection_handler::handle_messages",
-                threads::pending, true, threads::thread_priority_critical);
+                threads::pending, true, threads::thread_priority_boost);
         }
         else
         {
             boost::asio::io_service& io_service = io_service_pool_.get_io_service();
-            io_service.post(HPX_STD_BIND(&connection_handler::handle_messages, this));
+            io_service.post(util::bind(&connection_handler::handle_messages, this));
         }
     }
 
@@ -126,7 +150,7 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
     }
 
     boost::shared_ptr<sender> connection_handler::create_connection(
-        naming::locality const& l, error_code& ec)
+        parcelset::locality const& l, error_code& ec)
     {
         boost::shared_ptr<sender> sender_connection(new sender(
             communicator_, get_next_tag(), l,
@@ -231,8 +255,10 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
 
         // We let the message handling loop spin for another 2 seconds to avoid the
         // costs involved with posting it to asio
-        while(bootstrapping || (!stopped_ && has_work) || (!has_work && t.elapsed() < 2.0))
+        while(bootstrapping || has_work || (!has_work && t.elapsed() < 2.0))
         {
+            if(stopped_) break;
+
             // break the loop if someone requested to pause the parcelport
             if(!enable_parcel_handling_) break;
 
@@ -283,53 +309,76 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
             if(next.first)
             {
                 boost::shared_ptr<receiver> rcv;
-                receivers_rank_map_type::iterator jt = receivers_map_.find(next.second.rank());
-                if(jt != receivers_map_.end())
+                header h = next.second;
+
+                receivers_tag_map_type & tag_map = receivers_map_[h.rank()];
+
+                receivers_tag_map_type::iterator jt = tag_map.find(h.tag());
+
+                if(jt != tag_map.end())
                 {
-                    receivers_tag_map_type::iterator kt = jt->second.find(next.second.tag());
-                    if(kt != jt->second.end())
-                    {
-                        if(next.second.close_request())
-                        {
-                            hpx::lcos::local::spinlock::scoped_lock l(tag_mtx_);
-                            free_tags_.push_back(kt->second->tag());
-                            jt->second.erase(kt);
-                            if(jt->second.empty())
-                            {
-                                receivers_map_.erase(jt);
-                            }
-                        }
-                        else
-                        {
-                            rcv = kt->second;
-                        }
-                    }
+                    rcv = jt->second;
                 }
-                if(!next.second.close_request())
+                else
                 {
-                    next.second.assert_valid();
-                    if(!rcv)
+                    rcv = boost::make_shared<receiver>(
+                        communicator_
+                      , get_next_tag()
+                      , h.tag()
+                      , h.rank()
+                      , *this);
+                    tag_map.insert(std::make_pair(h.tag(), rcv));
+                }
+
+                if(h.close_request())
+                {
+                    rcv->close();
+                }
+                else
+                {
+                    h.assert_valid();
+                    if (static_cast<std::size_t>(h.size()) > this->get_max_inbound_message_size())
                     {
-                        rcv = boost::make_shared<receiver>(communicator_, get_next_tag());
+                        // report this problem ...
+                        HPX_THROW_EXCEPTION(
+                            boost::asio::error::operation_not_supported,
+                            "mpi::connection_handler::handle_messages",
+                            "The size of this message exceeds the maximum "
+                            "allowed inbound data size");
+                        return;
                     }
-                    rcv->async_read(next.second, *this);
-                    receivers_.push_back(rcv);
+                    if(rcv->async_read(h))
+                    {
+#ifdef HPX_DEBUG
+                        receivers_type::iterator it = std::find(receivers_.begin(), receivers_.end(), rcv);
+                        HPX_ASSERT(it == receivers_.end());
+
+#endif
+                        receivers_.push_back(rcv);
+                    }
                 }
             }
 
             // handle all receive requests
-            for(
-                receivers_type::iterator it = receivers_.begin();
-                !stopped_ && enable_parcel_handling_ && it != receivers_.end();
-                /**/)
+            for(receivers_type::iterator it = receivers_.begin();
+                it != receivers_.end(); /**/)
             {
-                if((*it)->done(*this))
+                boost::shared_ptr<receiver> rcv = *it;
+                if(rcv->done())
                 {
-                    HPX_ASSERT(
-                        !receivers_map_[(*it)->rank()][(*it)->sender_tag()]
-                     || receivers_map_[(*it)->rank()][(*it)->sender_tag()].get() == it->get()
-                    );
-                    receivers_map_[(*it)->rank()][(*it)->sender_tag()] = *it;
+                    HPX_ASSERT(rcv->sender_tag() != -1);
+                    if(rcv->closing())
+                    {
+                        receivers_tag_map_type & tag_map = receivers_map_[rcv->rank()];
+
+                        receivers_tag_map_type::iterator jt = tag_map.find(rcv->sender_tag());
+                        HPX_ASSERT(jt != tag_map.end());
+                        tag_map.erase(jt);
+                        {
+                            hpx::lcos::local::spinlock::scoped_lock l(tag_mtx_);
+                            free_tags_.push_back(rcv->tag());
+                        }
+                    }
                     it = receivers_.erase(it);
                 }
                 else
@@ -337,7 +386,6 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
                     ++it;
                 }
             }
-
             if(!has_work) has_work = !receivers_.empty();
 
             // handle completed close requests

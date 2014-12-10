@@ -30,7 +30,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace threads { namespace policies
 {
-#if HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
     ///////////////////////////////////////////////////////////////////////////
     // We globally control whether to do minimal deadlock detection using this
     // global bool variable. It will be set once by the runtime configuration
@@ -98,7 +98,7 @@ namespace hpx { namespace threads { namespace policies
             queues_(init.num_queues_),
             curr_queue_(0),
             numa_sensitive_(init.numa_sensitive_),
-#if !defined(HPX_NATIVE_MIC)        // we know that the MIC has one NUMA domain only
+#ifndef HPX_NATIVE_MIC        // we know that the MIC has one NUMA domain only
             steals_in_numa_domain_(init.num_queues_),
             steals_outside_numa_domain_(init.num_queues_),
 #endif
@@ -126,7 +126,7 @@ namespace hpx { namespace threads { namespace policies
 
         bool numa_sensitive() const { return numa_sensitive_; }
 
-#if HPX_THREAD_MAINTAIN_CREATION_AND_CLEANUP_RATES
+#ifdef HPX_THREAD_MAINTAIN_CREATION_AND_CLEANUP_RATES
         boost::uint64_t get_creation_time(bool reset)
         {
             boost::uint64_t time = 0;
@@ -148,7 +148,7 @@ namespace hpx { namespace threads { namespace policies
         }
 #endif
 
-#if HPX_THREAD_MAINTAIN_STEALING_COUNTS
+#ifdef HPX_THREAD_MAINTAIN_STEALING_COUNTS
         std::size_t get_num_pending_misses(std::size_t num_thread, bool reset)
         {
             std::size_t num_pending_misses = 0;
@@ -259,11 +259,11 @@ namespace hpx { namespace threads { namespace policies
         ///////////////////////////////////////////////////////////////////////
         // create a new thread and schedule it if the initial state is equal to
         // pending
-        thread_id_type create_thread(thread_init_data& data,
+        void create_thread(thread_init_data& data, thread_id_type* id,
             thread_state_enum initial_state, bool run_now, error_code& ec,
             std::size_t num_thread)
         {
-#if HPX_THREAD_MAINTAIN_TARGET_ADDRESS
+#ifdef HPX_THREAD_MAINTAIN_TARGET_ADDRESS
             // try to figure out the NUMA node where the data lives
             if (numa_sensitive_ && std::size_t(-1) == num_thread) {
                 mask_cref_type mask =
@@ -282,7 +282,7 @@ namespace hpx { namespace threads { namespace policies
                 num_thread %= queue_size;
 
             HPX_ASSERT(num_thread < queue_size);
-            return queues_[num_thread]->create_thread(data, initial_state,
+            queues_[num_thread]->create_thread(data, id, initial_state,
                 run_now, ec);
         }
 
@@ -325,7 +325,7 @@ namespace hpx { namespace threads { namespace policies
 
                     HPX_ASSERT(idx != num_thread);
 
-                    if (!test(this_numa_domain, idx) && !test(numa_domain, idx))
+                    if (!test(this_numa_domain, idx) && !test(numa_domain, idx)) //-V560 //-V600 //-V111
                         continue;
 
                     thread_queue_type* q = queues_[idx];
@@ -374,7 +374,11 @@ namespace hpx { namespace threads { namespace policies
         void schedule_thread_last(threads::thread_data_base* thrd, std::size_t num_thread,
             thread_priority priority = thread_priority_normal)
         {
-            local_queue_scheduler::schedule_thread(thrd, num_thread, priority);
+            if (std::size_t(-1) == num_thread)
+                num_thread = ++curr_queue_ % queues_.size();
+
+            HPX_ASSERT(num_thread < queues_.size());
+            queues_[num_thread]->schedule_thread(thrd, true);
         }
 
         /// Destroy the passed thread as it has been terminated
@@ -426,6 +430,7 @@ namespace hpx { namespace threads { namespace policies
                 case thread_priority_default:
                 case thread_priority_low:
                 case thread_priority_normal:
+                case thread_priority_boost:
                 case thread_priority_critical:
                     return queues_[num_thread]->get_thread_count(state);
 
@@ -446,6 +451,7 @@ namespace hpx { namespace threads { namespace policies
             case thread_priority_default:
             case thread_priority_low:
             case thread_priority_normal:
+            case thread_priority_boost:
             case thread_priority_critical:
                 {
                     for (std::size_t i = 0; i != queues_.size(); ++i)
@@ -465,7 +471,7 @@ namespace hpx { namespace threads { namespace policies
             return count;
         }
 
-#if HPX_THREAD_MAINTAIN_QUEUE_WAITTIME
+#ifdef HPX_THREAD_MAINTAIN_QUEUE_WAITTIME
         ///////////////////////////////////////////////////////////////////////
         // Queries the current average thread wait time of the queues.
         boost::int64_t get_average_thread_wait_time(
@@ -539,7 +545,7 @@ namespace hpx { namespace threads { namespace policies
                 // steal work items: first try to steal from other cores in
                 // the same NUMA node
 #if !defined(HPX_NATIVE_MIC)        // we know that the MIC has one NUMA domain only
-                if (test(steals_in_numa_domain_, num_thread))
+                if (test(steals_in_numa_domain_, num_thread)) //-V600 //-V111
 #endif
                 {
                     mask_cref_type numa_domain_mask =
@@ -551,7 +557,7 @@ namespace hpx { namespace threads { namespace policies
 
                         HPX_ASSERT(idx != num_thread);
 
-                        if (!test(numa_domain_mask, topology_.get_pu_number(idx)))
+                        if (!test(numa_domain_mask, topology_.get_pu_number(idx))) //-V600
                             continue;
 
                         result = queues_[num_thread]->wait_or_add_new(running,
@@ -565,9 +571,9 @@ namespace hpx { namespace threads { namespace policies
                     }
                 }
 
-#if !defined(HPX_NATIVE_MIC)        // we know that the MIC has one NUMA domain only
+#ifndef HPX_NATIVE_MIC        // we know that the MIC has one NUMA domain only
                 // if nothing found, ask everybody else
-                if (test(steals_outside_numa_domain_, num_thread)) {
+                if (test(steals_outside_numa_domain_, num_thread)) { //-V600 //-V111
                     mask_cref_type numa_domain_mask =
                         outside_numa_domain_masks_[num_thread];
                     for (std::size_t i = 1; i != queues_size; ++i)
@@ -577,7 +583,7 @@ namespace hpx { namespace threads { namespace policies
 
                         HPX_ASSERT(idx != num_thread);
 
-                        if (!test(numa_domain_mask, topology_.get_pu_number(idx)))
+                        if (!test(numa_domain_mask, topology_.get_pu_number(idx))) //-V600
                             continue;
 
                         result = queues_[num_thread]->wait_or_add_new(running,
@@ -613,7 +619,7 @@ namespace hpx { namespace threads { namespace policies
                 }
             }
 
-#if HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
             // no new work is available, are we deadlocked?
             if (HPX_UNLIKELY(minimal_deadlock_detection && LHPX_ENABLED(error)))
             {

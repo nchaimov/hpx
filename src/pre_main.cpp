@@ -13,13 +13,10 @@
 #include <hpx/runtime/threads/thread_data.hpp>
 #include <hpx/util/logging.hpp>
 #include <hpx/lcos/barrier.hpp>
-#include <hpx/lcos/future_wait.hpp>
 #include <hpx/lcos/detail/full_empty_entry.hpp>
 #include <hpx/runtime/agas/interface.hpp>
 
-#if !defined(HPX_GCC44_WORKAROUND)
 #define HPX_USE_FAST_BOOTSTRAP_SYNCHRONIZATION
-#endif
 
 #if defined(HPX_USE_FAST_BOOTSTRAP_SYNCHRONIZATION)
 #include <hpx/lcos/broadcast.hpp>
@@ -190,10 +187,6 @@ bool pre_main(runtime_mode mode)
             if (num_localities > 1)
             {
                 startup_barrier = create_barrier(num_localities, startup_barrier_name);
-
-                // retrieve list of resolved localities
-                rt.get_parcel_handler().set_resolved_localities(
-                    agas_client.get_resolved_localities());
             }
 
             LBT_(info) << "(2nd stage) pre_main: created 2nd and 3rd stage boot barriers";
@@ -202,10 +195,6 @@ bool pre_main(runtime_mode mode)
         {
             // Initialize the barrier clients (find them in AGAS)
             startup_barrier = find_barrier(startup_barrier_name);
-
-            // retrieve list of resolved localities
-            rt.get_parcel_handler().set_resolved_localities(
-                agas_client.get_resolved_localities());
 
             LBT_(info) << "(2nd stage) pre_main: found 2nd and 3rd stage boot barriers";
         }

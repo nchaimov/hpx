@@ -38,7 +38,7 @@ namespace hpx { namespace components { namespace server { namespace detail
     ///////////////////////////////////////////////////////////////////////////
     /// \brief The memory_block_header holds all information needed to describe
     ///        a block of memory managed by a server#memory_block component.
-    class memory_block_header : boost::noncopyable
+    class memory_block_header : boost::noncopyable //-V690
     {
     public:
         /// This constructor is called on the locality where there memory_block
@@ -417,6 +417,9 @@ namespace hpx { namespace components { namespace server { namespace detail
         HPX_DEFINE_COMPONENT_ACTION(memory_block, checkout);
         HPX_DEFINE_COMPONENT_ACTION(memory_block, checkin);
         HPX_DEFINE_COMPONENT_ACTION(memory_block, clone);
+
+        // This component type requires valid id for its actions to be invoked
+        static bool is_target_valid(naming::id_type const& id) { return true; }
 
         /// This is the default hook implementation for decorate_action which
         /// does no hooking at all.

@@ -15,6 +15,7 @@
 #include <hpx/components/security/parcel_suffix.hpp>
 #include <hpx/components/security/certificate.hpp>
 #include <hpx/components/security/signed_type.hpp>
+#include <hpx/runtime.hpp>
 #endif
 
 #include <boost/shared_ptr.hpp>
@@ -28,17 +29,32 @@ namespace hpx
     ///
     /// \param data      The full received message buffer, assuming that it
     ///                  has a parcel_suffix appended.
+    /// \param hash      The has object for the received data.
     /// \param parcel_id The parcel id of the first parcel in side the message
     ///
-    HPX_API_EXPORT bool verify_parcel_suffix(std::vector<char> const& data,
-        naming::gid_type& parcel_id, error_code& ec = throws);
+    template <typename Buffer>
+    bool verify_parcel_suffix(Buffer const& data,
+        naming::gid_type& parcel_id, error_code& ec = throws)
+    {
+        runtime* rt = get_runtime_ptr();
+        if (0 == rt)
+        {
+            HPX_THROWS_IF(ec, invalid_status,
+                "hpx::verify_parcel_suffix",
+                "the runtime system is not operational at this point");
+            return false;
+        }
+
+        return rt->verify_parcel_suffix(data, parcel_id, ec);
+    }
 
     bool is_starting();
     bool is_running();
 }
 #endif
 
-namespace hpx { namespace parcelset {
+namespace hpx { namespace parcelset
+{
     ///////////////////////////////////////////////////////////////////////////
 #if defined(HPX_HAVE_SECURITY)
     // read the certificate, if available, and add it to the local certificate
@@ -117,11 +133,12 @@ namespace hpx { namespace parcelset {
                     for(std::size_t i = 0; i != parcel_count; ++i)
                     {
 #if defined(HPX_HAVE_SECURITY)
-                        if(pp.enable_security())
+                        naming::gid_type parcel_id;
+                        if (pp.enable_security())
                         {
                             // handle certificate and verify parcel suffix once
-                            naming::gid_type parcel_id;
-                            first_message = deserialize_certificate(archive, first_message);
+                            first_message = deserialize_certificate(archive,
+                                first_message);
                             if (!first_message && i == 0)
                             {
                                 verify_message_suffix(buffer->data_,
@@ -133,14 +150,14 @@ namespace hpx { namespace parcelset {
                         parcel p;
                         archive >> p;
 
-                        // verify parcel id, but only once while handling the first parcel
+                        // verify parcel id, but only once while handling the
+                        // first parcel
                         if (pp.enable_security() && !first_message && i == 0 &&
                             parcel_id != p.get_parcel_id())
                         {
                             // again, all hell breaks loose
                             HPX_THROW_EXCEPTION(security_error,
-                                "decode_message",
-                                "parcel id mismatch");
+                                "decode_message", "parcel id mismatch");
                             return;
                         }
 #else
@@ -149,7 +166,7 @@ namespace hpx { namespace parcelset {
                         archive >> p;
 #endif
                         // make sure this parcel ended up on the right locality
-                        HPX_ASSERT(p.get_destination_locality() == pp.here());
+                        HPX_ASSERT(hpx::get_locality() ? p.get_destination_locality() == hpx::get_locality() : true);
 
                         // be sure not to measure add_parcel as serialization time
                         boost::int64_t add_parcel_time = timer.elapsed_nanoseconds();
@@ -212,13 +229,12 @@ namespace hpx { namespace parcelset {
         if(chunks) chunks_ = chunks.get();
 
 #if defined(HPX_HAVE_SECURITY)
-        decode_message(parcelport_, buffer, chunks_, first_message);
+        decode_message(parcelport, buffer, chunks_, first_message);
 #else
         decode_message(parcelport, buffer, chunks_);
 #endif
         buffer->parcels_decoded_ = true;
     }
-
 
     template <typename Parcelport, typename Connection, typename Buffer>
     void decode_parcels(Parcelport & parcelport, Connection & connection,
@@ -231,7 +247,6 @@ namespace hpx { namespace parcelset {
             static_cast<std::size_t>(
                 static_cast<boost::uint32_t>(buffer->num_chunks_.first));
 
-//        boost::shared_ptr<std::vector<std::vector<char> > > in_chunks(in_chunks_);
         boost::shared_ptr<std::vector<util::serialization_chunk> > chunks;
         if (num_zero_copy_chunks != 0) {
             // decode chunk information
@@ -271,8 +286,17 @@ namespace hpx { namespace parcelset {
                 (*chunks)[index] = util::create_index_chunk(first, second);
                 ++index;
             }
-            HPX_ASSERT(index == num_zero_copy_chunks + num_non_zero_copy_chunks);
+#if defined(HPX_DEBUG)
+            // make sure that all spots have been populated
+            for (std::size_t i = 0;
+                 i != num_zero_copy_chunks + num_non_zero_copy_chunks;
+                 ++i)
+            {
+                HPX_ASSERT((*chunks)[i].size_ != 0);
+            }
+#endif
         }
+
         bool first_message = false;
 #if defined(HPX_HAVE_SECURITY)
         if(connection.first_message_)
@@ -284,12 +308,12 @@ namespace hpx { namespace parcelset {
         HPX_ASSERT(!buffer->parcels_decoded_);
         if(hpx::is_running() && parcelport.async_serialization())
         {
-                hpx::applier::register_thread_nullary(
-                    HPX_STD_BIND(
-                        &decode_parcels_impl<Parcelport, Buffer>,
-                            boost::ref(parcelport), buffer, chunks, first_message),
-                    "decode_parcels",
-                    threads::pending, true, threads::thread_priority_critical);
+            hpx::applier::register_thread_nullary(
+                util::bind(
+                    util::one_shot(&decode_parcels_impl<Parcelport, Buffer>),
+                    boost::ref(parcelport), buffer, chunks, first_message),
+                "decode_parcels",
+                threads::pending, true, threads::thread_priority_boost);
         }
         else
         {

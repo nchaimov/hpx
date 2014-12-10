@@ -71,14 +71,14 @@ namespace hpx { namespace lcos
 
         static void parcel_write_handler(
             boost::intrusive_ptr<typename base_type::wrapping_type> impl,
-            boost::system::error_code const& ec)
+            boost::system::error_code const& ec, parcelset::parcel const& p)
         {
             // any error in the parcel layer will be stored in the future object
             if (ec) {
                 boost::exception_ptr exception =
                     hpx::detail::get_exception(hpx::exception(ec),
                         "packaged_action::parcel_write_handler",
-                        __FILE__, __LINE__);
+                        __FILE__, __LINE__, parcelset::dump_parcel(p));
                 (*impl)->set_exception(exception);
             }
         }
@@ -105,18 +105,18 @@ namespace hpx { namespace lcos
             util::block_profiler_wrapper<profiler_tag> bp(apply_logger_);
 
             hpx::apply_c_cb<action_type>(this->get_gid(), gid,
-                HPX_STD_BIND(&packaged_action::parcel_write_handler,
-                    this->impl_, HPX_STD_PLACEHOLDERS::_1));
+                util::bind(&packaged_action::parcel_write_handler,
+                    this->impl_, util::placeholders::_1, util::placeholders::_2));
         }
 
-        void apply(BOOST_SCOPED_ENUM(launch) policy, naming::address& addr,
+        void apply(BOOST_SCOPED_ENUM(launch) policy, naming::address&& addr,
             naming::id_type const& gid)
         {
             util::block_profiler_wrapper<profiler_tag> bp(apply_logger_);
 
-            hpx::apply_c_cb<action_type>(this->get_gid(), addr, gid,
-                HPX_STD_BIND(&packaged_action::parcel_write_handler,
-                    this->impl_, HPX_STD_PLACEHOLDERS::_1));
+            hpx::apply_c_cb<action_type>(this->get_gid(), std::move(addr), gid,
+                util::bind(&packaged_action::parcel_write_handler,
+                    this->impl_, util::placeholders::_1, util::placeholders::_2));
         }
 
         void apply_p(BOOST_SCOPED_ENUM(launch) policy, naming::id_type const& gid,
@@ -125,18 +125,19 @@ namespace hpx { namespace lcos
             util::block_profiler_wrapper<profiler_tag> bp(apply_logger_);
 
             hpx::apply_c_p_cb<action_type>(this->get_gid(), gid, priority,
-                HPX_STD_BIND(&packaged_action::parcel_write_handler,
-                    this->impl_, HPX_STD_PLACEHOLDERS::_1));
+                util::bind(&packaged_action::parcel_write_handler,
+                    this->impl_, util::placeholders::_1, util::placeholders::_2));
         }
 
-        void apply_p(BOOST_SCOPED_ENUM(launch) policy, naming::address& addr,
+        void apply_p(BOOST_SCOPED_ENUM(launch) policy, naming::address&& addr,
             naming::id_type const& gid, threads::thread_priority priority)
         {
             util::block_profiler_wrapper<profiler_tag> bp(apply_logger_);
 
-            hpx::apply_c_p_cb<action_type>(this->get_gid(), addr, gid, priority,
-                HPX_STD_BIND(&packaged_action::parcel_write_handler,
-                    this->impl_, HPX_STD_PLACEHOLDERS::_1));
+            hpx::apply_c_p_cb<action_type>(this->get_gid(), std::move(addr),
+                gid, priority,
+                util::bind(&packaged_action::parcel_write_handler,
+                    this->impl_, util::placeholders::_1, util::placeholders::_2));
         }
 
         /// Construct a new \a packaged_action instance. The \a thread
@@ -197,14 +198,14 @@ namespace hpx { namespace lcos
 
         static void parcel_write_handler(
             boost::intrusive_ptr<typename base_type::wrapping_type> impl,
-            boost::system::error_code const& ec)
+            boost::system::error_code const& ec, parcelset::parcel const& p)
         {
             // any error in the parcel layer will be stored in the future object
             if (ec) {
                 boost::exception_ptr exception =
                     hpx::detail::get_exception(hpx::exception(ec),
                         "packaged_action::parcel_write_handler",
-                        __FILE__, __LINE__);
+                        __FILE__, __LINE__, parcelset::dump_parcel(p));
                 (*impl)->set_exception(exception);
             }
         }
@@ -244,13 +245,14 @@ namespace hpx { namespace lcos
             else {
                 // remote execution
                 hpx::applier::detail::apply_c_cb<action_type>(
-                    addr, this->get_gid(), gid,
-                    HPX_STD_BIND(&packaged_action::parcel_write_handler,
-                        this->impl_, HPX_STD_PLACEHOLDERS::_1));
+                    std::move(addr), this->get_gid(), gid,
+                    util::bind(&packaged_action::parcel_write_handler,
+                        this->impl_, util::placeholders::_1,
+                        util::placeholders::_2));
             }
         }
 
-        void apply(BOOST_SCOPED_ENUM(launch) /*policy*/, naming::address& addr,
+        void apply(BOOST_SCOPED_ENUM(launch) /*policy*/, naming::address&& addr,
             naming::id_type const& gid)
         {
             util::block_profiler_wrapper<profiler_tag> bp(apply_logger_);
@@ -268,9 +270,10 @@ namespace hpx { namespace lcos
             else {
                 // remote execution
                 hpx::applier::detail::apply_c_cb<action_type>(
-                    addr, this->get_gid(), gid,
-                    HPX_STD_BIND(&packaged_action::parcel_write_handler,
-                        this->impl_, HPX_STD_PLACEHOLDERS::_1));
+                    std::move(addr), this->get_gid(), gid,
+                    util::bind(&packaged_action::parcel_write_handler,
+                        this->impl_, util::placeholders::_1,
+                        util::placeholders::_2));
             }
         }
 

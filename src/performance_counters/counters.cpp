@@ -16,6 +16,7 @@
 #include <hpx/util/portable_binary_iarchive.hpp>
 #include <hpx/util/portable_binary_oarchive.hpp>
 #include <hpx/util/bind.hpp>
+#include <hpx/util/safe_lexical_cast.hpp>
 #include <hpx/lcos/local/packaged_continuation.hpp>
 
 #include <boost/format.hpp>
@@ -333,7 +334,7 @@ namespace hpx { namespace performance_counters
             }
             else if (!elements.instance_.parent_.index_.empty()) {
                 path.parentinstanceindex_ =
-                    boost::lexical_cast<boost::uint64_t>(elements.instance_.parent_.index_);
+                    hpx::util::safe_lexical_cast<boost::uint64_t>(elements.instance_.parent_.index_);
             }
 
             if (elements.instance_.child_.index_ == "#*") {
@@ -341,7 +342,7 @@ namespace hpx { namespace performance_counters
             }
             else if (!elements.instance_.child_.index_.empty()) {
                 path.instanceindex_ =
-                    boost::lexical_cast<boost::uint64_t>(elements.instance_.child_.index_);
+                    hpx::util::safe_lexical_cast<boost::uint64_t>(elements.instance_.child_.index_);
             }
         }
 
@@ -527,10 +528,10 @@ namespace hpx { namespace performance_counters
     counter_status discover_counter_types(std::vector<counter_info>& counters,
         discover_counters_mode mode, error_code& ec)
     {
-        using HPX_STD_PLACEHOLDERS::_1;
+        using hpx::util::placeholders::_1;
 
         HPX_STD_FUNCTION<discover_counter_func> func(
-            HPX_STD_BIND(&detail::discover_counters, _1, boost::ref(counters),
+            hpx::util::bind(&detail::discover_counters, _1, boost::ref(counters),
                 boost::ref(ec)));
 
         return discover_counter_types(func, mode, ec);
@@ -540,10 +541,10 @@ namespace hpx { namespace performance_counters
         std::string const& name, std::vector<counter_info>& counters,
         discover_counters_mode mode, error_code& ec)
     {
-        using HPX_STD_PLACEHOLDERS::_1;
+        using hpx::util::placeholders::_1;
 
         HPX_STD_FUNCTION<discover_counter_func> func(
-            HPX_STD_BIND(&detail::discover_counters, _1, boost::ref(counters),
+            hpx::util::bind(&detail::discover_counters, _1, boost::ref(counters),
                 boost::ref(ec)));
 
         return discover_counter_type(name, func, mode, ec);
@@ -553,10 +554,10 @@ namespace hpx { namespace performance_counters
         counter_info const& info, std::vector<counter_info>& counters,
         discover_counters_mode mode, error_code& ec)
     {
-        using HPX_STD_PLACEHOLDERS::_1;
+        using hpx::util::placeholders::_1;
 
         HPX_STD_FUNCTION<discover_counter_func> func(
-            HPX_STD_BIND(&detail::discover_counters, _1, boost::ref(counters),
+            hpx::util::bind(&detail::discover_counters, _1, boost::ref(counters),
                 boost::ref(ec)));
 
         return discover_counter_type(info, func, mode, ec);
@@ -909,7 +910,7 @@ namespace hpx { namespace performance_counters
                 }
 
                 // attach the function which registers the id_type with AGAS
-                return f.then(util::bind(&register_with_agas, util::placeholders::_1,
+                return f.then(hpx::util::bind(&register_with_agas, hpx::util::placeholders::_1,
                     complemented_info.fullname_));
             }
             catch (hpx::exception const& e) {

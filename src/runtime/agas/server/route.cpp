@@ -30,13 +30,12 @@ namespace hpx { namespace agas { namespace server
         naming::address* addrs = p.get_destination_addrs();
         std::vector<resolved_type> cache_addresses;
 
+        runtime& rt = get_runtime();
+
         // resolve destination addresses, we should be able to resolve all of
         // them, otherwise it's an error
         {
             mutex_type::scoped_lock l(mutex_);
-
-            if (!locality_)
-                locality_ = get_runtime().here();
 
             cache_addresses.reserve(size);
             for (std::size_t i = 0; i != size; ++i)
@@ -64,44 +63,41 @@ namespace hpx { namespace agas { namespace server
                     gva const g = boost::fusion::at_c<1>(r).resolve(
                         ids[i].get_gid(), boost::fusion::at_c<0>(r));
 
-                    addrs[i].locality_ = g.endpoint;
+                    addrs[i].locality_ = g.prefix;
                     addrs[i].type_ = g.type;
                     addrs[i].address_ = g.lva();
-                }
-                else
-                {
-                    cache_addresses.push_back(
-                        boost::fusion::make_vector(
-                            naming::gid_type(), gva(), naming::invalid_locality_id));
                 }
             }
         }
 
         // either send the parcel on its way or execute actions locally
-        if (addrs[0].locality_ == locality_)
+        if (addrs[0].locality_ == get_locality())
         {
             // destination is local
-            get_runtime().get_applier().schedule_action(p);
+            rt.get_applier().schedule_action(p);
         }
         else
         {
             // destination is remote
-            get_runtime().get_parcel_handler().put_parcel(p);
+            rt.get_parcel_handler().put_parcel(p);
         }
 
-        // asynchronously update cache on source locality
-        naming::id_type source = p.get_source();
-        for (std::size_t i = 0; i != size; ++i)
+        if (rt.get_state() < runtime::state_pre_shutdown)
         {
-            resolved_type const& r = cache_addresses[i];
-            if (boost::fusion::at_c<0>(r))
+            // asynchronously update cache on source locality
+            naming::id_type source = p.get_source();
+            for (std::size_t i = 0; i != cache_addresses.size(); ++i)
             {
-                gva const& g = boost::fusion::at_c<1>(r);
-                naming::address addr(g.endpoint, g.type, g.lva());
+                resolved_type const& r = cache_addresses[i];
+                if (boost::fusion::at_c<0>(r))
+                {
+                    gva const& g = boost::fusion::at_c<1>(r);
+                    naming::address addr(g.prefix, g.type, g.lva());
 
-                using components::stubs::runtime_support;
-                runtime_support::update_agas_cache_entry_colocated(
-                    source, boost::fusion::at_c<0>(r), addr, g.count, g.offset);
+                    using components::stubs::runtime_support;
+                    runtime_support::update_agas_cache_entry_colocated(
+                        source, boost::fusion::at_c<0>(r), addr, g.count, g.offset);
+                }
             }
         }
 

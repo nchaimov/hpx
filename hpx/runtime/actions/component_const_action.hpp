@@ -37,6 +37,12 @@ namespace hpx { namespace actions
         typedef action<Component const, result_type, arguments_type, Derived>
             base_type;
 
+        // Let the component decide whether the id is valid
+        static bool is_target_valid(naming::id_type const& id)
+        {
+            return Component::is_target_valid(id);
+        }
+
     protected:
         /// The \a continuation_thread_function will be registered as the thread
         /// function of a thread. It encapsulates the execution of the
@@ -53,7 +59,7 @@ namespace hpx { namespace actions
                                 (get_lva<Component const>::call(lva)) << ")";
                 (get_lva<Component const>::call(lva)->*F)();      // just call the function
             }
-            catch (hpx::thread_interrupted const&) {
+            catch (hpx::thread_interrupted const&) { //-V565
                 /* swallow this exception */
             }
             catch (hpx::exception const& e) {
@@ -98,7 +104,7 @@ namespace hpx { namespace actions
                 &Derived::template thread_function<naming::address::address_type>;
 
             return traits::action_decorate_function<Derived>::call(
-                lva, HPX_STD_BIND(f, lva));
+                lva, util::bind(f, lva));
         }
 
         /// \brief This static \a construct_thread_function allows to construct
@@ -131,27 +137,6 @@ namespace hpx { namespace actions
             return (get_lva<Component const>::call(lva)->*F)();
         }
     };
-
-#if BOOST_WORKAROUND(BOOST_MSVC, == 1600)
-    namespace detail
-    {
-        template <typename Obj, typename Result>
-        struct synthesize_const_mf<Obj, Result (*)()>
-        {
-            typedef Result (Obj::*type)() const;
-        };
-
-        template <typename Obj, typename Result>
-        struct synthesize_const_mf<Obj, Result (Obj::*)() const>
-        {
-            typedef Result (Obj::*type)() const;
-        };
-
-        template <typename Result>
-        typename boost::mpl::identity<Result (*)()>::type
-        replicate_type(Result (*p)());
-    }
-#endif
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Component, typename Result,
@@ -235,6 +220,12 @@ namespace hpx { namespace actions
         typedef action<Component const, result_type, arguments_type, Derived>
             base_type;
 
+        // Let the component decide whether the id is valid
+        static bool is_target_valid(naming::id_type const& id)
+        {
+            return Component::is_target_valid(id);
+        }
+
     protected:
         /// The \a continuation_thread_function will be registered as the thread
         /// function of a thread. It encapsulates the execution of the
@@ -251,7 +242,7 @@ namespace hpx { namespace actions
                                 (get_lva<Component const>::call(lva)) << ")";
                 (get_lva<Component const>::call(lva)->*F)();      // just call the function
             }
-            catch (hpx::thread_interrupted const&) {
+            catch (hpx::thread_interrupted const&) { //-V565
                 /* swallow this exception */
             }
             catch (hpx::exception const& e) {
@@ -296,7 +287,7 @@ namespace hpx { namespace actions
                 &Derived::template thread_function<naming::address::address_type>;
 
             return traits::action_decorate_function<Derived>::call(
-                lva, HPX_STD_BIND(f, lva));
+                lva, util::bind(f, lva));
         }
 
         /// \brief This static \a construct_thread_function allows to construct

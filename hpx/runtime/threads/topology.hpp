@@ -21,6 +21,9 @@
 #include <vector>
 #include <iosfwd>
 #include <limits>
+#if defined(HPX_HAVE_MORE_THAN_64_THREADS) || (defined(HPX_MAX_CPU_COUNT) && HPX_MAX_CPU_COUNT > 64)
+#include <bitset>
+#endif
 
 namespace hpx { namespace threads
 {
@@ -87,6 +90,14 @@ namespace hpx { namespace threads
         }
         return ~std::size_t(0);
     }
+
+    inline bool equal(mask_cref_type lhs, mask_cref_type rhs, std::size_t)
+    {
+        return lhs == rhs;
+    }
+
+#define HPX_CPU_MASK_PREFIX "0x"
+
 #else
 # if defined(HPX_MAX_CPU_COUNT)
     typedef std::bitset<HPX_MAX_CPU_COUNT> mask_type;
@@ -150,6 +161,24 @@ namespace hpx { namespace threads
 # else
         return mask.find_first();
 # endif
+    }
+
+# if defined(HPX_MAX_CPU_COUNT)
+#define HPX_CPU_MASK_PREFIX "0b"
+#else
+#define HPX_CPU_MASK_PREFIX "0x"
+#endif
+
+    inline bool equal(mask_cref_type lhs, mask_cref_type rhs, std::size_t numbits)
+    {
+        for (std::size_t j = 0; j != numbits; ++j)
+        {
+            if (test(lhs, j) != test(rhs, j))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 #endif
     /// \endcond
@@ -289,6 +318,10 @@ namespace hpx { namespace threads
 
         virtual std::size_t get_core_number(std::size_t num_thread,
             error_code& ec = throws) const = 0;
+
+        virtual mask_type get_cpubind_mask(error_code& ec = throws) const = 0;
+
+        virtual void write_to_log() const = 0;
     };
 
     HPX_API_EXPORT std::size_t hardware_concurrency();

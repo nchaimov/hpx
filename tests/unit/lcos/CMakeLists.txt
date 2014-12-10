@@ -11,10 +11,13 @@ set(tests
     async_continue
     async_local
     async_remote
+    broadcast
+    broadcast_apply
     composable_guard
     condition_variable
     barrier
     dataflow
+    fold
     future
     future_ref
     future_then
@@ -25,26 +28,10 @@ set(tests
     local_mutex
     packaged_action
     promise
+    reduce
     shared_future
     unwrapped
    )
-
-# include some of the tests for non-gcc 4.4 only
-set(gcc_version 040500)
-if(GCC_VERSION)
-  set(gcc_version ${GCC_VERSION})
-endif()
-
-if((040500 EQUAL ${gcc_version}) OR (040500 LESS ${gcc_version}) OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel"))
-  set(tests
-      ${tests}
-      broadcast
-      broadcast_apply
-      fold
-      for_each
-      reduce
-     )
-endif()
 
 set(apply_colocated_PARAMETERS LOCALITIES 2)
 set(apply_remote_PARAMETERS LOCALITIES 2)
@@ -84,6 +71,8 @@ foreach(test ${tests})
   add_hpx_executable(${test}_test
                      SOURCES ${sources}
                      ${${test}_FLAGS}
+                     EXCLUDE_FROM_ALL
+                     HPX_PREFIX ${HPX_BUILD_PREFIX}
                      FOLDER "Tests/Unit/LCOs")
 
   add_hpx_unit_test("lcos" ${test} ${${test}_PARAMETERS})

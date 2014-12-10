@@ -21,6 +21,7 @@
 #include <hpx/util/logging.hpp>
 #include <hpx/util/get_and_reset_value.hpp>
 #include <hpx/util/tuple.hpp>
+#include <hpx/lcos/local/spinlock.hpp>
 
 #include <map>
 #include <list>
@@ -42,7 +43,7 @@ namespace hpx { namespace util
     class connection_cache
     {
     public:
-        typedef boost::recursive_mutex mutex_type;
+        typedef hpx::lcos::local::spinlock mutex_type;
 
         typedef boost::shared_ptr<Connection> connection_type;
         typedef std::deque<connection_type> value_type;
@@ -103,7 +104,7 @@ namespace hpx { namespace util
         {
             return util::get<1>(entry);
         }
-        static std::size_t const& 
+        static std::size_t const&
         num_existing_connections(cache_value_type const& entry)
         {
             return util::get<1>(entry);
@@ -457,7 +458,7 @@ namespace hpx { namespace util
             mutex_type::scoped_lock lock(mtx_);
 
             // Check if this key already exists in the cache.
-            typename cache_type::iterator const it = cache_.find(l);
+            typename cache_type::iterator it = cache_.find(l);
             if (it != cache_.end())
             {
                 // Remove from LRU meta data.
@@ -589,7 +590,7 @@ namespace hpx { namespace util
             while (connections_ >= max_connections_)
             {
                 // Find the least recently used keys data.
-                const typename cache_type::iterator ct = cache_.find(*kt);
+                typename cache_type::iterator ct = cache_.find(*kt);
                 HPX_ASSERT(ct != cache_.end());
 
                 // If the entry is empty, ignore it and try the next least

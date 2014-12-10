@@ -52,13 +52,7 @@ struct test_server1
 
     void test();
 
-#if defined(HPX_GCC44_WORKAROUND)
-    typedef hpx::actions::action0<
-        test_server1, &test_server1::test
-    > test_action;
-#else
     HPX_DEFINE_COMPONENT_ACTION_TPL(test_server1, test, test_action);
-#endif
 
     hpx::id_type other;
     static bool alive;
@@ -85,14 +79,8 @@ struct test_server2
             hpx::find_here(), this->get_gid()).get();
     }
 
-#if defined(HPX_GCC44_WORKAROUND)
-    typedef hpx::actions::result_action0<
-        test_server2, hpx::id_type, &test_server2::create_test_server1
-    > create_test_server1_action;
-#else
     HPX_DEFINE_COMPONENT_ACTION_TPL(test_server2, create_test_server1,
         create_test_server1_action);
-#endif
 
     static bool alive;
 };
@@ -130,11 +118,11 @@ void test_server1<ComponentBase>::test()
 
 void ensure_garbage_collect()
 {
-    hpx::this_thread::sleep_for(boost::posix_time::millisec(500));
+    hpx::this_thread::sleep_for(boost::chrono::milliseconds(500));
     hpx::agas::garbage_collect();
-    hpx::this_thread::sleep_for(boost::posix_time::millisec(500));
+    hpx::this_thread::sleep_for(boost::chrono::milliseconds(500));
     hpx::agas::garbage_collect();
-    hpx::this_thread::sleep_for(boost::posix_time::millisec(500));
+    hpx::this_thread::sleep_for(boost::chrono::milliseconds(500));
     hpx::agas::garbage_collect();
 }
 

@@ -71,11 +71,11 @@ namespace hpx { namespace util
         names_.reserve(names.size());
         if (ids_.empty())
         {
-            using HPX_STD_PLACEHOLDERS::_1;
-            using HPX_STD_PLACEHOLDERS::_2;
+            using util::placeholders::_1;
+            using util::placeholders::_2;
 
             HPX_STD_FUNCTION<performance_counters::discover_counter_func> func(
-                HPX_STD_BIND(&query_counters::find_counter, this, _1, _2));
+                util::bind(&query_counters::find_counter, this, _1, _2));
 
             ids_.reserve(names.size());
             uoms_.reserve(names.size());
@@ -110,6 +110,11 @@ namespace hpx { namespace util
 
         // this will invoke the evaluate function for the first time
         timer_.start();
+    }
+
+    void query_counters::stop_evaluating_counters()
+    {
+        timer_.stop();
     }
 
     template <typename Stream>
@@ -180,7 +185,23 @@ namespace hpx { namespace util
             started.push_back(performance_counter::start_async(ids_[i]));
 
         // wait for all counters to be started
-        wait_all(started, ec);
+        wait_all(started);
+
+        BOOST_FOREACH(future<bool>& f, started)
+        {
+            if (f.has_exception())
+            {
+                if (&ec == &hpx::throws)
+                {
+                    f.get();
+                }
+                else
+                {
+                    ec = make_error_code(f.get_exception_ptr());
+                }
+                return;
+            }
+        }
     }
 
     void query_counters::stop_counters(error_code& ec)
@@ -209,7 +230,23 @@ namespace hpx { namespace util
             stopped.push_back(performance_counter::stop_async(ids_[i]));
 
         // wait for all counters to be started
-        wait_all(stopped, ec);
+        wait_all(stopped);
+
+        BOOST_FOREACH(future<bool>& f, stopped)
+        {
+            if (f.has_exception())
+            {
+                if (&ec == &hpx::throws)
+                {
+                    f.get();
+                }
+                else
+                {
+                    ec = make_error_code(f.get_exception_ptr());
+                }
+                return;
+            }
+        }
     }
 
     void query_counters::reset_counters(error_code& ec)
@@ -238,7 +275,23 @@ namespace hpx { namespace util
             reset.push_back(performance_counter::reset_async(ids_[i]));
 
         // wait for all counters to be started
-        wait_all(reset, ec);
+        wait_all(reset);
+
+        BOOST_FOREACH(future<void>& f, reset)
+        {
+            if (f.has_exception())
+            {
+                if (&ec == &hpx::throws)
+                {
+                    f.get();
+                }
+                else
+                {
+                    ec = make_error_code(f.get_exception_ptr());
+                }
+                return;
+            }
+        }
     }
 
     bool query_counters::evaluate_counters(bool reset,
@@ -290,7 +343,7 @@ namespace hpx { namespace util
             output << description << std::endl;
 
 //         // wait for all values to be returned
-//         wait_all(values, ec);
+//         wait_all(values);
 
         // Output the performance counter value.
         for (std::size_t i = 0; i < values.size(); ++i)
@@ -300,7 +353,7 @@ namespace hpx { namespace util
             std::cout << util::osstream_get_string(output) << std::flush;
         }
         else {
-            std::ofstream out(destination_, std::ios_base::app);
+            std::ofstream out(destination_.c_str(), std::ofstream::app);
             out << util::osstream_get_string(output);
         }
 

@@ -73,7 +73,7 @@ namespace hpx { namespace threads { namespace detail
         typename String::const_iterator stri = str.begin();
         typename String::const_iterator str_last = str.end();
 
-        for (; stri != str_last; ++stri, ++i) 
+        for (; stri != str_last; ++stri, ++i)
         {
             if (i == last || (*stri != *i))
             {
@@ -156,7 +156,7 @@ namespace hpx { namespace threads { namespace detail
     ///////////////////////////////////////////////////////////////////////////
     // Parse for (possibly partial) literal strings
     template <typename String, bool no_attribute>
-    struct partial_literal_string
+    struct partial_literal_string //-V690
       : boost::spirit::qi::primitive_parser<
             partial_literal_string<String, no_attribute> >
     {
@@ -214,9 +214,6 @@ namespace hpx { namespace threads { namespace detail
           : str_lo(in)
           , str_hi(in)
         {
-#if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))
-            encoding; // suppresses warning: C4100: 'encoding' : unreferenced formal parameter
-#endif
             typename string_type::iterator loi = str_lo.begin();
             typename string_type::iterator hii = str_hi.begin();
 
@@ -274,7 +271,7 @@ namespace boost { namespace spirit { namespace qi
         typedef typename mpl::if_<
             no_case
           , hpx::threads::detail::no_case_partial_literal_string<const_string, true>
-          , hpx::threads::detail::partial_literal_string<const_string, true> 
+          , hpx::threads::detail::partial_literal_string<const_string, true>
         >::type result_type;
 
         template <typename Terminal>

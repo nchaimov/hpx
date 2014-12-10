@@ -18,7 +18,6 @@ set(subdirs
     jacobi
     jacobi_smp
     nqueen
-    mini_ghost
     performance_counters
     quickstart
     qt
@@ -31,11 +30,12 @@ set(subdirs
     apex
    )
 
-if(HPX_HAVE_CXX11_LAMBDAS)
+ if(HPX_WITH_CXX11_LAMBDAS)
   set(subdirs ${subdirs}
-      1d_stencil
-      diskperf
-      tuplespace
+     1d_stencil
+     diskperf
+     tuplespace
+     transpose
       )
 endif()
 

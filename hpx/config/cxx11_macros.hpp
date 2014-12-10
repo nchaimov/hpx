@@ -313,4 +313,40 @@
 #endif
 //  ------------------ End of macros introduced at 1.55 ----------------------
 
+//  -------------------- Macros introduced at 1.56 ---------------------------
+#if BOOST_VERSION < 105600
+
+//  Define BOOST_NO_CXX11_ADDRESSOF fallback
+#if !defined(BOOST_NO_CXX11_ADDRESSOF)
+#  define BOOST_NO_CXX11_ADDRESSOF
+#endif
+
+//  Define BOOST_NO_CXX11_ATOMIC_SMART_PTR fallback
+#if !defined(BOOST_NO_CXX11_ATOMIC_SMART_PTR)
+#  define BOOST_NO_CXX11_ATOMIC_SMART_PTR
+#endif
+
+//  Define BOOST_NO_CXX11_HDR_ATOMIC fallback
+#if !defined(BOOST_NO_CXX11_HDR_ATOMIC)
+#  define BOOST_NO_CXX11_HDR_ATOMIC
+#endif
+
+//  Define BOOST_NO_CXX11_STD_ALIGN fallback
+#if !defined(BOOST_NO_CXX11_STD_ALIGN)
+#  define BOOST_NO_CXX11_STD_ALIGN
+#endif
+
+//  Define BOOST_NO_CXX11_REF_QUALIFIERS fallback
+#if !defined(BOOST_NO_CXX11_REF_QUALIFIERS)
+#  define BOOST_NO_CXX11_REF_QUALIFIERS
+#endif
+
+// Boost versions before 1.56 may define this unconditionally
+#if defined(BOOST_MSVC)
+#undef BOOST_NO_CXX11_VARIADIC_TEMPLATES
+#endif
+
+#endif
+//  ------------------ End of macros introduced at 1.56 ----------------------
+
 #endif

@@ -68,7 +68,7 @@ namespace hpx { namespace plugins { namespace parcel
     coalescing_message_handler::coalescing_message_handler(
             char const* action_name, parcelset::parcelport* pp, std::size_t num,
             std::size_t interval)
-      : buffer_(detail::get_num_messages(num)), pp_(pp),
+      : pp_(pp), buffer_(detail::get_num_messages(num)),
         timer_(boost::bind(&coalescing_message_handler::timer_flush, this_()),
             boost::bind(&coalescing_message_handler::flush, this_(), true),
             detail::get_interval(interval), std::string(action_name) + "_timer",
@@ -76,7 +76,7 @@ namespace hpx { namespace plugins { namespace parcel
         stopped_(false)
     {}
 
-    void coalescing_message_handler::put_parcel(parcelset::parcel& p,
+    void coalescing_message_handler::put_parcel(parcelset::locality const & dest, parcelset::parcel& p,
         write_handler_type const& f)
     {
         mutex_type::scoped_lock l(mtx_);
@@ -84,12 +84,12 @@ namespace hpx { namespace plugins { namespace parcel
             l.unlock();
 
             // this instance should not buffer parcels anymore
-            pp_->put_parcel(p, f);
+            pp_->put_parcel(dest, p, f);
             return;
         }
 
         detail::message_buffer::message_buffer_append_state s =
-            buffer_.append(p, f);
+            buffer_.append(dest, p, f);
 
         switch(s) {
         case detail::message_buffer::first_message:

@@ -8,92 +8,13 @@
 [section:whats_new What's New]
 
 [//////////////////////////////////////////////////////////////////////////////]
-[section:hpx_0_9_9 __hpx__ V0.9.9]
+[section:hpx_0_9_10 __hpx__ V0.9.10]
 
 [heading General Changes]
-
-* We completed the transition from the older (non-conforming) implementation
-  of `hpx::future` to the new and fully conforming version by removing the
-  old code and by renaming the type `hpx::unique_future` to `hpx::future`. In
-  order to maintain backwards compatibility with existing code which uses the
-  type `hpx::unique_future` we support the configuration variable
-  `HPX_UNIQUE_FUTURE_ALIAS`. If this variable is set to `ON` while running
-  cmake it will additionally define a template alias for this type.
 
 [heading Bug Fixes (Closed Tickets)]
 
 Here is a list of the important tickets we closed for this release.
-
-* [issue 1146] - Stencil print
-* [issue 1145] - N3960 hpx::parallel::copy implemented and tested
-* [issue 1145] - OpenMP examples 1d_stencil do not build
-* [issue 1143] - 1d_stencil OpenMP examples do not build
-* [issue 1142] - Cannot build HPX with gcc 4.6 on OS X
-* [issue 1140] - Fix OpenMP lookup, enable usage of config tests in external
-                 CMake projects.
-* [issue 1139] - hpx/hpx/config/compiler_specific.hpp
-* [issue 1137] - Improvements to create binary packages
-* [issue 1136] - HPX_GCC_VERSION not defined on all compilers
-* [issue 1136] - HPX_GCC_VERSION not defined on all compilers
-* [issue 1135] - Avoiding collision between winsock2.h and windows.h
-* [issue 1134] - Making sure, that hpx::finalize can be called from any locality
-* [issue 1133] - 1d stencil examples
-* [issue 1130] - Unique function
-* [issue 1128] - Action future args
-* [issue 1127] - Executor causes segmentation fault
-* [issue 1124] - Adding new API functions: `register_id_with_basename`,
-                 `unregister_id_with_basename`, `find_ids_from_basename`;
-                 adding test
-* [issue 1123] - Reduce nesting of try-catch construct in `encode_parcels`?
-* [issue 1122] - Client base fixes
-* [issue 1121] - Update `hpxrun.py.in`
-* [issue 1120] - HTTS2 tests compile errors on v110 (VS2012)
-* [issue 1119] - Remove references to boost::atomic in accumulator example
-* [issue 1118] - Only build test thread_pool_executor_1114_test if
-                 `HPX_LOCAL_SCHEDULER` is set
-* [issue 1117] - local_queue_executor linker error on vc110
-* [issue 1116] - Disabled performance counter should give runtime errors, not
-                 invalid data
-* [issue 1114] - Default constructed executor is not usable
-* [issue 1113] - Fast compilation of logging causes ABI incompatibilities
-                 between different `NDEBUG` values
-* [issue 1112] - Using thread_pool_executors causes segfault
-* [issue 1111] - `hpx::threads::get_thread_data` always returns zero
-* [issue 1110] - Remove unnecessary null pointer checks
-* [issue 1109] - More tests adjustments
-* [issue 1108] - Clarify build rules for "libboost_atomic-mt.so"?
-* [issue 1107] - Remove unnecessary null pointer checks
-* [issue 1106] - network_storage benchmark imporvements, adding legends to
-                 plots and tidying layout
-* [issue 1105] - Add more plot outputs and improve instructions doc
-* [issue 1104] - Complete quoting for parameters of some CMake commands
-* [issue 1103] - Work on test/scripts
-* [issue 1102] - Changed minimum requirement of window install to 2012
-* [issue 1101] - Changed minimum requirement of window install to 2012
-* [issue 1100] - Changed readme to no longer specify using MSVC 2010 compiler
-* [issue 1099] - Error returning futures from component actions
-* [issue 1098] - Improve storage test
-* [issue 1097] - data_actions quickstart example calls missing function
-                 decorate_action of data_get_action
-* [issue 1096] - MPI parcelport broken with new zero copy optimization
-* [issue 1095] - Warning C4005: _WIN32_WINNT: Macro redefinition
-* [issue 1094] - Syntax error for -DHPX_UNIQUE_FUTURE_ALIAS in master
-* [issue 1093] - Syntax error for -DHPX_UNIQUE_FUTURE_ALIAS
-* [issue 1092] - Rename unique_future<> back to future<>
-* [issue 1091] - Inconsistent error message
-* [issue 1090] - On windows 8.1 the examples crashed if using more than one os
-                 thread
-* [issue 1089] - Components should be allowed to have their own executor
-* [issue 1088] - Add possibility to select a network interface for the
-                 ibverbs parcelport
-* [issue 1087] - ibverbs and ipc parcelport uses zero copy optimization
-* [issue 1083] - Make shell examples copyable in docs
-* [issue 1082] - Implement proper termination detection during shutdown
-* [issue 1081] - Implement thread_specific_ptr for hpx::threads
-* [issue 1070] - Complete quoting for parameters of some CMake commands
-* [issue 1059] - Fix more unused variable warnings
-* [issue 879]  - Hung test leads to cascading test failure; make tests should
-                 support the MPI parcelport
 
 [endsect]
 

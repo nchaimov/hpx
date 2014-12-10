@@ -44,14 +44,16 @@ namespace hpx { namespace threads { namespace executors
             // Schedule given function for execution in this executor no sooner
             // than time abs_time. This call never blocks, and may violate
             // bounds on the executor's queue size.
-            void add_at(boost::posix_time::ptime const& abs_time,
+            void add_at(
+                boost::chrono::steady_clock::time_point const& abs_time,
                 closure_type && f, char const* description,
                 threads::thread_stacksize stacksize, error_code& ec);
 
             // Schedule given function for execution in this executor no sooner
             // than time rel_time from now. This call never blocks, and may
             // violate bounds on the executor's queue size.
-            void add_after(boost::posix_time::time_duration const& rel_time,
+            void add_after(
+                boost::chrono::steady_clock::duration const& rel_time,
                 closure_type && f, char const* description,
                 threads::thread_stacksize stacksize, error_code& ec);
 
@@ -61,12 +63,12 @@ namespace hpx { namespace threads { namespace executors
         protected:
             friend class manage_thread_pool_executor<Scheduler>;
 
-            // The function below are used by the resource manager to
-            // interact with the scheduler.
-
             // Return the requested policy element
             std::size_t get_policy_element(threads::detail::executor_parameter p,
                 error_code& ec) const;
+
+            // The function below are used by the resource manager to
+            // interact with the scheduler.
 
             // Return statistics collected by this scheduler
             void get_statistics(executor_statistics& stats, error_code& ec) const;
@@ -111,7 +113,7 @@ namespace hpx { namespace threads { namespace executors
     {
         local_queue_executor();
 
-        local_queue_executor(std::size_t max_punits,
+        explicit local_queue_executor(std::size_t max_punits,
             std::size_t min_punits = 1);
     };
 #endif
@@ -130,7 +132,7 @@ namespace hpx { namespace threads { namespace executors
     {
         local_priority_queue_executor();
 
-        local_priority_queue_executor(std::size_t max_punits,
+        explicit local_priority_queue_executor(std::size_t max_punits,
             std::size_t min_punits = 1);
     };
 
@@ -139,7 +141,7 @@ namespace hpx { namespace threads { namespace executors
     {
         static_priority_queue_executor();
 
-        static_priority_queue_executor(std::size_t max_punits,
+        explicit static_priority_queue_executor(std::size_t max_punits,
             std::size_t min_punits = 1);
     };
 #endif

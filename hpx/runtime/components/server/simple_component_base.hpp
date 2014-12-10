@@ -53,6 +53,15 @@ namespace hpx { namespace components
             if (gid_) applier::unbind_gid_local(gid_);
         }
 
+        // Copy construction and copy assignment should not copy the gid_.
+        simple_component_base(simple_component_base const&)
+        {}
+
+        simple_component_base& operator=(simple_component_base const&)
+        {
+            return *this;
+        }
+
         /// \brief finalize() will be called just before the instance gets
         ///        destructed
         void finalize() {}
@@ -78,8 +87,7 @@ namespace hpx { namespace components
         {
             if (!gid_)
             {
-                applier::applier& appl = hpx::applier::get_applier();
-                naming::address addr(appl.here(),
+                naming::address addr(get_locality(),
                     components::get_component_type<wrapped_type>(),
                     boost::uint64_t(static_cast<this_component_type const*>(this)));
 
@@ -100,6 +108,7 @@ namespace hpx { namespace components
                 }
                 else
                 {
+                    applier::applier& appl = hpx::applier::get_applier();
                     gid_ = assign_gid;
                     naming::detail::strip_credits_from_gid(gid_);
 
@@ -189,13 +198,20 @@ namespace hpx { namespace components
         }
 #endif
 
+        // This component type requires valid id for its actions to be invoked
+        static bool is_target_valid(naming::id_type const& id)
+        {
+            return !naming::is_locality(id);
+        }
+
         // This component type does not support migration.
         static BOOST_CONSTEXPR bool supports_migration() { return false; }
 
         // Pinning functionality
         void pin() {}
         void unpin() {}
-        unsigned int pin_count() const { return 0; }
+        boost::uint32_t pin_count() const { return 0; }
+
         void mark_as_migrated()
         {
             // If this assertion is triggered then this component instance is
@@ -252,11 +268,7 @@ namespace hpx { namespace components
 
         /// \brief  The function \a create is used for allocation and
         ///         initialization of instances of the derived components.
-#if defined(NDEBUG) && defined(HPX_DISABLE_ASSERTS)
-        static component_type* create(std::size_t)
-#else
         static component_type* create(std::size_t count)
-#endif
         {
             // simple components can be created individually only
             HPX_ASSERT(1 == count);
@@ -265,11 +277,7 @@ namespace hpx { namespace components
 
         /// \brief  The function \a destroy is used for destruction and
         ///         de-allocation of instances of the derived components.
-#if defined(NDEBUG) && defined(HPX_DISABLE_ASSERTS)
-        static void destroy(Component* p, std::size_t /*count*/ = 1)
-#else
         static void destroy(Component* p, std::size_t count = 1)
-#endif
         {
             // simple components can be deleted individually only
             HPX_ASSERT(1 == count);

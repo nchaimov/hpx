@@ -35,7 +35,7 @@
 #include <io.h>
 #endif
 
-#if defined(HPX_HAVE_PARCELPORT_MPI)
+#if defined(HPX_PARCELPORT_MPI)
 #include <hpx/util/mpi_environment.hpp>
 #endif
 
@@ -137,9 +137,6 @@ namespace hpx {
         timer_pool_(rtcfg.get_thread_pool_size("timer_pool"),
             boost::bind(&runtime_impl::init_tss, This(), "timer-thread", ::_1, ::_2, true),
             boost::bind(&runtime_impl::deinit_tss, This()), "timer_pool"),
-        parcel_port_(parcelset::parcelport::create_bootstrap(ini_,
-            boost::bind(&runtime_impl::init_tss, This(), "parcel-thread", ::_1, ::_2, true),
-            boost::bind(&runtime_impl::deinit_tss, This()))),
         scheduler_(init),
         notifier_(
             boost::bind(&runtime_impl::init_tss, This(), "worker-thread", ::_1, ::_2, false),
@@ -148,12 +145,13 @@ namespace hpx {
         thread_manager_(new hpx::threads::threadmanager_impl<
             SchedulingPolicy, NotificationPolicy>(
                 timer_pool_, scheduler_, notifier_, num_threads)),
-        agas_client_(*parcel_port_, ini_, mode_),
         parcel_handler_(agas_client_, thread_manager_.get(),
-            new parcelset::policies::global_parcelhandler_queue),
+            new parcelset::policies::global_parcelhandler_queue,
+            boost::bind(&runtime_impl::init_tss, This(), "parcel-thread", ::_1, ::_2, true),
+            boost::bind(&runtime_impl::deinit_tss, This())),
+        agas_client_(parcel_handler_, ini_, mode_),
         init_logging_(ini_, mode_ == runtime_mode_console, agas_client_),
-        applier_(parcel_handler_, *thread_manager_,
-            boost::uint64_t(runtime_support_.get()), boost::uint64_t(memory_.get())),
+        applier_(parcel_handler_, *thread_manager_),
         action_manager_(applier_)
     {
         components::server::get_error_dispatcher().register_error_sink(
@@ -168,8 +166,11 @@ namespace hpx {
         this->init_security();
 #endif
         // now, launch AGAS and register all nodes, launch all other components
-        agas_client_.initialize(*parcel_port_);
-        parcel_handler_.initialize(parcel_port_);
+        agas_client_.initialize(
+            parcel_handler_, boost::uint64_t(runtime_support_.get()), boost::uint64_t(memory_.get()));
+        parcel_handler_.initialize();
+
+        applier_.initialize(boost::uint64_t(runtime_support_.get()), boost::uint64_t(memory_.get()));
 
 #if defined(HPX_HAVE_SECURITY)
         // enable parcel capability checking
@@ -219,7 +220,7 @@ namespace hpx {
         // unload libraries
         //runtime_support_->tidy();
 
-#if defined(HPX_HAVE_PARCELPORT_MPI)
+#if defined(HPX_PARCELPORT_MPI)
         util::mpi_environment::finalize();
 #endif
 
@@ -310,7 +311,9 @@ namespace hpx {
                 boost::ref(result_)),
             "run_helper", 0, threads::thread_priority_normal, std::size_t(-1),
             threads::get_stack_size(threads::thread_stacksize_large));
-        thread_manager_->register_thread(data);
+
+        threads::thread_id_type id = threads:: invalid_thread_id;
+        thread_manager_->register_thread(data, id);
         this->runtime::starting();
         // }}}
 
@@ -719,9 +722,11 @@ template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::local_priority_queue_scheduler<>,
     hpx::threads::policies::callback_notifier>;
 
+#if defined(HPX_ABP_SCHEDULER)
 template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::abp_fifo_priority_queue_scheduler,
     hpx::threads::policies::callback_notifier>;
+#endif
 
 #if defined(HPX_HIERARCHY_SCHEDULER)
 #include <hpx/runtime/threads/policies/hierarchy_scheduler.hpp>

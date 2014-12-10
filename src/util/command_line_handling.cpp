@@ -16,6 +16,7 @@
 #include <hpx/runtime/threads/policies/affinity_data.hpp>
 #include <hpx/runtime/threads/policies/topology.hpp>
 #include <hpx/util/mpi_environment.hpp>
+#include <hpx/util/safe_lexical_cast.hpp>
 
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
@@ -214,7 +215,7 @@ namespace hpx { namespace util
                 if ("all" == threads_str)
                     threads = thread::hardware_concurrency(); //-V101
                 else
-                    threads = boost::lexical_cast<std::size_t>(threads_str);
+                    threads = hpx::util::safe_lexical_cast<std::size_t>(threads_str);
 
                 if (threads == 0)
                 {
@@ -234,15 +235,7 @@ namespace hpx { namespace util
                     throw std::logic_error("Requested more than "
                         BOOST_PP_STRINGIZE(HPX_MAX_CPU_COUNT)" --hpx:threads "
                         "to use for this application, use the option "
-                        "-DHPX_MAX_CPU_COUNT=<N> or "
-                        "-DHPX_USE_MORE_THAN_64_THREADS when configuring HPX.");
-                }
-#elif !defined(HPX_HAVE_MORE_THAN_64_THREADS)
-                if (threads > 64) {
-                    throw std::logic_error("Requested more than 64 "
-                        "--hpx:threads to use for this application, use the "
-                        "option -DHPX_MAX_CPU_COUNT=<N> or "
-                        "-DHPX_USE_MORE_THAN_64_THREADS when configuring HPX.");
+                        "-DHPX_MAX_CPU_COUNT=<N> when configuring HPX.");
                 }
 #endif
             }
@@ -286,7 +279,7 @@ namespace hpx { namespace util
                 if ("all" == cores_str)
                     num_cores = get_number_of_default_cores(env);
                 else
-                    num_cores = boost::lexical_cast<std::size_t>(cores_str);
+                    num_cores = hpx::util::safe_lexical_cast<std::size_t>(cores_str);
             }
 
             return num_cores;
@@ -301,6 +294,13 @@ namespace hpx { namespace util
         using namespace boost::assign;
 
         bool debug_clp = node != std::size_t(-1) && vm.count("hpx:debug-clp");
+
+        if (vm.count("hpx:ini")) {
+            std::vector<std::string> cfg =
+                vm["hpx:ini"].as<std::vector<std::string> >();
+            std::copy(cfg.begin(), cfg.end(), std::back_inserter(ini_config));
+            cfgmap.add(cfg);
+        }
 
         // create host name mapping
         util::map_hostnames mapnames(debug_clp);
@@ -415,6 +415,7 @@ namespace hpx { namespace util
             if (vm.count("hpx:worker")) {
                 mode_ = hpx::runtime_mode_worker;
 
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
                 // do not execute any explicit hpx_main except if asked
                 // otherwise
                 if (!vm.count("hpx:run-hpx-main") &&
@@ -422,6 +423,7 @@ namespace hpx { namespace util
                 {
                     util::detail::reset_function(hpx_main_f_);
                 }
+#endif
             }
             else if (vm.count("hpx:connect")) {
                 mode_ = hpx::runtime_mode_connect;
@@ -434,6 +436,7 @@ namespace hpx { namespace util
             // when connecting we need to select a unique port
             hpx_port = HPX_CONNECTING_IP_PORT;
 
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
             // do not execute any explicit hpx_main except if asked
             // otherwise
             if (!vm.count("hpx:run-hpx-main") &&
@@ -441,6 +444,7 @@ namespace hpx { namespace util
             {
                 util::detail::reset_function(hpx_main_f_);
             }
+#endif
         }
         else if (node != std::size_t(-1) || vm.count("hpx:node")) {
             // command line overwrites the environment
@@ -463,6 +467,7 @@ namespace hpx { namespace util
                     hpx_port = static_cast<boost::uint16_t>(hpx_port + node);
                     mode_ = hpx::runtime_mode_worker;
 
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
                     // do not execute any explicit hpx_main except if asked
                     // otherwise
                     if (!vm.count("hpx:run-hpx-main") &&
@@ -470,18 +475,13 @@ namespace hpx { namespace util
                     {
                         util::detail::reset_function(hpx_main_f_);
                     }
+#endif
                 }
             }
 
             // store node number in configuration
             ini_config += "hpx.locality!=" +
                 boost::lexical_cast<std::string>(node);
-        }
-
-        if (vm.count("hpx:ini")) {
-            std::vector<std::string> cfg =
-                vm["hpx:ini"].as<std::vector<std::string> >();
-            std::copy(cfg.begin(), cfg.end(), std::back_inserter(ini_config));
         }
 
         if (vm.count("hpx:hpx")) {
@@ -495,7 +495,7 @@ namespace hpx { namespace util
             }
         }
 
-        queuing_ = "priority_local";
+        queuing_ = "local-priority";
         if (vm.count("hpx:queuing"))
             queuing_ = vm["hpx:queuing"].as<std::string>();
 
@@ -533,6 +533,7 @@ namespace hpx { namespace util
             // should not run the AGAS server we assume to be in worker mode
             mode_ = hpx::runtime_mode_worker;
 
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
             // do not execute any explicit hpx_main except if asked
             // otherwise
             if (!vm.count("hpx:run-hpx-main") &&
@@ -540,6 +541,7 @@ namespace hpx { namespace util
             {
                 util::detail::reset_function(hpx_main_f_);
             }
+#endif
         }
 
         // write HPX and AGAS network parameters to the proper ini-file entries
@@ -737,21 +739,56 @@ namespace hpx { namespace util
         threads::topology& top = threads::create_topology();
         runtime & rt = get_runtime();
         {
-            util::osstream strm;        // make sure all ouput is kept together
+            util::osstream strm;    // make sure all output is kept together
 
             strm << std::string(79, '*') << '\n';
             strm << "locality: " << hpx::get_locality_id() << '\n';
             for (std::size_t i = 0; i != num_threads; ++i)
             {
-                top.print_affinity_mask(
-                    strm, i, rt.get_thread_manager().get_pu_mask(top, i)
-                );
+                // print the mask for the current PU
+                threads::mask_cref_type pu_mask =
+                    rt.get_thread_manager().get_pu_mask(top, i);
+
+                top.print_affinity_mask(strm, i, pu_mask);
+
+                // Make sure the mask does not contradict the CPU bindings
+                // returned by the system (see #973: Would like option to
+                // report HWLOC bindings).
+                error_code ec(lightweight);
+                threads::mask_type boundcpu = top.get_cpubind_mask(ec);
+
+                // The masks reported by HPX must be the same as the ones
+                // reported from HWLOC.
+                if (!ec && threads::any(boundcpu) &&
+                    !threads::equal(boundcpu, pu_mask, num_threads))
+                {
+                    HPX_THROW_EXCEPTION(invalid_status,
+                        "handle_print_bind",
+                        boost::str(
+                            boost::format("unexpected mismatch between "
+                                "locality %1%: binding reported from HWLOC(%2%) and HPX(%3%) on thread %4%"
+                            ) % hpx::get_locality_id() % boundcpu % pu_mask % i));
+                }
             }
 
             std::cout << util::osstream_get_string(strm);
         }
     }
 #endif
+
+    void handle_list_parcelports()
+    {
+        runtime & rt = get_runtime();
+        {
+            util::osstream strm;    // make sure all output is kept together
+            strm << std::string(79, '*') << '\n';
+            strm << "locality: " << hpx::get_locality_id() << '\n';
+
+            rt.get_parcel_handler().list_parcelports(strm);
+
+            std::cout << util::osstream_get_string(strm);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     int command_line_handling::call(

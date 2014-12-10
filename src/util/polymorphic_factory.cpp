@@ -7,7 +7,6 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/exception.hpp>
 #include <hpx/util/polymorphic_factory.hpp>
-#include <hpx/util/detail/vtable_ptr_base_fwd.hpp>
 
 #include <hpx/util/static.hpp>
 #include <hpx/util/jenkins_hash.hpp>
@@ -92,10 +91,7 @@ namespace hpx { namespace util
         return factory.get();
     }
 
-    template class HPX_EXPORT polymorphic_factory<actions::base_action>;
-    template class HPX_EXPORT polymorphic_factory<actions::continuation>;
-    template class HPX_EXPORT polymorphic_factory<
-        detail::vtable_ptr_virtbase<
-            portable_binary_iarchive, portable_binary_oarchive
-        > >;
+    template class polymorphic_factory<actions::base_action>;
+    template class polymorphic_factory<actions::continuation>;
+    template class polymorphic_factory<detail::function_registration_info_base>;
 }}

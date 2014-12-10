@@ -41,6 +41,7 @@
 #include <hpx/util/register_locks.hpp>
 #include <hpx/util/decay.hpp>
 #include <hpx/util/detail/count_num_args.hpp>
+#include <hpx/util/detail/serialization_registration.hpp>
 #include <hpx/util/static.hpp>
 #include <hpx/lcos/async_fwd.hpp>
 #include <hpx/lcos/future.hpp>
@@ -306,6 +307,9 @@ namespace hpx { namespace actions
         virtual void load(hpx::util::portable_binary_iarchive & ar) = 0;
         virtual void save(hpx::util::portable_binary_oarchive & ar) const = 0;
 
+        /// Wait for embedded futures to become ready
+        virtual void wait_for_futures() = 0;
+
 //         /// Return all data needed for thread initialization
 //         virtual threads::thread_init_data&
 //         get_thread_init_data(naming::id_type const& target,
@@ -332,8 +336,8 @@ namespace hpx { namespace actions
 
         /// Return a pointer to the message handler to be used for this action.
         virtual parcelset::policies::message_handler* get_message_handler(
-            parcelset::parcelhandler* ph, naming::locality const& loc,
-            parcelset::connection_type t, parcelset::parcel const& p) const = 0;
+            parcelset::parcelhandler* ph, parcelset::locality const& loc,
+            parcelset::parcel const& p) const = 0;
 
 #if defined(HPX_HAVE_SECURITY)
         /// Return the set of capabilities required to invoke this action
@@ -440,7 +444,7 @@ namespace hpx { namespace actions
         template <typename Args>
         explicit transfer_action(Args && args)
           : arguments_(std::forward<Args>(args)),
-#if HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
             parent_locality_(transfer_action::get_locality_id()),
             parent_id_(reinterpret_cast<boost::uint64_t>(threads::get_parent_id())),
             parent_phase_(threads::get_parent_phase()),
@@ -458,7 +462,7 @@ namespace hpx { namespace actions
         template <typename Args>
         transfer_action(threads::thread_priority priority, Args && args)
           : arguments_(std::forward<Args>(args)),
-#if HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
             parent_locality_(transfer_action::get_locality_id()),
             parent_id_(reinterpret_cast<boost::uint64_t>(threads::get_parent_id())),
             parent_phase_(threads::get_parent_phase()),
@@ -551,7 +555,7 @@ namespace hpx { namespace actions
                 std::move(arguments_));
         }
 
-#if !HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if !defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
         /// Return the locality of the parent thread
         boost::uint32_t get_parent_locality_id() const
         {
@@ -613,6 +617,12 @@ namespace hpx { namespace actions
             return traits::action_may_require_id_splitting<derived_type>::call(arguments_);
         }
 
+        /// Wait for embedded futures to become ready
+        void wait_for_futures()
+        {
+            traits::serialize_as_future<arguments_type>::call(arguments_);
+        }
+
         /// Return whether the embedded action is part of termination detection
         bool does_termination_detection() const
         {
@@ -625,13 +635,13 @@ namespace hpx { namespace actions
             naming::address::address_type lva, threads::thread_init_data& data)
         {
             data.func = get_thread_function(lva);
-#if HPX_THREAD_MAINTAIN_TARGET_ADDRESS
+#if defined(HPX_THREAD_MAINTAIN_TARGET_ADDRESS)
             data.lva = lva;
 #endif
-#if HPX_THREAD_MAINTAIN_DESCRIPTION
+#if defined(HPX_THREAD_MAINTAIN_DESCRIPTION)
             data.description = detail::get_action_name<derived_type>();
 #endif
-#if HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
             data.parent_id = reinterpret_cast<threads::thread_id_repr_type>(parent_id_);
             data.parent_locality_id = parent_locality_;
 #endif
@@ -647,13 +657,13 @@ namespace hpx { namespace actions
             naming::address::address_type lva, threads::thread_init_data& data)
         {
             data.func = get_thread_function(cont, lva);
-#if HPX_THREAD_MAINTAIN_TARGET_ADDRESS
+#if defined(HPX_THREAD_MAINTAIN_TARGET_ADDRESS)
             data.lva = lva;
 #endif
-#if HPX_THREAD_MAINTAIN_DESCRIPTION
+#if defined(HPX_THREAD_MAINTAIN_DESCRIPTION)
             data.description = detail::get_action_name<derived_type>();
 #endif
-#if HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
             data.parent_id = reinterpret_cast<threads::thread_id_repr_type>(parent_id_);
             data.parent_locality_id = parent_locality_;
 #endif
@@ -706,11 +716,11 @@ namespace hpx { namespace actions
 
         /// Return a pointer to the message handler to be used for this action.
         parcelset::policies::message_handler* get_message_handler(
-            parcelset::parcelhandler* ph, naming::locality const& loc,
-            parcelset::connection_type t, parcelset::parcel const& p) const
+            parcelset::parcelhandler* ph, parcelset::locality const& loc,
+            parcelset::parcel const& p) const
         {
             return traits::action_message_handler<derived_type>::
-                call(ph, loc, t, p);
+                call(ph, loc, p);
         }
 
 #if defined(HPX_HAVE_SECURITY)
@@ -739,7 +749,7 @@ namespace hpx { namespace actions
             // compatibility on the wire.
 
             if (ar.flags() & util::disable_array_optimization) {
-#if !HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if !defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
                 boost::uint32_t parent_locality_ = naming::invalid_locality_id;
                 boost::uint64_t parent_id_ = boost::uint64_t(-1);
                 boost::uint64_t parent_phase_ = 0;
@@ -755,7 +765,7 @@ namespace hpx { namespace actions
                 detail::action_serialization_data data;
                 ar.load(data);
 
-#if HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
                 parent_id_ = data.parent_id_;
                 parent_phase_ = data.parent_phase_;
                 parent_locality_ = data.parent_locality_;
@@ -772,7 +782,7 @@ namespace hpx { namespace actions
             // Always serialize the parent information to maintain binary
             // compatibility on the wire.
 
-#if !HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if !defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
             boost::uint32_t parent_locality_ = naming::invalid_locality_id;
             boost::uint64_t parent_id_ = boost::uint64_t(-1);
             boost::uint64_t parent_phase_ = 0;
@@ -807,7 +817,7 @@ namespace hpx { namespace actions
     protected:
         arguments_type arguments_;
 
-#if HPX_THREAD_MAINTAIN_PARENT_REFERENCE
+#if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
         boost::uint32_t parent_locality_;
         boost::uint64_t parent_id_;
         boost::uint64_t parent_phase_;
@@ -939,9 +949,6 @@ namespace hpx { namespace actions
 #if defined(HPX_HAVE_CXX11_DECLTYPE)
 #  define HPX_TYPEOF(x)       decltype(x)
 #  define HPX_TYPEOF_TPL(x)   decltype(x)
-#elif defined(HPX_GCC44_WORKAROUND)
-#  define HPX_TYPEOF(x)       __typeof__(x)
-#  define HPX_TYPEOF_TPL(x)   __typeof__(x)
 #else
 #  define HPX_TYPEOF(x)       BOOST_TYPEOF(x)
 #  define HPX_TYPEOF_TPL(x)   BOOST_TYPEOF_TPL(x)
@@ -962,69 +969,6 @@ namespace hpx { namespace actions
         hpx::actions::make_direct_action<HPX_TYPEOF_TPL(&f), &f> /**/         \
     /**/
 
-#if BOOST_WORKAROUND(BOOST_MSVC, == 1600)
-    // workarounds for VC2010
-    #define HPX_MAKE_COMPONENT_ACTION(component, f)                           \
-        hpx::actions::make_action<                                            \
-            HPX_TYPEOF(component::f) component::*, &component::f>  /**/       \
-    /**/
-    #define HPX_MAKE_DIRECT_COMPONENT_ACTION(component, f)                    \
-        hpx::actions::make_direct_action<                                     \
-            HPX_TYPEOF(component::f) component::*, &component::f>  /**/       \
-    /**/
-
-    #define HPX_MAKE_COMPONENT_ACTION_TPL(component, f)                       \
-        hpx::actions::make_action<                                            \
-            HPX_TYPEOF_TPL(component::f) component::*, &component::f>  /**/   \
-    /**/
-    #define HPX_MAKE_DIRECT_COMPONENT_ACTION_TPL(component, f)                \
-        hpx::actions::make_direct_action<                                     \
-            HPX_TYPEOF_TPL(component::f) component::*, &component::f>  /**/   \
-    /**/
-
-    namespace detail
-    {
-        template <typename Obj, typename F>
-        struct synthesize_const_mf;
-
-        template <typename F> F replicate_type(F);
-    }
-
-    #define HPX_MAKE_CONST_COMPONENT_ACTION(component, f)                     \
-        hpx::actions::make_action<                                            \
-            hpx::actions::detail::synthesize_const_mf<                        \
-                component, HPX_TYPEOF(                                        \
-                    hpx::actions::detail::replicate_type(&component::f)       \
-                )                                                             \
-            >::type, &component::f>  /**/                                     \
-    /**/
-    #define HPX_MAKE_CONST_DIRECT_COMPONENT_ACTION(component, f)              \
-        hpx::actions::make_direct_action<                                     \
-            hpx::actions::detail::synthesize_const_mf<                        \
-                component, HPX_TYPEOF(                                        \
-                    hpx::actions::detail::replicate_type(&component::f)       \
-                )                                                             \
-            >::type, &component::f>  /**/                                     \
-    /**/
-
-    #define HPX_MAKE_CONST_COMPONENT_ACTION_TPL(component, f)                 \
-        hpx::actions::make_action<                                            \
-            typename hpx::actions::detail::synthesize_const_mf<               \
-                component, HPX_TYPEOF_TPL(                                    \
-                    hpx::actions::detail::replicate_type(&component::f)       \
-                )                                                             \
-            >::type, &component::f>  /**/                                     \
-    /**/
-    #define HPX_MAKE_CONST_DIRECT_COMPONENT_ACTION_TPL(component, f)          \
-        hpx::actions::make_direct_action<                                     \
-            typename hpx::actions::detail::synthesize_const_mf<               \
-                component, HPX_TYPEOF_TPL(                                    \
-                    hpx::actions::detail::replicate_type(&component::f)       \
-                )                                                             \
-            >::type, &component::f>  /**/                                     \
-    /**/
-#else
-    // the implementation on conforming compilers is almost trivial
     #define HPX_MAKE_COMPONENT_ACTION(component, f)                           \
         HPX_MAKE_ACTION(component::f)                                         \
     /**/
@@ -1050,7 +994,6 @@ namespace hpx { namespace actions
     #define HPX_MAKE_CONST_DIRECT_COMPONENT_ACTION_TPL(component, f)          \
         HPX_MAKE_DIRECT_ACTION_TPL(component::f)                              \
     /**/
-#endif
 
     /// \endcond
 }}
