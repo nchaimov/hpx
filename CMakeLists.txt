@@ -341,16 +341,6 @@ if(HPX_THREAD_MAINTAIN_LOCAL_STORAGE)
   hpx_add_config_define(HPX_THREAD_MAINTAIN_LOCAL_STORAGE)
 endif()
 
-################################################################################
-# PAPI event counters
-################################################################################
-find_package(HPX_PAPI)
-
-################################################################################
-# Apex event counters
-################################################################################
-find_package(HPX_TAU)
-
 hpx_option(HPX_HAVE_SWAP_CONTEXT_EMULATION BOOL "Emulate SwapContext API for coroutines (default: OFF)"
   OFF CATEGORY "Thread Manager" ADVANCED)
 
@@ -857,59 +847,59 @@ if(HPX_COMPILER_WARNINGS)
       hpx_add_compile_flag(-wd4800)
     endif()
   else() # Trial and error approach for any other compiler ...
-    hpx_add_compile_flag_if_available(-Wall LANGUAGES CXX C Fortran)
-    hpx_add_compile_flag_if_available(-Wextra LANGUAGES CXX C Fortran)
-    # This is a new warning popping up from the boost headers with no particular meaning
-    hpx_add_compile_flag_if_available(-Wno-unused-local-typedefs LANGUAGES CXX C Fortran)
-    hpx_add_compile_flag_if_available(-Wno-strict-aliasing LANGUAGES CXX C Fortran)
-    hpx_add_compile_flag_if_available(-Wno-sign-promo LANGUAGES CXX)
-    hpx_add_compile_flag_if_available(-Wno-attributes LANGUAGES CXX)
-    hpx_add_compile_flag_if_available(-Wno-cast-align LANGUAGES CXX)
+      hpx_add_compile_flag_if_available(-Wall LANGUAGES CXX C Fortran)
+      hpx_add_compile_flag_if_available(-Wextra LANGUAGES CXX C Fortran)
+      # This is a new warning popping up from the boost headers with no particular meaning
+      hpx_add_compile_flag_if_available(-Wno-unused-local-typedefs LANGUAGES CXX C Fortran)
+      hpx_add_compile_flag_if_available(-Wno-strict-aliasing LANGUAGES CXX C Fortran)
+      hpx_add_compile_flag_if_available(-Wno-sign-promo LANGUAGES CXX)
+      hpx_add_compile_flag_if_available(-Wno-attributes LANGUAGES CXX)
+      hpx_add_compile_flag_if_available(-Wno-cast-align LANGUAGES CXX)
 
-    # We never want trampolines
-    hpx_add_compile_flag_if_available(-Wt)
+      # We never want trampolines
+      hpx_add_compile_flag_if_available(-Wt)
 
-    # These are usually benign and can't be suppressed because of
-    # interface requirements
-    hpx_add_compile_flag_if_available(-Wno-unused-parameter)
+      # These are usually benign and can't be suppressed because of
+      # interface requirements
+      hpx_add_compile_flag_if_available(-Wno-unused-parameter)
 
-    # There are ignored qualifiers in Boost, so we have to ignore them
-    hpx_add_compile_flag_if_available(-Wno-ignored-qualifiers)
+      # There are ignored qualifiers in Boost, so we have to ignore them
+      hpx_add_compile_flag_if_available(-Wno-ignored-qualifiers)
 
-    # Be extra strict about format checks
-    # Boost.Logging is built on fprintf, sadly
-    hpx_add_compile_flag_if_available(-Wformat=2)
-    hpx_add_compile_flag_if_available(-Wno-format-nonliteral)
+      # Be extra strict about format checks
+      # Boost.Logging is built on fprintf, sadly
+      hpx_add_compile_flag_if_available(-Wformat=2)
+      hpx_add_compile_flag_if_available(-Wno-format-nonliteral)
 
-    # Self initialization is dangerous
-    hpx_add_compile_flag_if_available(-Winit-self)
+      # Self initialization is dangerous
+      hpx_add_compile_flag_if_available(-Winit-self)
 
-    # For portability
-    hpx_add_compile_flag_if_available(-Wdouble-promotion)
+      # For portability
+      hpx_add_compile_flag_if_available(-Wdouble-promotion)
 
-    # Warn about casting that violates qualifiers or alignment
-    hpx_add_compile_flag_if_available(-Wcast-qual)
-    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-      # Clang is overeager in reporting cast alignment problems in Boost
-      hpx_add_compile_flag_if_available(-Wcast-align)
-    endif()
+      # Warn about casting that violates qualifiers or alignment
+      hpx_add_compile_flag_if_available(-Wcast-qual)
+      if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        # Clang is overeager in reporting cast alignment problems in Boost
+        hpx_add_compile_flag_if_available(-Wcast-align)
+      endif()
 
-    hpx_add_compile_flag_if_available(-Werror=trampolines)
-    hpx_add_compile_flag_if_available(-Werror=parentheses)
-    hpx_add_compile_flag_if_available(-Werror=reorder)
-    hpx_add_compile_flag_if_available(-Werror=return-type)
-    hpx_add_compile_flag_if_available(-Werror=sequence-point)
+      hpx_add_compile_flag_if_available(-Werror=trampolines)
+      hpx_add_compile_flag_if_available(-Werror=parentheses)
+      hpx_add_compile_flag_if_available(-Werror=reorder)
+      hpx_add_compile_flag_if_available(-Werror=return-type)
+      hpx_add_compile_flag_if_available(-Werror=sequence-point)
 
-    if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
-      # Uninitialized variables are bad, earlier compilers issue spurious
-      # warnings
-      hpx_add_compile_flag_if_available(-Werror=uninitialized)
-    endif()
+      if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
+        # Uninitialized variables are bad, earlier compilers issue spurious
+        # warnings
+        hpx_add_compile_flag_if_available(-Werror=uninitialized)
+      endif()
 
-    #hpx_add_compile_flag_if_available(-Werror=missing-field-initializers)
-    hpx_add_compile_flag_if_available(-Werror=format)
-    hpx_add_compile_flag_if_available(-Werror=missing-braces)
-    hpx_add_compile_flag_if_available(-Werror=sign-compare)
+      #hpx_add_compile_flag_if_available(-Werror=missing-field-initializers)
+      hpx_add_compile_flag_if_available(-Werror=format)
+      hpx_add_compile_flag_if_available(-Werror=missing-braces)
+      hpx_add_compile_flag_if_available(-Werror=sign-compare)
   endif()
 endif()
 
@@ -948,7 +938,7 @@ else()
   endif()
 
   # Check if our libraries have unresolved symbols
-  if(NOT APPLE)
+  if(NOT APPLE AND NOT HPX_HAVE_APEX)
     hpx_add_link_flag_if_available(-Wl,-z,defs TARGETS SHARED EXE)
   endif()
 
@@ -1169,8 +1159,12 @@ set(HPX_DEBUG_POSTFIX "d")
 
 if(HPX_HAVE_APEX)
   add_subdirectory(apex/apex)
+  set(APEX_BINARY_DIR ${PROJECT_BINARY_DIR}/lib)
+  set(ITTNOTIFY_BINARY_DIR ${PROJECT_BINARY_DIR}/lib)
   hpx_info("apex" "Apex source dir: ${APEX_SOURCE_DIR}")
   hpx_info("apex" "Apex binary dir: ${APEX_BINARY_DIR}")
+
+
 
   set(APEX_FOUND ON)
 
@@ -1195,7 +1189,9 @@ if(HPX_HAVE_APEX)
         "${ITTNOTIFY_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ittnotify.lib")
     endif()
   endif()
-  set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${apex_libraries})
+  #set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${apex_libraries})
+
+  hpx_info("apex" "Apex libraries: ${apex_libraries}")
 
   include_directories(${APEX_SOURCE_DIR})
   hpx_libraries(${apex_libraries})

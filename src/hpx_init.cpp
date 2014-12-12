@@ -1228,11 +1228,6 @@ namespace hpx
                         "'cmake -DHPX_THREAD_SCHEDULERS=periodic-priority'.");
 #endif
                 }
-                else {
-                    throw std::logic_error("Bad value for command line option "
-                        "--hpx:queuing");
-                }
-            }
             else if (0 == std::string("throttle").find(cfg.queuing_)) {
 #if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
                 result = detail::run_throttle(startup, shutdown, cfg, blocking);
@@ -1245,6 +1240,7 @@ namespace hpx
             else {
                 throw std::logic_error("Bad value for command line option "
                     "--hpx:queuing");
+            }
             }
             catch (std::exception& e) {
                 std::cerr << "{env}: " << hpx::detail::get_execution_environment();
