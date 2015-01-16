@@ -314,9 +314,9 @@ namespace hpx { namespace performance_counters { namespace papi
 
 ///////////////////////////////////////////////////////////////////////////////
 // register a startup function for PAPI performance counter
-HPX_REGISTER_STARTUP_MODULE_DYNAMIC(
-    hpx::performance_counters::papi::check_startup);
+//HPX_REGISTER_STARTUP_MODULE_DYNAMIC(
+//    hpx::performance_counters::papi::check_startup);
 
 // register related command line options
-HPX_REGISTER_COMMANDLINE_MODULE_DYNAMIC(
-    hpx::performance_counters::papi::util::get_options_description);
+//HPX_REGISTER_COMMANDLINE_MODULE_DYNAMIC(
+//    hpx::performance_counters::papi::util::get_options_description);
