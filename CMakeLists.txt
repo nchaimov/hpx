@@ -12,6 +12,12 @@
 # We require at least CMake V2.8.10
 cmake_minimum_required(VERSION 2.8.10 FATAL_ERROR)
 
+# explicitly set certain policies
+cmake_policy(VERSION 2.8.10)
+if(NOT(CMAKE_VERSION VERSION_LESS 3.1.0))
+  cmake_policy(SET CMP0054 OLD)
+endif()
+
 # Overrides must go before the project() statement, otherwise they are ignored.
 
 ################################################################################
@@ -116,8 +122,8 @@ hpx_option(HPX_WITH_SECURITY BOOL "Enable security support via libsodium." OFF)
 
 # Logging configuration
 hpx_option(HPX_WITH_LOGGING BOOL "Build HPX with logging enabled (default: ON)." ON ADVANCED)
-if(NOT HPX_WITH_LOGGING)
-  hpx_add_config_define(HPX_NO_LOGGING)
+if(HPX_WITH_LOGGING)
+  hpx_add_config_define(HPX_WITH_LOGGING)
 endif()
 
 ## Compiler related build options
@@ -1300,6 +1306,15 @@ configure_file("${hpx_SOURCE_DIR}/cmake/templates/hpxrun.py.in"
 ################################################################################
 # installation instructions
 ################################################################################
+install(
+  DIRECTORY ${CMAKE_BINARY_DIR}/bin/
+  DESTINATION hpx/bin/
+  COMPONENT core
+  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                   GROUP_READ GROUP_EXECUTE
+                   WORLD_READ WORLD_EXECUTE
+  FILES_MATCHING PATTERN "hpxcxx" EXCLUDE)
+
 install( # install all hpx header files
   DIRECTORY hpx/
   DESTINATION include/hpx

@@ -120,7 +120,7 @@ namespace hpx
                 typename action_type::component_type>::call(addr));
 
             apply_helper<action_type>::call(target, addr.address_, priority,
-                util::forward_as_tuple(HPX_ENUM_FORWARD_ARGS(N, Arg, arg)));
+                HPX_ENUM_FORWARD_ARGS(N, Arg, arg));
             return true;     // no parcel has been sent (dest is local)
         }
 
@@ -136,7 +136,7 @@ namespace hpx
                 typename action_type::component_type>::call(addr));
 
             apply_helper<action_type>::call(target, addr.address_, priority,
-                util::forward_as_tuple(HPX_ENUM_MOVE_ARGS(N, arg)));
+                HPX_ENUM_MOVE_ARGS(N, arg));
             return true;     // no parcel has been sent (dest is local)
         }
 
@@ -185,13 +185,12 @@ namespace hpx
             HPX_ENUM_FORWARD_ARGS(N, Arg, arg));
     }
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived, BOOST_PP_ENUM_PARAMS(N, typename Arg)>
+    template <typename Component, typename Signature, typename Derived,
+        BOOST_PP_ENUM_PARAMS(N, typename Arg)>
     inline bool
     apply (
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/, naming::id_type const& gid, HPX_ENUM_FWD_ARGS(N, Arg, arg))
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
+        naming::id_type const& gid, HPX_ENUM_FWD_ARGS(N, Arg, arg))
     {
         return apply_p<Derived>(gid, actions::action_priority<Derived>(),
             HPX_ENUM_FORWARD_ARGS(N, Arg, arg));
@@ -250,13 +249,11 @@ namespace hpx
             HPX_ENUM_FORWARD_ARGS(N, Arg, arg));
     }
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived, BOOST_PP_ENUM_PARAMS(N, typename Arg)>
+    template <typename Component, typename Signature, typename Derived,
+        BOOST_PP_ENUM_PARAMS(N, typename Arg)>
     inline bool
     apply (
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/,
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
         std::vector<naming::id_type> const& gids,
         HPX_ENUM_FWD_ARGS(N, Arg, arg))
     {
@@ -308,7 +305,7 @@ namespace hpx
 
             apply_helper<action_type>::call(
                 cont, target, addr.address_, priority,
-                util::forward_as_tuple(HPX_ENUM_FORWARD_ARGS(N, Arg, arg)));
+                HPX_ENUM_FORWARD_ARGS(N, Arg, arg));
             return true;     // no parcel has been sent (dest is local)
         }
 
@@ -358,14 +355,11 @@ namespace hpx
             HPX_ENUM_FORWARD_ARGS(N, Arg, arg));
     }
 
-    template <typename Component, typename Result,
-        typename Arguments, typename Derived,
+    template <typename Component, typename Signature, typename Derived,
         BOOST_PP_ENUM_PARAMS(N, typename Arg)>
     inline bool
     apply (actions::continuation* c,
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/,
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
         naming::id_type const& gid,
         HPX_ENUM_FWD_ARGS(N, Arg, arg))
     {
@@ -436,13 +430,12 @@ namespace hpx
             HPX_ENUM_FORWARD_ARGS(N, Arg, arg));
     }
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived, BOOST_PP_ENUM_PARAMS(N, typename Arg)>
+    template <typename Component, typename Signature, typename Derived,
+        BOOST_PP_ENUM_PARAMS(N, typename Arg)>
     inline bool
     apply_c (
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/, naming::id_type const& contgid, naming::id_type const& gid,
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
+        naming::id_type const& contgid, naming::id_type const& gid,
         HPX_ENUM_FWD_ARGS(N, Arg, arg))
     {
         typedef

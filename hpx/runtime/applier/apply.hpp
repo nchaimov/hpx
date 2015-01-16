@@ -18,6 +18,8 @@
 #include <hpx/runtime/applier/apply_helper.hpp>
 #include <hpx/runtime/actions/component_action.hpp>
 #include <hpx/runtime/actions/continuation.hpp>
+#include <hpx/traits/action_is_target_valid.hpp>
+#include <hpx/traits/action_priority.hpp>
 #include <hpx/traits/component_type_is_compatible.hpp>
 #include <hpx/util/remove_local_destinations.hpp>
 
@@ -237,8 +239,7 @@ namespace hpx
             HPX_ASSERT(traits::component_type_is_compatible<
                 typename action_type_::component_type>::call(addr));
 
-            util::tuple<> env;
-            apply_helper<action_type_>::call(target, addr.address_, priority, env);
+            apply_helper<action_type_>::call(target, addr.address_, priority);
             return true;     // no parcel has been sent (dest is local)
         }
 
@@ -283,12 +284,10 @@ namespace hpx
         return apply_p<Action>(gid, actions::action_priority<Action>());
     }
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived>
+    template <typename Component, typename Signature, typename Derived>
     inline bool apply (
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/, naming::id_type const& gid)
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
+        naming::id_type const& gid)
     {
         return apply_p<Derived>(gid, actions::action_priority<Derived>());
     }
@@ -338,12 +337,10 @@ namespace hpx
         return apply_p<Action>(ids, actions::action_priority<Action>());
     }
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived>
+    template <typename Component, typename Signature, typename Derived>
     inline bool apply (
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/, std::vector<naming::id_type> const& ids)
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
+        std::vector<naming::id_type> const& ids)
     {
         return apply_p<Derived>(ids, actions::action_priority<Derived>());
     }
@@ -411,9 +408,8 @@ namespace hpx
                 typename action_type_::component_type>::call(addr));
 
             actions::continuation_type cont(c);
-            util::tuple<> env;
             apply_helper<action_type_>::call(cont, target, addr.address_,
-                priority, env);
+                priority);
             return true;     // no parcel has been sent (dest is local)
         }
 
@@ -455,12 +451,10 @@ namespace hpx
         return apply_p<Action>(c, gid, actions::action_priority<Action>());
     }
 
-    template <typename Component, typename Result,
-        typename Arguments, typename Derived>
+    template <typename Component, typename Signature, typename Derived>
     inline bool apply (actions::continuation* c,
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/, naming::id_type const& gid)
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
+        naming::id_type const& gid)
     {
         return apply_p<Derived>(c, gid, actions::action_priority<Derived>());
     }
@@ -524,13 +518,11 @@ namespace hpx
             actions::action_priority<Action>());
     }
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived>
+    template <typename Component, typename Signature, typename Derived>
     inline bool
     apply_c (
-        hpx::actions::action<
-            Component, Result, Arguments, Derived
-        > /*act*/, naming::id_type const& contgid, naming::id_type const& gid)
+        hpx::actions::basic_action<Component, Signature, Derived> /*act*/,
+        naming::id_type const& contgid, naming::id_type const& gid)
     {
         typedef
             typename hpx::actions::extract_action<Derived>::result_type

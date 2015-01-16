@@ -83,6 +83,15 @@ response locality_namespace::service(
                 counter_data_.increment_resolve_locality_count();
                 return resolve_locality(req, ec);
             }
+        case locality_ns_resolve_locality_gid:
+            {
+                update_time_on_exit update(
+                    counter_data_
+                  , counter_data_.resolve_locality_.time_
+                );
+                counter_data_.increment_resolve_locality_count();
+                return resolve_locality_gid(req, ec);
+            }
         case locality_ns_resolved_localities:
             {
                 update_time_on_exit update(
@@ -324,7 +333,7 @@ response locality_namespace::allocate(
     else
     {
         // Check for address space exhaustion.
-        if (HPX_UNLIKELY(0xFFFFFFFE < partitions_.size()))
+        if (HPX_UNLIKELY(0xFFFFFFFE < partitions_.size())) //-V104
         {
             l.unlock();
 
@@ -471,6 +480,28 @@ response locality_namespace::resolve_locality(
         no_success);
 } // }}}
 
+response locality_namespace::resolve_locality_gid(
+    request const& req
+  , error_code& ec
+    )
+{ // {{{ resolve_locality implementation
+
+    using boost::fusion::at_c;
+    boost::uint32_t prefix = naming::get_locality_id_from_gid(req.get_gid());
+
+    // FIXME: implement better way than O(N) lookup
+    BOOST_FOREACH(partition_table_type::value_type & ep, partitions_)
+    {
+        if(prefix == at_c<0>(ep.second))
+        {
+            return response(locality_ns_resolve_locality_gid, ep.first);
+        }
+    }
+
+    return response(locality_ns_resolve_locality_gid, parcelset::endpoints_type(),
+        no_success);
+} // }}}
+
 response locality_namespace::free(
     request const& req
   , error_code& ec
@@ -500,6 +531,7 @@ response locality_namespace::free(
 
         if (primary_)
         {
+            l.unlock();
             request req(primary_ns_unbind_gid, locality, 0);
             response resp = primary_->service(req, ec);
             if (ec) return resp;

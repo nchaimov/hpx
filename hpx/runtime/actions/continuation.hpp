@@ -11,6 +11,7 @@
 #include <hpx/util/bind.hpp>
 #include <hpx/exception.hpp>
 #include <hpx/runtime/naming/name.hpp>
+#include <hpx/util/invoke.hpp>
 #include <hpx/util/polymorphic_factory.hpp>
 #include <hpx/util/logging.hpp>
 #include <hpx/util/serialize_empty_type.hpp>
@@ -28,12 +29,12 @@ namespace hpx
 {
     //////////////////////////////////////////////////////////////////////////
     // forward declare the required overload of apply.
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived, typename Arg>
+    template <typename Component, typename Signature, typename Derived,
+        typename Arg>
     inline bool
-    apply(hpx::actions::action<Component, Result, Arguments, Derived>,
+    apply(hpx::actions::basic_action<Component, Signature, Derived>,
         naming::id_type const&, Arg &&);
-    
+
     // MSVC complains about ambiguities if it sees this forward declaration
 #ifndef BOOST_MSVC
     template <typename F, typename ...Ts>
@@ -46,23 +47,20 @@ namespace hpx
     >::type
     apply(F&& f, Ts&&... vs);
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived, typename Arg0, typename F>
-    inline typename boost::enable_if_c<
-        util::tuple_size<Arguments>::value == 1,
-        bool
-    >::type
-    apply_continue(hpx::actions::action<Component, Result, Arguments, Derived>,
-        naming::id_type const& gid, Arg0 && arg0,
-        F && f);
+    template <
+        typename Component, typename Signature, typename Derived,
+        typename T0, typename F>
+    bool apply_continue(
+        hpx::actions::basic_action<Component, Signature, Derived>,
+        naming::id_type const& gid, T0 && v0, F && f);
 #endif
 
-    template <typename Component, typename Result, typename Arguments,
-        typename Derived, typename Arg0>
+    template <typename Component, typename Signature, typename Derived,
+        typename T0>
     inline bool
-    apply_c(hpx::actions::action<Component, Result, Arguments, Derived>,
+    apply_c(hpx::actions::basic_action<Component, Signature, Derived>,
         naming::id_type const& contgid, naming::id_type const& gid,
-        Arg0 && arg0);
+        T0 && v0);
 
     //////////////////////////////////////////////////////////////////////////
     // handling special case of triggering an LCO
@@ -218,6 +216,36 @@ namespace hpx { namespace actions
     protected:
         naming::id_type gid_;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename F, typename ...Ts>
+    typename boost::disable_if_c<
+        boost::is_void<typename util::result_of<F(Ts...)>::type>::value
+    >::type trigger(continuation& cont, F&& f, Ts&&... vs)
+    {
+        try {
+            cont.trigger(util::invoke(std::forward<F>(f), std::forward<Ts>(vs)...));
+        }
+        catch (...) {
+            // make sure hpx::exceptions are propagated back to the client
+            cont.trigger_error(boost::current_exception());
+        }
+    }
+
+    template <typename F, typename ...Ts>
+    typename boost::enable_if_c<
+        boost::is_void<typename util::result_of<F(Ts...)>::type>::value
+    >::type trigger(continuation& cont, F&& f, Ts&&... vs)
+    {
+        try {
+            util::invoke(std::forward<F>(f), std::forward<Ts>(vs)...);
+            cont.trigger();
+        }
+        catch (...) {
+            // make sure hpx::exceptions are propagated back to the client
+            cont.trigger_error(boost::current_exception());
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     struct set_lco_value_continuation

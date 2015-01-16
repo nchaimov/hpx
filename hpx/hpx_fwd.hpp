@@ -491,9 +491,8 @@ namespace hpx
 
         class HPX_API_EXPORT action_manager;
 
-        template <typename Component, typename Result,
-            typename Arguments, typename Derived>
-        struct action;
+        template <typename Component, typename Signature, typename Derived>
+        struct basic_action;
     }
 
     class HPX_API_EXPORT runtime;

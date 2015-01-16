@@ -313,12 +313,9 @@ namespace hpx { namespace components { namespace server
             ids.push_back(factory->create());
 
     // log result if requested
-        if (LHPX_ENABLED(info))
-        {
-            LRT_(info) << "successfully created " << count << " components " //-V128
-                        << " of type: "
-                        << components::get_component_type_name(type);
-        }
+        LRT_(info) << "successfully created " << count << " components " //-V128
+                    << " of type: "
+                    << components::get_component_type_name(type);
         return ids;
     }
 
@@ -828,7 +825,7 @@ namespace hpx { namespace components { namespace server
         std::vector<naming::id_type> locality_ids = find_all_localities();
         std::size_t count = dijkstra_termination_detection(locality_ids);
 
-        LRT_(info) << "runtime_support::shutdown_all: "
+        LRT_(info) << "runtime_support::shutdown_all: " //-V128
                       "passed first termination detection (count: "
                    << count << ").";
 
@@ -844,7 +841,7 @@ namespace hpx { namespace components { namespace server
         // functions.
         count = dijkstra_termination_detection(locality_ids);
 
-        LRT_(info) << "runtime_support::shutdown_all: "
+        LRT_(info) << "runtime_support::shutdown_all: " //-V128
                       "passed second termination detection (count: "
                    << count << ").";
 
@@ -1279,11 +1276,8 @@ namespace hpx { namespace components { namespace server
             ec = make_success_code();
 
         // log result if requested
-        if (LHPX_ENABLED(info))
-        {
-            LRT_(info) << "successfully created message handler plugin of type: "
-                       << message_handler_type;
-        }
+        LRT_(info) << "successfully created message handler plugin of type: "
+                    << message_handler_type;
         return mh;
     }
 
@@ -1328,11 +1322,8 @@ namespace hpx { namespace components { namespace server
             ec = make_success_code();
 
         // log result if requested
-        if (LHPX_ENABLED(info))
-        {
-            LRT_(info) << "successfully binary filter handler plugin of type: "
-                       << binary_filter_type;
-        }
+        LRT_(info) << "successfully binary filter handler plugin of type: "
+                    << binary_filter_type;
         return bf;
     }
 
