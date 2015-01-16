@@ -1189,7 +1189,7 @@ if(HPX_HAVE_APEX)
         "${ITTNOTIFY_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ittnotify.lib")
     endif()
   endif()
-  #set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${apex_libraries})
+  set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${apex_libraries})
 
   hpx_info("apex" "Apex libraries: ${apex_libraries}")
 
