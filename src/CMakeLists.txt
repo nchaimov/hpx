@@ -257,11 +257,13 @@ endif()
 
 if(HPX_STATIC_LINKING)
   target_link_libraries(hpx
-    ${HPX_LIBRARIES})
+    ${HPX_LIBRARIES}
+    ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES})
 else()
   target_link_libraries(hpx
     hpx_serialization
-    ${HPX_LIBRARIES})
+    ${HPX_LIBRARIES}
+    ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES})
 endif()
 
 set_property(TARGET hpx APPEND

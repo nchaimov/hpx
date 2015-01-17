@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2013 Hartmut Kaiser
+//  Copyright (c) 2007-2015 Hartmut Kaiser
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -12,7 +12,11 @@
 #endif
 
 #ifdef HPX_HAVE_APEX
+#ifdef HPX_HAVE_ITTNOTIFY
 extern bool use_ittnotify_api;
+#else
+static bool const use_ittnotify_api = true;
+#endif
 #endif
 
 namespace hpx { namespace util
@@ -34,8 +38,7 @@ namespace hpx { namespace util
     }
 
     struct apex_wrapper
-    {                      
-        
+    {
         apex_wrapper(char const* const name)
           : name_(name)
         {
