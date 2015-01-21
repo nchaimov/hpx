@@ -2,7 +2,7 @@
 // portable_binary_oarchive.cpp
 
 // (C) Copyright 2002-7 Robert Ramey - http://www.rrsd.com .
-// Copyright (c) 2007-2013 Hartmut Kaiser
+// Copyright (c) 2007-2015 Hartmut Kaiser
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -11,8 +11,6 @@
 
 #include <boost/version.hpp>
 #include <hpx/config.hpp>
-
-#if BOOST_VERSION >= 103700
 
 // export the defined functions
 #define BOOST_ARCHIVE_SOURCE
@@ -50,6 +48,12 @@ namespace hpx { namespace util
 void portable_binary_oarchive::save_impl(
     boost::int64_t const l, char const maxsize)
 {
+#if defined(HPX_DEBUG_SERIALIZATION)
+    static char const type = 'i';
+    this->primitive_base_t::save(type);
+    this->primitive_base_t::save(maxsize);
+#endif
+
     char size = 0;
     if (l == 0) {
         this->primitive_base_t::save(size);
@@ -67,6 +71,8 @@ void portable_binary_oarchive::save_impl(
         ll >>= CHAR_BIT;
         ++size;
     } while (ll != 0);
+
+    HPX_ASSERT(size <= maxsize);
 
     this->primitive_base_t::save(size);
     this->primitive_base_t::save(negative);
@@ -92,6 +98,12 @@ void portable_binary_oarchive::save_impl(
 void portable_binary_oarchive::save_impl(
     boost::uint64_t const ul, char const maxsize)
 {
+#if defined(HPX_DEBUG_SERIALIZATION)
+    static char const type = 'u';
+    this->primitive_base_t::save(type);
+    this->primitive_base_t::save(maxsize);
+#endif
+
     char size = 0;
     if (ul == 0) {
         this->primitive_base_t::save(size);
@@ -104,6 +116,7 @@ void portable_binary_oarchive::save_impl(
         ++size;
     } while (ll != 0);
 
+    HPX_ASSERT(size <= maxsize);
     this->primitive_base_t::save(size);
 
     ll = ul;
@@ -167,21 +180,6 @@ void portable_binary_oarchive::init(util::binary_filter* filter, unsigned int fl
 
 }}
 
-#if BOOST_VERSION < 104000
-// explicitly instantiate for this type of stream
-#include <boost/archive/impl/archive_pointer_oserializer.ipp>
-
-namespace boost {
-namespace archive {
-
-    template class HPX_ALWAYS_EXPORT
-        detail::archive_pointer_oserializer<hpx::util::portable_binary_oarchive>;
-
-} // namespace archive
-} // namespace boost
-
-#else
-
 #include <boost/archive/detail/archive_serializer_map.hpp>
 #include <boost/archive/impl/archive_serializer_map.ipp>
 
@@ -194,8 +192,6 @@ namespace archive {
 } // namespace archive
 } // namespace boost
 
-#endif
-
 #include <hpx/util/basic_binary_oprimitive_impl.hpp>
 
 namespace hpx { namespace util
@@ -205,5 +201,3 @@ namespace hpx { namespace util
         hpx::util::portable_binary_oarchive
     >;
 }}
-
-#endif // BOOST_VERSION >= 103700
