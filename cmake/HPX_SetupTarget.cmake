@@ -156,7 +156,7 @@ function(hpx_setup_target target)
   # ABI differences
   if(CMAKE_MAJOR_VERSION GREATER 2)
     set_property(TARGET ${target} APPEND PROPERTY
-	    COMPILE_DEFINITIONS $<$<CONFIG:Debug>:HPX_DEBUG>)
+        COMPILE_DEFINITIONS $<$<CONFIG:Debug>:HPX_DEBUG>)
   else()
     set_property(TARGET ${target} APPEND PROPERTY
       COMPILE_DEFINITIONS_DEBUG HPX_DEBUG)
