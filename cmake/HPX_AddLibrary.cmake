@@ -81,6 +81,11 @@ macro(add_hpx_library name)
       TARGETS ${${name}_lib_HEADERS})
   endif()
 
+  set(_nolibs)
+  if(NOT ${name}_NOLIBS)
+    set(_nolibs NOLIBS)
+  endif()
+
   hpx_print_list("DEBUG" "add_library.${name}" "Sources for ${name}" ${name}_SOURCES)
   hpx_print_list("DEBUG" "add_library.${name}" "Headers for ${name}" ${name}_HEADERS)
   hpx_print_list("DEBUG" "add_library.${name}" "Dependencies for ${name}" ${name}_DEPENDENCIES)
@@ -161,6 +166,7 @@ macro(add_hpx_library name)
     LINK_FLAGS ${${name}_LINK_FLAGS}
     DEPENDENCIES ${${name}_DEPENDENCIES}
     COMPONENT_DEPENDENCIES ${${name}_COMPONENT_DEPENDENCIES}
+    ${_nolibs}
     ${_target_flags}
     ${install_optional}
   )

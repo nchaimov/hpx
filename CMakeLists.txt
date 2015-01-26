@@ -623,17 +623,33 @@ endif()
 ################################################################################
 # Enable integration with Apex event counters
 ################################################################################
+set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES CACHE INTERNAL "")
 if(HPX_WITH_APEX)
-  find_package(APEX)
+  # handle APEX library
+  add_subdirectory(apex/apex)
   if(NOT APEX_FOUND)
-    hpx_error("Apex could not be found and HPX_WITH_APEX=On, please specify APEX_ROOT to point to the root of your Apex installation")
+    hpx_error("Apex could not be found and HPX_WITH_APEX=On")
   endif()
-  hpx_libraries(${APEX_LIBRARIES})
-  include_directories(${APEX_INCLUDE_DIR})
   if(AMPLIFIER_FOUND)
     hpx_error("AMPLIFIER_FOUND has been set. Please disable the use of the Intel Amplifier (WITH_AMPLIFIER=Off) in order to use Apex")
   endif()
-  hpx_add_config_define(HPX_HAVE_ITTNOTIFY)
+
+  include_directories(${APEX_SOURCE_DIR})
+  hpx_add_config_define(HPX_HAVE_APEX 1)
+  set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
+      ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} apex_lib)
+
+  # handle optional ITTNotify library
+  if(HPX_WITH_ITTNOTIFY)
+    add_subdirectory(apex/ITTNotify)
+    if(NOT ITTNOTIFY_FOUND)
+      hpx_error("ITTNotify could not be found and HPX_WITH_ITTNOTIFY=On")
+    endif()
+    include_directories(${ITTNOTIFY_SOURCE_DIR})
+    hpx_add_config_define(HPX_HAVE_ITTNOTIFY 1)
+    set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
+        ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} ittnotify_lib)
+  endif()
 endif()
 
 if(HPX_WITH_GOOGLE_PERFTOOLS)
@@ -1162,53 +1178,6 @@ set(HPX_DEBUG_POSTFIX "d")
 # Recurse into some subdirectories. This does not actually cause another cmake
 # executable to run. The same process will walk through the project's entire
 # directory structure.
-
-if(HPX_HAVE_APEX)
-  add_subdirectory(apex/apex)
-  set(APEX_BINARY_DIR ${PROJECT_BINARY_DIR}/lib)
-  set(ITTNOTIFY_BINARY_DIR ${PROJECT_BINARY_DIR}/lib)
-  hpx_info("apex" "Apex source dir: ${APEX_SOURCE_DIR}")
-  hpx_info("apex" "Apex binary dir: ${APEX_BINARY_DIR}")
-
-
-
-  set(APEX_FOUND ON)
-
-  if(NOT MSVC)
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-      set(apex_libraries
-        ${APEX_BINARY_DIR}/libapex${CMAKE_DEBUG_POSTFIX}.so
-        ${ITTNOTIFY_BINARY_DIR}/libittnotify${CMAKE_DEBUG_POSTFIX}.so)
-    else()
-      set(apex_libraries
-        ${APEX_BINARY_DIR}/libapex.so
-        ${ITTNOTIFY_BINARY_DIR}/libittnotify.so)
-    endif()
-  else()
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-      set(apex_libraries
-        "${APEX_BINARY_DIR}/Debug/apex${CMAKE_DEBUG_POSTFIX}.lib"
-        "${ITTNOTIFY_BINARY_DIR}/Debug/ittnotify${CMAKE_DEBUG_POSTFIX}.lib")
-    else()
-      set(apex_libraries
-        "${APEX_BINARY_DIR}/${CMAKE_BUILD_TYPE}/apex.lib"
-        "${ITTNOTIFY_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ittnotify.lib")
-    endif()
-  endif()
-  set(hpx_RUNTIME_LIBRARIES ${hpx_RUNTIME_LIBRARIES} ${apex_libraries})
-
-  hpx_info("apex" "Apex libraries: ${apex_libraries}")
-
-  include_directories(${APEX_SOURCE_DIR})
-  hpx_libraries(${apex_libraries})
-  #hpx_link_sys_directories(${APEX_BINARY_DIR})
-  hpx_add_config_define(HPX_HAVE_APEX)
-
-  include_directories(${ITTNOTIFY_SOURCE_DIR})
-  #hpx_link_sys_directories(${ITTNOTIFY_BINARY_DIR})
-  hpx_add_config_define(HPX_HAVE_ITTNOTIFY 1)
-endif()
-
 
 if(HPX_BUILD_TOOLS)
   add_hpx_pseudo_target(tools)
