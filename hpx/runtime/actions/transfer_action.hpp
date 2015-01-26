@@ -67,13 +67,10 @@ namespace hpx { namespace actions
 
         typedef typename Action::direct_execution direct_execution;
 
-        // default constructor is needed for serialization
-        transfer_action() {}
-
         // construct an action from its arguments
-        template <typename Args>
-        explicit transfer_action(Args && args)
-          : arguments_(std::forward<Args>(args)),
+        template <typename ...Ts>
+        explicit transfer_action(Ts&&... vs)
+          : arguments_(std::forward<Ts>(vs)...),
 #if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
             parent_locality_(transfer_action::get_locality_id()),
             parent_id_(reinterpret_cast<boost::uint64_t>(threads::get_parent_id())),
@@ -89,9 +86,9 @@ namespace hpx { namespace actions
                 >::call(threads::thread_stacksize_default))
         {}
 
-        template <typename Args>
-        transfer_action(threads::thread_priority priority, Args && args)
-          : arguments_(std::forward<Args>(args)),
+        template <typename ...Ts>
+        transfer_action(threads::thread_priority priority, Ts&&... vs)
+          : arguments_(std::forward<Ts>(vs)...),
 #if defined(HPX_THREAD_MAINTAIN_PARENT_REFERENCE)
             parent_locality_(transfer_action::get_locality_id()),
             parent_id_(reinterpret_cast<boost::uint64_t>(threads::get_parent_id())),
@@ -488,6 +485,20 @@ namespace hpx { namespace actions
     }
 
     /// \endcond
+}}
+
+namespace hpx { namespace actions
+{
+    template <typename Action>
+    struct init_registration<transfer_action<Action> >
+    {
+        static detail::automatic_action_registration<transfer_action<Action> > g;
+    };
+
+    template <typename Action>
+    detail::automatic_action_registration<transfer_action<Action> >
+        init_registration<transfer_action<Action> >::g =
+            detail::automatic_action_registration<transfer_action<Action> >();
 }}
 
 // Disabling the guid initialization stuff for actions
