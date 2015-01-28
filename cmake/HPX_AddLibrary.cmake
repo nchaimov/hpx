@@ -82,7 +82,7 @@ macro(add_hpx_library name)
   endif()
 
   set(_nolibs)
-  if(NOT ${name}_NOLIBS)
+  if(${name}_NOLIBS)
     set(_nolibs NOLIBS)
   endif()
 

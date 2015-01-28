@@ -616,7 +616,7 @@ endif()
 set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES CACHE INTERNAL "")
 if(HPX_WITH_APEX)
   # handle APEX library
-  add_subdirectory(apex/apex)
+  add_subdirectory(apex/src/apex)
   if(NOT APEX_FOUND)
     hpx_error("Apex could not be found and HPX_WITH_APEX=On")
   endif()
@@ -631,7 +631,7 @@ if(HPX_WITH_APEX)
 
   # handle optional ITTNotify library
   if(HPX_WITH_ITTNOTIFY)
-    add_subdirectory(apex/ITTNotify)
+    add_subdirectory(apex/src/ITTNotify)
     if(NOT ITTNOTIFY_FOUND)
       hpx_error("ITTNotify could not be found and HPX_WITH_ITTNOTIFY=On")
     endif()
