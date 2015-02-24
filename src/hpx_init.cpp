@@ -644,7 +644,7 @@ namespace hpx
             return 0;
         }
 #endif
-#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
+#if defined(HPX_THROTTLE_SCHEDULER)
         ///////////////////////////////////////////////////////////////////////
         // local scheduler (one queue for each OS threads)
         int run_throttle(startup_function_type const& startup,
