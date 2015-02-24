@@ -52,7 +52,7 @@ namespace hpx { namespace util
         }
 
         char const* const name_;
-        void * profiler_;
+        apex::profiler * profiler_;
     };
 
     struct apex_wrapper_init

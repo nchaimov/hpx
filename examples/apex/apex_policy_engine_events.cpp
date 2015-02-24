@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
           "n value for the Fibonacci function")
         ;
 
-    const apex_event_type when = START_EVENT;
+    const apex_event_type when = APEX_START_EVENT;
     apex::register_policy(when, [](apex_context const& context){
         std::cout << "Start event!" << std::endl;        
         return true;

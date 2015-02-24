@@ -94,13 +94,13 @@ int main(int argc, char* argv[])
     apex::register_event_policy(when, [](void * e){return true;}, [](void * e){
         apex::event_data * evt = (apex::event_data *) e;
         switch(evt->event_type_) {
-            case apex::STARTUP: std::cout      << "Startup event" << std::endl; break;
-            case apex::SHUTDOWN: std::cout     << "Shutdown event" << std::endl; break;
-            case apex::NEW_NODE: std::cout     << "New node event" << std::endl; break;
-            case apex::NEW_THREAD: std::cout   << "New thread event" << std::endl; break;
-            case apex::START_EVENT: std::cout  << "Start event" << std::endl; break;
-            case apex::STOP_EVENT: std::cout   << "Stop event" << std::endl; break;
-            case apex::SAMPLE_VALUE: std::cout << "Sample value event" << std::endl; break;
+            case apex::APEX_STARTUP: std::cout      << "Startup event" << std::endl; break;
+            case apex::APEX_SHUTDOWN: std::cout     << "Shutdown event" << std::endl; break;
+            case apex::APEX_NEW_NODE: std::cout     << "New node event" << std::endl; break;
+            case apex::APEX_NEW_THREAD: std::cout   << "New thread event" << std::endl; break;
+            case apex::APEX_START_EVENT: std::cout  << "Start event" << std::endl; break;
+            case apex::APEX_STOP_EVENT: std::cout   << "Stop event" << std::endl; break;
+            case apex::APEX_SAMPLE_VALUE: std::cout << "Sample value event" << std::endl; break;
             default: std::cout << "Unknown event" << std::endl;
         }
     });
