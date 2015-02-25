@@ -118,7 +118,7 @@ namespace hpx { namespace threads { namespace executors
     };
 #endif
 
-#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
+#if defined(HPX_THROTTLE_SCHEDULER)
     struct HPX_EXPORT throttle_queue_executor : public scheduled_executor
     {
         throttle_queue_executor();

@@ -1219,7 +1219,7 @@ namespace hpx
 #endif
                 }
             else if (0 == std::string("throttle").find(cfg.queuing_)) {
-#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
+#if defined(HPX_THROTTLE_SCHEDULER)
                 result = detail::run_throttle(startup, shutdown, cfg, blocking);
 #else
         throw std::logic_error("Command line option --hpx:queuing=throttle "

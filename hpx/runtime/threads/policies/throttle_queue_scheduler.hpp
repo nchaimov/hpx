@@ -330,137 +330,21 @@ namespace hpx { namespace threads { namespace policies
         }
 
         bool TTthrottle(std::size_t num_thread, int add_thread){ 
-                mask_cref_type this_numa_domain = numa_domain_masks_[num_thread];
-		std::size_t count_this_numa_domain = 0;
-		std::size_t count_other_numa_domain = 0;
-		std::size_t queues_size = queues_.size();
+            mask_cref_type this_numa_domain = numa_domain_masks_[num_thread];
+            std::size_t count_this_numa_domain = 0;
+            std::size_t count_other_numa_domain = 0;
+            std::size_t queues_size = queues_.size();
 
 
-		if (apex_init == false) {
-		  apex_init = true;
+            if (HPX_UNLIKELY(apex_init == false)) {
+            apex_init = true;
+                // init apex throttling here
+            std::cerr << "APEX initialization goes here." << std::endl;
+            }
 
-		  // Initialize Blackboard
-		  bool ret = RCR.initBlackBoard();
-		  if (ret == false) {
-		    fprintf(stderr,"Error reading shared memory region\n");
-		    exit(1);
-		  }
-		  // Blackboard counters (energy for now)
-		  int size = RCR.getNumOfNodes()*RCR.getNumOfSockets();
-		  energy = (volatile int64_t**)malloc(sizeof(int64_t*)*size);
-		  savedEnergy = (int64_t*)malloc(sizeof(int64_t*)*size);
-		  
-		  int n,s;
-		  for(n = 0; n < RCR.getNumOfNodes(); n++){
-		    for(s = 0; s < RCR.getNumOfSockets(); s++){		      
-		      energy[s]= RCR.getSocketMeter(ENERGY_STATUS, n, s);
-		      if (!energy[s]) {
-			std::cerr << "Error: Failed to find ENERGY_STATUS socket " << s << std::endl;
-			exit(1);
-		      }
-		    }
-		  }
-		  gettimeofday(&startts, NULL);
-
-		  // set up max thread and throttled thread count values
-		  {
-		    char* option = NULL;
-		    option = getenv("HPX_THROTTLE_MAX");
-		    if (option != NULL) {
-		      maxThreads = atoi(option);
-		    }
-		    else maxThreads = 16;
-		    option = getenv("HPX_THROTTLE_MIN");
-		    if (option != NULL) {
-		      minThreads = atoi(option);
-		    }
-		    else minThreads = 12;
-		  }
-
-		  // set up periodic counter check to drive throttling model
-		  apex::register_periodic_policy(1000, [](void * e){return true;}, [](void * e){
-		      // apex::register_event_policy(when, [](void * e){return true;}, [](void * e){
-		      apex::event_data * evt = (apex::event_data *) e;
-		      switch(evt->event_type_) {
-
-			// on startup set active threads to number of active queues
-			//    print message telling me that thottling active
-		      case apex::STARTUP: 
-			std::cout  << "Throttling active" << std::endl; 
-			break;
-
-			// once shutdown initiated try to complete as fast as possible
-			//     set active threads to number of active queues
-		      case apex::SHUTDOWN:
-			std::cout  << "Throttling shutdown" << std::endl; 
-			//apex_current_desired_active_threads = init.num_queues_; 
-			break;
-
-			// add node -- do nothing at moment
-		      case apex::NEW_NODE: 
-			std::cout  << "add node" << std::endl; 
-			break;
-			// add thread -- do nothing at moment
-
-		      case apex::NEW_THREAD: 
-			std::cout  << "add thread" << std::endl; 
-			break;
-
-			// start event -- do nothing at moment (do I really want to be making the
-			//     throttle adjustment here? -- on RCRdaemon events?)
-		      case apex::START_EVENT: 
-			std::cout  << "event start" << std::endl; 
-			break;
-
-			// stop event -- do nothing at moment
-		      case apex::STOP_EVENT:
-			std::cout  << "event stop" << std::endl; 
-			break;
-
-			// read sample -- check to see if memory utilization has changed since last sample
-			//     and reset perferred active threads if needed
-		      case apex::SAMPLE_VALUE: 
-			std::cout  << "sample value" << std::endl; 
-			apex_current_desired_active_threads=1;
-			break;
-
-			// read sample -- check to see if memory utilization has changed since last sample
-			//     and reset perferred active threads if needed
-		      case apex::PERIODIC: 
-			{
-			  double watts = 0.0;
-			  double time = 0.0;
-			  int64_t totalEnergy = 0;
-			  gettimeofday(&curts, NULL);
-			  time = (curts.tv_sec+curts.tv_usec/1000000.0)-(startts.tv_sec+startts.tv_usec/1000000.0);
-			  startts = curts;
-			  int n,s;
-			  for(n = 0; n < RCR.getNumOfNodes(); n++){
-			    for(s = 0; s < RCR.getNumOfSockets(); s++){
-			      int64_t e = *energy[s];
-			      totalEnergy += e - savedEnergy[s];
-			      savedEnergy[s] = e;
-			    }
-			  }
-			  watts = totalEnergy/(time * 100000.0);
-			
-			  if (watts > 80.0) { // throttle -- should be environment varaible value
-			    apex_current_desired_active_threads=minThreads;
-			  }
-			  else if (watts < 50.0) { 
-			    apex_current_desired_active_threads=maxThreads;
-			  }
-			}
-			break;
-			
-		      default: std::cout << "Unknown event " << evt->event_type_  << std::endl;
-		      }
-		    });
-		}
-
-
-		if (num_thread < apex_current_desired_active_threads) return true;
-		else return false;
+            // check if we should throttle
+            std::cerr << "Checking if we should throttle " << num_thread << std::endl;
+            return true;
         }
 
         /// Return the next thread to be executed, return false if none is

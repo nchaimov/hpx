@@ -10,7 +10,7 @@
 #include <hpx/runtime/threads/policies/local_queue_scheduler.hpp>
 #endif
 #include <hpx/runtime/threads/policies/local_priority_queue_scheduler.hpp>
-#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
+#if defined(HPX_THROTTLE_SCHEDULER)
 #include <hpx/runtime/threads/policies/throttle_queue_scheduler.hpp>
 #endif
 #if defined(HPX_STATIC_PRIORITY_SCHEDULER)
@@ -399,7 +399,7 @@ namespace hpx { namespace threads { namespace executors
     {}
 #endif
 
-#if defined(HPX_THROTTLE_SCHEDULER) && defined(HPX_HAVE_RCR)
+#if defined(HPX_THROTTLE_SCHEDULER)
     ///////////////////////////////////////////////////////////////////////////
     throttle_queue_executor::throttle_queue_executor()
       : scheduled_executor(new detail::thread_pool_executor<
