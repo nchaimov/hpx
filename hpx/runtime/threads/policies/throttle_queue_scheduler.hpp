@@ -159,6 +159,9 @@ namespace hpx { namespace threads { namespace policies
 
         virtual ~throttle_queue_scheduler()
         {
+            if(apex_init) {
+                apex::shutdown_throttling();
+            }
             for (std::size_t i = 0; i != queues_.size(); ++i)
                 delete queues_[i];
         }
@@ -333,14 +336,21 @@ namespace hpx { namespace threads { namespace policies
 
 
             if (HPX_UNLIKELY(apex_init == false)) {
-            apex_init = true;
-                // init apex throttling here
-            std::cerr << "APEX initialization goes here." << std::endl;
+                if(apex::setup_power_cap_throttling() != APEX_NOERROR) {
+                    std::cerr << "Error initializing APEX power throttling." << std::endl;
+                    return true; // Don't throttle
+                } else {
+                    apex_init = true;
+                }
             }
 
             // check if we should throttle
-            std::cerr << "Checking if we should throttle " << num_thread << std::endl;
-            return true;
+            const int desired_active_threads = apex::get_thread_cap();
+            if(num_thread < desired_active_threads) {
+                return true;
+            } else {
+                return false;
+            }
         }
 
         /// Return the next thread to be executed, return false if none is
