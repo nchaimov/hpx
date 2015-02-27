@@ -697,6 +697,7 @@ namespace hpx { namespace threads
                     tfunc_impl(num_thread);
                 }
                 catch (hpx::exception const& e) {
+                    state_ = terminating;
                     LFATAL_ << "tfunc(" << num_thread //-V128
                             << "): caught hpx::exception: "
                             << e.what() << ", aborted thread execution";
@@ -704,6 +705,7 @@ namespace hpx { namespace threads
                     return;
                 }
                 catch (boost::system::system_error const& e) {
+                    state_ = terminating;
                     LFATAL_ << "tfunc(" << num_thread //-V128
                             << "): caught boost::system::system_error: "
                             << e.what() << ", aborted thread execution";
@@ -717,6 +719,7 @@ namespace hpx { namespace threads
                 }
             }
             catch (...) {
+                state_ = terminating;
                 LFATAL_ << "tfunc(" << num_thread << "): caught unexpected " //-V128
                     "exception, aborted thread execution";
                 report_error(num_thread, boost::current_exception());
@@ -1550,8 +1553,10 @@ namespace hpx { namespace threads
             util::bind(&threadmanager_impl::idle_callback, this, num_thread));
 
         // the OS thread is allowed to exit only if no more HPX threads exist
+        // or if some other thread has terminated
         HPX_ASSERT(!scheduler_.get_thread_count(
-            unknown, thread_priority_default, num_thread));
+            unknown, thread_priority_default, num_thread) ||
+            state_ == terminating);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1618,7 +1623,7 @@ namespace hpx { namespace threads
 
                 LTM_(info) << "run: create OS thread " << thread_num //-V128
                     << ": will run on processing units within this mask: "
-#if !defined(HPX_HAVE_MORE_THAN_64_THREADS) || (defined(HPX_MAX_CPU_COUNT) && HPX_MAX_CPU_COUNT <= 64)
+#if !defined(HPX_WITH_MORE_THAN_64_THREADS) || (defined(HPX_MAX_CPU_COUNT) && HPX_MAX_CPU_COUNT <= 64)
                     << std::hex << "0x" << mask;
 #else
                     << "0b" << mask;
@@ -1679,7 +1684,7 @@ namespace hpx { namespace threads
             }
 
             if (blocking) {
-                for (std::size_t i = 0; i < threads_.size(); ++i)
+                for (std::size_t i = 0; i != threads_.size(); ++i)
                 {
                     // make sure no OS thread is waiting
                     LTM_(info) << "stop: notify_all";

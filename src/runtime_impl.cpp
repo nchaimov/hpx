@@ -35,10 +35,6 @@
 #include <io.h>
 #endif
 
-#if defined(HPX_PARCELPORT_MPI)
-#include <hpx/util/mpi_environment.hpp>
-#endif
-
 namespace hpx {
 
     ///////////////////////////////////////////////////////////////////////////
@@ -122,7 +118,7 @@ namespace hpx {
     ///////////////////////////////////////////////////////////////////////////
     template <typename SchedulingPolicy, typename NotificationPolicy>
     runtime_impl<SchedulingPolicy, NotificationPolicy>::runtime_impl(
-            util::runtime_configuration const& rtcfg,
+            util::runtime_configuration & rtcfg,
             runtime_mode locality_mode, std::size_t num_threads,
             init_scheduler_type const& init,
             threads::policies::init_affinity_data const& init_affinity)
@@ -145,7 +141,7 @@ namespace hpx {
         thread_manager_(new hpx::threads::threadmanager_impl<
             SchedulingPolicy, NotificationPolicy>(
                 timer_pool_, scheduler_, notifier_, num_threads)),
-        parcel_handler_(thread_manager_.get(),
+        parcel_handler_(rtcfg, thread_manager_.get(),
             new parcelset::policies::global_parcelhandler_queue,
             boost::bind(&runtime_impl::init_tss, This(), "parcel-thread", ::_1, ::_2, true),
             boost::bind(&runtime_impl::deinit_tss, This())),
@@ -168,7 +164,7 @@ namespace hpx {
         // now, launch AGAS and register all nodes, launch all other components
         agas_client_.initialize(
             parcel_handler_, boost::uint64_t(runtime_support_.get()), boost::uint64_t(memory_.get()));
-        parcel_handler_.initialize();
+        parcel_handler_.initialize(agas_client_);
 
         applier_.initialize(boost::uint64_t(runtime_support_.get()), boost::uint64_t(memory_.get()));
 
@@ -218,11 +214,7 @@ namespace hpx {
         io_pool_.stop();
 
         // unload libraries
-        //runtime_support_->tidy();
-
-#if defined(HPX_PARCELPORT_MPI)
-        util::mpi_environment::finalize();
-#endif
+        runtime_support_->tidy();
 
         LRT_(debug) << "~runtime_impl(finished)";
     }
@@ -401,7 +393,7 @@ namespace hpx {
         LRT_(warning) << "runtime_impl: about to stop services";
 
         // flush all parcel buffers, stop buffering parcels at this point
-        parcel_handler_.do_background_work(true);
+        //parcel_handler_.do_background_work(true);
 
         // execute all on_exit functions whenever the first thread calls this
         this->runtime::stopping();
@@ -458,7 +450,19 @@ namespace hpx {
         // Early and late exceptions, errors outside of HPX-threads
         if (!threads::get_self_ptr() || !threads::threadmanager_is(running))
         {
-            detail::report_exception_and_terminate(e);
+            // report the error to the local console
+            detail::report_exception_and_continue(e);
+
+            // store the exception to be able to rethrow it later
+            {
+                boost::mutex::scoped_lock l(mtx_);
+                exception_ = e;
+            }
+
+            // initiate stopping the runtime system
+            runtime_support_->notify_waiting_main();
+            stop(false);
+
             return;
         }
 
@@ -473,7 +477,7 @@ namespace hpx {
         naming::gid_type console_id;
         if (agas_client_.get_console_locality(console_id))
         {
-            if (parcel_handler_.get_locality() != console_id) {
+            if (agas_client_.get_local_locality() != console_id) {
                 components::console_error_sink(
                     naming::id_type(console_id, naming::id_type::unmanaged), e);
             }
@@ -487,8 +491,24 @@ namespace hpx {
     void runtime_impl<SchedulingPolicy, NotificationPolicy>::report_error(
         boost::exception_ptr const& e)
     {
-        std::size_t num_thread = hpx::threads::threadmanager_base::get_worker_thread_num();
+        std::size_t num_thread =
+            hpx::threads::threadmanager_base::get_worker_thread_num();
         return report_error(num_thread, e);
+    }
+
+    template <typename SchedulingPolicy, typename NotificationPolicy>
+    void runtime_impl<SchedulingPolicy, NotificationPolicy>::rethrow_exception()
+    {
+        if (state_.load() > running)
+        {
+            boost::mutex::scoped_lock l(mtx_);
+            if (exception_)
+            {
+                boost::exception_ptr e = exception_;
+                exception_ = boost::exception_ptr();
+                boost::rethrow_exception(e);
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -504,6 +524,8 @@ namespace hpx {
         stop();
 
         parcel_handler_.stop();      // stops parcelport for sure
+
+        rethrow_exception();
         return result_;
     }
 
@@ -519,6 +541,8 @@ namespace hpx {
         stop();
 
         parcel_handler_.stop();      // stops parcelport for sure
+
+        rethrow_exception();
         return result;
     }
 

@@ -10,6 +10,7 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/runtime/threads/policies/affinity_data.hpp>
 #include <hpx/runtime/threads/topology.hpp>
+#include <hpx/runtime/parcelset/locality.hpp>
 #include <hpx/lcos/local/spinlock.hpp>
 #include <hpx/util/static_reinit.hpp>
 #include <hpx/util/runtime_configuration.hpp>
@@ -95,7 +96,7 @@ namespace hpx
 
         /// construct a new instance of a runtime
         runtime(
-            util::runtime_configuration const& rtcfg
+            util::runtime_configuration & rtcfg
           , threads::policies::init_affinity_data const& affinity_init);
 
         virtual ~runtime();
@@ -198,6 +199,8 @@ namespace hpx
         virtual int run(util::function_nonser<hpx_main_function_type> const& func) = 0;
 
         virtual int run() = 0;
+
+        virtual void rethrow_exception() = 0;
 
         virtual int start(util::function_nonser<hpx_main_function_type> const& func,
             bool blocking = false) = 0;

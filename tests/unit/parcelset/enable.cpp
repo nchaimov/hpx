@@ -17,22 +17,18 @@ HPX_PLAIN_ACTION(f);
 
 std::size_t send_count()
 {
-    hpx::parcelset::connection_type conn
-        = hpx::parcelset::connection_type::connection_mpi;
     return
         hpx::get_runtime().
             get_parcel_handler().
-                get_parcel_send_count(conn, false);
+                get_parcel_send_count("mpi", false);
 }
 
 std::size_t receive_count()
 {
-    hpx::parcelset::connection_type conn
-        = hpx::parcelset::connection_type::connection_mpi;
     return
         hpx::get_runtime().
             get_parcel_handler().
-                get_parcel_receive_count(conn, false);
+                get_parcel_receive_count("mpi", false);
 }
 
 void test_non_disabled(std::vector<hpx::id_type> const & localities)
@@ -41,7 +37,7 @@ void test_non_disabled(std::vector<hpx::id_type> const & localities)
 
     std::size_t sent = send_count();
     std::size_t received = receive_count();
-    
+
     std::vector<hpx::future<void> > futures;
     futures.reserve(localities.size());
     BOOST_FOREACH(hpx::id_type id, localities)
@@ -64,7 +60,7 @@ void test_disable_enable(std::vector<hpx::id_type> const & localities)
 
         std::size_t sent = send_count();
         std::size_t received = receive_count();
-        
+
         std::vector<hpx::future<void> > futures;
         futures.reserve(localities.size());
         BOOST_FOREACH(hpx::id_type id, localities)
@@ -75,7 +71,8 @@ void test_disable_enable(std::vector<hpx::id_type> const & localities)
         hpx::this_thread::yield();
 
         HPX_TEST_EQ(sent, send_count());
-        HPX_TEST_EQ(received, receive_count());
+        // Decoding might have taken a little longer which increases the receive count ...
+        HPX_TEST(received == receive_count() || received + 1 == receive_count());
 
         hpx::this_thread::yield();
         BOOST_FOREACH(hpx::future<void> const & f, futures)
@@ -101,10 +98,11 @@ void test_disable(std::vector<hpx::id_type> const & localities)
     futures.reserve(localities.size());
     {
         hpx::parcelset::disable d;
+        hpx::this_thread::yield();
 
         sent = send_count();
         received = receive_count();
-        
+
         BOOST_FOREACH(hpx::id_type id, localities)
         {
             if(id != here)
@@ -113,7 +111,8 @@ void test_disable(std::vector<hpx::id_type> const & localities)
         hpx::this_thread::yield();
 
         HPX_TEST_EQ(sent, send_count());
-        HPX_TEST_EQ(received, receive_count());
+        // Decoding might have taken a little longer which increases the receive count ...
+        HPX_TEST(received == receive_count() || received + 1 == receive_count());
 
         hpx::this_thread::yield();
         BOOST_FOREACH(hpx::future<void> const & f, futures)

@@ -72,6 +72,7 @@ include(CMakeDependentOption)
 include(HPX_Utils)
 include(HPX_ExportTargets)
 include(HPX_Libraries)
+include(HPX_LibraryDir)
 include(HPX_AddConfigTest)
 include(HPX_AddDefinitions)
 
@@ -138,9 +139,6 @@ hpx_option(HPX_BUILD_DOCUMENTATION BOOL "Build the HPX documentation (default OF
 
 hpx_option(HPX_BUILD_DOCUMENTATION_SINGLEPAGE BOOL "The HPX documentation should be build as a single page HTML (default OFF)." OFF CATEGORY "Build Targets")
 
-hpx_option(HPX_AUTOMATIC_PREPROCESSING BOOL "True if the automatic header preprocessing target should be created (default: OFF)." OFF ADVANCED)
-hpx_option(HPX_WAVE_ADDITIONAL_INCLUDE_DIRS STRING "Additional (compiler specific) include directories for the wave preprocessing tool." "" CATEGORY "Generic" ADVANCED)
-
 ################################################################################
 # Some platforms do not support dynamic linking. Enable this to link all
 # libraries statically. This also changes some of the internals of HPX related
@@ -167,7 +165,11 @@ hpx_option(HPX_BUILD_TESTS_EXTERNAL_BUILD BOOL "Build external cmake build tests
 hpx_option(HPX_BUILD_TOOLS BOOL "Build HPX tools (default: OFF)" OFF ADVANCED CATEGORY "Build Targets")
 hpx_option(HPX_BUILD_RUNTIME BOOL "Build HPX runtime (default: ON)" ON ADVANCED CATEGORY "Build Targets")
 
-hpx_option(HPX_FULL_RPATH BOOL "Build and link HPX libraries and executables with full RPATHs (default: ON)" ON ADVANCED)
+set(HPX_FULL_RPATH_DEFAULT ON)
+if(APPLE)
+  set(HPX_FULL_RPATH_DEFAULT OFF)
+endif()
+hpx_option(HPX_FULL_RPATH BOOL "Build and link HPX libraries and executables with full RPATHs (default: ON)" OFF ADVANCED)
 hpx_option(HPX_BUILD_WITH_INSTALL_PREFIX BOOL "Always set the HPX_PREFIX default to the install directory (default: OFF)" OFF ADVANCED)
 
 ################################################################################
@@ -181,16 +183,6 @@ hpx_option(HPX_NATIVE_TLS BOOL "Use native TLS support if available (default: ON
 if(HPX_NATIVE_TLS)
   hpx_info("Native TLS is enabled.")
   hpx_add_config_define(HPX_HAVE_NATIVE_TLS)
-endif()
-
-################################################################################
-# Disable the use of partially preprocessed header files
-################################################################################
-hpx_option(HPX_PREPROCESSOR_LIMIT_EXPANSION BOOL "Do not use preprocessed headers (default: OFF)" OFF ADVANCED)
-
-if(HPX_PREPROCESSOR_LIMIT_EXPANSION)
-  hpx_info("Use of preprocessed headers is disabled.")
-  hpx_add_config_define(HPX_USE_PREPROCESSOR_LIMIT_EXPANSION)
 endif()
 
 ################################################################################
@@ -238,6 +230,14 @@ hpx_option(HPX_MAX_CPU_COUNT STRING
   ${HPX_MAX_CPU_COUNT_DEFAULT}
   CATEGORY "Thread Manager" ADVANCED)
 hpx_add_config_define(HPX_MAX_CPU_COUNT ${HPX_MAX_CPU_COUNT})
+
+if(NOT (${HPX_MAX_CPU_COUNT} LESS 65))
+  set(HPX_WITH_MORE_THAN_64_THREADS_DEFAULT OFF)
+  hpx_option(HPX_WITH_MORE_THAN_64_THREADS STRING
+    "HPX applications will be able to run on more than 64 cores"
+    ${HPX_WITH_MORE_THAN_64_THREADS_DEFAULT}
+    CATEGORY "Thread Manager" ADVANCED)
+endif()
 
 hpx_option(HPX_THREAD_STACK_MMAP BOOL
   "Use mmap for stack allocation on appropriate platforms"
@@ -399,8 +399,8 @@ hpx_option(HPX_PARCELPORT_IBVERBS_MAX_MEMORY_CHUNKS STRING "Maximum number of ch
 
 ## mpi parcelport settings
 hpx_option(HPX_PARCELPORT_MPI_ENV STRING
-  "List of environment variables checked to detect MPI (default: PMI_RANK;OMPI_COMM_WORLD_SIZE)."
-  "PMI_RANK;OMPI_COMM_WORLD_SIZE" CATEGORY "Parcelport" ADVANCED)
+  "List of environment variables checked to detect MPI (default: MV2_COMM_WORLD_RANK;PMI_RANK;OMPI_COMM_WORLD_SIZE)."
+  "MV2_COMM_WORLD_RANK;PMI_RANK;OMPI_COMM_WORLD_SIZE" CATEGORY "Parcelport" ADVANCED)
 
 ## Profiling related build options
 hpx_option(HPX_WITH_APEX BOOL "Enable APEX instrumentation support." OFF CATEGORY "Profiling")
@@ -507,85 +507,6 @@ if(HPX_WITH_HWLOC)
   hpx_libraries(${HWLOC_LIBRARIES})
   include_directories(${HWLOC_INCLUDE_DIR})
   hpx_add_config_define(HPX_HAVE_HWLOC)
-endif()
-
-################################################################################
-# Decide whether to use the ibverbs based parcelport
-################################################################################
-if(HPX_PARCELPORT_IBVERBS)
-  find_package(Ibverbs)
-  if(NOT IBVERBS_FOUND)
-    hpx_error("The ibverbs libraries could not be found and HPX_PARCELPORT_IBVERBS=ON, please specify IBVERBS_ROOT to point to the correct location or set HPX_PARCELPORT_IBVERBS to OFF")
-  endif()
-  hpx_libraries(${IBVERBS_LIBRARIES})
-  include_directories(${IBVERBS_INCLUDE_DIR})
-
-  find_package(Rdmacm)
-  if(NOT RDMACM_FOUND)
-    hpx_error("The ibverbs libraries could not be found and HPX_PARCELPORT_IBVERBS=ON, please specify RDMACM_ROOT to point to the correct location or set HPX_PARCELPORT_IBVERBS to OFF")
-  endif()
-  hpx_libraries(${RDMACM_LIBRARIES})
-  include_directories(${RDMACM_INCLUDE_DIR})
-  hpx_add_config_define(HPX_PARCELPORT_IBVERBS)
-  hpx_add_config_define(HPX_PARCELPORT_IBVERBS_IFNAME "\"${HPX_PARCELPORT_IBVERBS_IFNAME}\"")
-  hpx_add_config_define(HPX_PARCELPORT_IBVERBS_MESSAGE_PAYLOAD "${HPX_PARCELPORT_IBVERBS_MESSAGE_PAYLOAD}")
-  hpx_add_config_define(HPX_PARCELPORT_IBVERBS_MEMORY_CHUNK_SIZE "${HPX_PARCELPORT_IBVERBS_MEMORY_CHUNK_SIZE}")
-  hpx_add_config_define(HPX_PARCELPORT_IBVERBS_MAX_MEMORY_CHUNKS "${HPX_PARCELPORT_IBVERBS_MAX_MEMORY_CHUNKS}")
-endif()
-
-################################################################################
-# Decide whether to use shared memory based parcelport (starting with
-# Boost V1.52)
-################################################################################
-if(HPX_PARCELPORT_IPC)
-  if(Boost_VERSION GREATER 105100)
-    hpx_add_config_define(HPX_PARCELPORT_IPC)
-  endif()
-endif()
-
-################################################################################
-# Decide whether to use the MPI based parcelport
-################################################################################
-if(HPX_PARCELPORT_MPI)
-  find_package(MPI)
-  if(NOT MPI_CXX_FOUND)
-    hpx_error("MPI could not be found and HPX_PARCELPORT_MPI=On, please specify MPI_CXX_COMPILER to point to a working MPI C++ compiler for your platform")
-  endif()
-  hpx_add_config_define(HPX_PARCELPORT_MPI)
-  if(MPI_CXX_COMPILE_FLAGS)
-    hpx_add_compile_flag(${MPI_CXX_COMPILE_FLAGS})
-  endif()
-  if(MPI_CXX_LINK_FLAGS)
-    #    hpx_add_link_flag_if_available(${MPI_CXX_LINK_FLAGS})
-  endif()
-  if(MPI_CXX_INCLUDE_PATH)
-    include_directories(${MPI_CXX_INCLUDE_PATH})
-  endif()
-  if(MPI_CXX_LIBRARIES)
-    hpx_libraries(${MPI_CXX_LIBRARIES})
-  endif()
-  if(MPI_LIBRARY)
-    hpx_libraries(${MPI_LIBRARY})
-  endif()
-  if(MPI_EXTRA_LIBRARY)
-    hpx_libraries(${MPI_LIBRARY})
-  endif()
-  # This list is to detect whether we run inside an mpi environment.
-  # If one of those environment variables is set, the MPI parcelport
-  # is enabled by default.
-  # PMI_RANK: Intel MPI and MVAPICH2
-  # OMPI_COMM_WORLD_SIZE: OpenMPI starting at version 1.3
-  if(HPX_PARCELPORT_MPI_ENV)
-    string(REPLACE ";" "," hpx_parcelport_mpi_env_ "${HPX_PARCELPORT_MPI_ENV}")
-    hpx_add_config_define(HPX_PARCELPORT_MPI_ENV "\"${hpx_parcelport_mpi_env_}\"")
-  endif()
-endif()
-
-################################################################################
-# Decide whether to use the TCP/IP based parcelport
-################################################################################
-if(HPX_PARCELPORT_TCP)
-  hpx_add_config_define(HPX_PARCELPORT_TCP)
 endif()
 
 ################################################################################
@@ -863,59 +784,56 @@ if(HPX_COMPILER_WARNINGS)
       hpx_add_compile_flag(-wd4800)
     endif()
   else() # Trial and error approach for any other compiler ...
-      hpx_add_compile_flag_if_available(-Wall LANGUAGES CXX C Fortran)
-      hpx_add_compile_flag_if_available(-Wextra LANGUAGES CXX C Fortran)
-      # This is a new warning popping up from the boost headers with no particular meaning
-      hpx_add_compile_flag_if_available(-Wno-unused-local-typedefs LANGUAGES CXX C Fortran)
-      hpx_add_compile_flag_if_available(-Wno-strict-aliasing LANGUAGES CXX C Fortran)
-      hpx_add_compile_flag_if_available(-Wno-sign-promo LANGUAGES CXX)
-      hpx_add_compile_flag_if_available(-Wno-attributes LANGUAGES CXX)
-      hpx_add_compile_flag_if_available(-Wno-cast-align LANGUAGES CXX)
+    hpx_add_compile_flag_if_available(-Wall LANGUAGES CXX C Fortran)
+    hpx_add_compile_flag_if_available(-Wextra LANGUAGES CXX C Fortran)
+    # This is a new warning popping up from the boost headers with no particular meaning
+    hpx_add_compile_flag_if_available(-Wno-unused-local-typedefs LANGUAGES CXX C Fortran)
+    hpx_add_compile_flag_if_available(-Wno-strict-aliasing LANGUAGES CXX C Fortran)
+    hpx_add_compile_flag_if_available(-Wno-sign-promo LANGUAGES CXX)
+    hpx_add_compile_flag_if_available(-Wno-attributes LANGUAGES CXX)
+    hpx_add_compile_flag_if_available(-Wno-cast-align LANGUAGES CXX)
 
-      # We never want trampolines
-      hpx_add_compile_flag_if_available(-Wt)
+    # These are usually benign and can't be suppressed because of
+    # interface requirements
+    hpx_add_compile_flag_if_available(-Wno-unused-parameter)
 
-      # These are usually benign and can't be suppressed because of
-      # interface requirements
-      hpx_add_compile_flag_if_available(-Wno-unused-parameter)
+    # There are ignored qualifiers in Boost, so we have to ignore them
+    hpx_add_compile_flag_if_available(-Wno-ignored-qualifiers)
 
-      # There are ignored qualifiers in Boost, so we have to ignore them
-      hpx_add_compile_flag_if_available(-Wno-ignored-qualifiers)
+    # Be extra strict about format checks
+    # Boost.Logging is built on fprintf, sadly
+    hpx_add_compile_flag_if_available(-Wformat=2)
+    hpx_add_compile_flag_if_available(-Wno-format-nonliteral)
 
-      # Be extra strict about format checks
-      # Boost.Logging is built on fprintf, sadly
-      hpx_add_compile_flag_if_available(-Wformat=2)
-      hpx_add_compile_flag_if_available(-Wno-format-nonliteral)
+    # Self initialization is dangerous
+    hpx_add_compile_flag_if_available(-Winit-self)
 
-      # Self initialization is dangerous
-      hpx_add_compile_flag_if_available(-Winit-self)
+    # For portability
+    hpx_add_compile_flag_if_available(-Wdouble-promotion)
 
-      # For portability
-      hpx_add_compile_flag_if_available(-Wdouble-promotion)
+    # Warn about casting that violates qualifiers or alignment
+    hpx_add_compile_flag_if_available(-Wcast-qual)
+    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+      # Clang is overeager in reporting cast alignment problems in Boost
+      hpx_add_compile_flag_if_available(-Wcast-align)
+    endif()
 
-      # Warn about casting that violates qualifiers or alignment
-      hpx_add_compile_flag_if_available(-Wcast-qual)
-      if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        # Clang is overeager in reporting cast alignment problems in Boost
-        hpx_add_compile_flag_if_available(-Wcast-align)
-      endif()
+    hpx_add_compile_flag_if_available(-Werror=trampolines)
+    hpx_add_compile_flag_if_available(-Werror=parentheses)
+    hpx_add_compile_flag_if_available(-Werror=reorder)
+    hpx_add_compile_flag_if_available(-Werror=return-type)
+    hpx_add_compile_flag_if_available(-Werror=sequence-point)
 
-      hpx_add_compile_flag_if_available(-Werror=trampolines)
-      hpx_add_compile_flag_if_available(-Werror=parentheses)
-      hpx_add_compile_flag_if_available(-Werror=reorder)
-      hpx_add_compile_flag_if_available(-Werror=return-type)
-      hpx_add_compile_flag_if_available(-Werror=sequence-point)
+    if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
+      # Uninitialized variables are bad, earlier compilers issue spurious
+      # warnings
+      hpx_add_compile_flag_if_available(-Werror=uninitialized)
+    endif()
 
-      if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
-        # Uninitialized variables are bad, earlier compilers issue spurious
-        # warnings
-        hpx_add_compile_flag_if_available(-Werror=uninitialized)
-      endif()
-
-      #hpx_add_compile_flag_if_available(-Werror=missing-field-initializers)
-      hpx_add_compile_flag_if_available(-Werror=format)
-      hpx_add_compile_flag_if_available(-Werror=missing-braces)
-      hpx_add_compile_flag_if_available(-Werror=sign-compare)
+    #hpx_add_compile_flag_if_available(-Werror=missing-field-initializers)
+    hpx_add_compile_flag_if_available(-Werror=format)
+    hpx_add_compile_flag_if_available(-Werror=missing-braces)
+    hpx_add_compile_flag_if_available(-Werror=sign-compare)
   endif()
 endif()
 
@@ -1121,13 +1039,13 @@ endif()
 include(HPX_GitCommit)
 hpx_add_config_define(HPX_GIT_COMMIT "\"${HPX_GIT_COMMIT}\"")
 
-
 hpx_include(SetOutputPaths)
 ##############################################################################
 
 ################################################################################
-# # Configure compression and other plugins
-# ###############################################################################
+# Configure compression and other plugins
+################################################################################
+set(HPX_STATIC_PARCELPORT_PLUGINS "" CACHE INTERNAL "" FORCE)
 add_hpx_pseudo_target(plugins)
 add_subdirectory(plugins)
 
@@ -1149,11 +1067,6 @@ hpx_add_config_define(HPX_HAVE_PARCEL_COALESCING)
 ################################################################################
 hpx_include(Documentation)
 
-################################################################################
-# Creating the partially preprocessed header requires a recent version of Wave
-################################################################################
-hpx_include(Preprocessing)
-
 # Debug library postfix
 set(CMAKE_DEBUG_POSTFIX "d")
 set(HPX_DEBUG_POSTFIX "d")
@@ -1164,7 +1077,6 @@ set(HPX_DEBUG_POSTFIX "d")
 # Recurse into some subdirectories. This does not actually cause another cmake
 # executable to run. The same process will walk through the project's entire
 # directory structure.
-
 if(HPX_BUILD_TOOLS)
   add_hpx_pseudo_target(tools)
   add_subdirectory(tools)
@@ -1209,7 +1121,6 @@ if(HPX_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
-
 if(HPX_BUILD_RUNTIME)
   add_hpx_pseudo_target(runtime)
   add_subdirectory(runtime)
@@ -1217,10 +1128,6 @@ endif()
 
 if(HPX_BUILD_DOCUMENTATION)
   add_subdirectory(docs)
-endif()
-
-if(HPX_AUTOMATIC_PREPROCESSING)
-  add_subdirectory(preprocess)
 endif()
 
 ################################################################################

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //  Copyright (c) 2011 Bryce Lelbach
-//  Copyright (c) 2011-2014 Hartmut Kaiser
+//  Copyright (c) 2011-2015 Hartmut Kaiser
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -78,6 +78,7 @@ struct HPX_EXPORT addressing_service : boost::noncopyable
     > gva_cache_type;
     // }}}
 
+    typedef std::set<naming::gid_type> migrated_objects_table_type;
     typedef std::map<naming::gid_type, boost::int64_t> refcnt_requests_type;
 
     struct bootstrap_data_type;
@@ -85,6 +86,7 @@ struct HPX_EXPORT addressing_service : boost::noncopyable
 
     mutable cache_mutex_type gva_cache_mtx_;
     boost::shared_ptr<gva_cache_type> gva_cache_;
+    migrated_objects_table_type migrated_objects_table_;
 
     mutable mutex_type console_cache_mtx_;
     boost::uint32_t console_cache_;
@@ -118,6 +120,12 @@ struct HPX_EXPORT addressing_service : boost::noncopyable
     naming::address component_ns_addr_;
     naming::address symbol_ns_addr_;
 
+    mutable mutex_type resolved_localities_mtx_;
+    typedef
+        std::map<naming::gid_type, parcelset::endpoints_type>
+        resolved_localities_type;
+    resolved_localities_type resolved_localities_;
+
     addressing_service(
         parcelset::parcelhandler& ph
       , util::runtime_configuration const& ini_
@@ -130,7 +138,8 @@ struct HPX_EXPORT addressing_service : boost::noncopyable
         destroy_big_boot_barrier();
     }
 
-    void initialize(parcelset::parcelhandler& ph, boost::uint64_t rts_lva, boost::uint64_t mem_lva);
+    void initialize(parcelset::parcelhandler& ph, boost::uint64_t rts_lva,
+        boost::uint64_t mem_lva);
 
     void adjust_local_cache_size();
 
@@ -152,6 +161,7 @@ struct HPX_EXPORT addressing_service : boost::noncopyable
     }
 
     void set_local_locality(naming::gid_type const& g);
+    void register_console(parcelset::endpoints_type const & eps);
 
     bool is_bootstrap() const
     {
@@ -207,7 +217,7 @@ struct HPX_EXPORT addressing_service : boost::noncopyable
 
 protected:
     void launch_bootstrap(
-        parcelset::parcelport& pp
+        boost::shared_ptr<parcelset::parcelport> pp
       , parcelset::endpoints_type const & endpoints
       , util::runtime_configuration const& ini_
         );
@@ -222,7 +232,12 @@ protected:
         future<response> f
       , naming::gid_type const& id
       , gva const& g
-    );
+        );
+
+    /// Maintain list of migrated objects
+    bool was_object_migrated_locked(
+        naming::gid_type const& id
+        );
 
 private:
     /// Assumes that \a refcnt_requests_mtx_ is locked.
@@ -286,24 +301,15 @@ public:
 
     /// \brief Resolve a locality to its prefix.
     ///
-    /// \returns Returns 0 if the locality is not registered.
-    naming::gid_type resolve_locality(
-        parcelset::endpoints_type const& endpoints
-      , error_code& ec = throws
-        );
-
-    future<parcelset::endpoints_type> resolve_locality_async(
-        naming::gid_type const & gid
-        );
-
-    parcelset::endpoints_type resolve_locality(
+    /// \returns Returns an empty vector if the locality is not registered.
+    parcelset::endpoints_type const& resolve_locality(
         naming::gid_type const & gid
       , error_code& ec = throws
         );
 
     /// \brief Remove a locality from the runtime.
     bool unregister_locality(
-        parcelset::endpoints_type const& endpoints
+        naming::gid_type const & gid
       , error_code& ec = throws
         );
 
@@ -599,7 +605,17 @@ public:
       , boost::uint32_t locality_id
         )
     {
-        return bind_range_async(id, 1, addr, 0, locality_id);
+        return bind_range_async(id, 1, addr, 0,
+            naming::get_gid_from_locality_id(locality_id));
+    }
+
+    hpx::future<bool> bind_async(
+        naming::gid_type const& id
+      , naming::address const& addr
+      , naming::gid_type const& locality
+        )
+    {
+        return bind_range_async(id, 1, addr, 0, locality);
     }
 
     /// \brief Bind unique range of global ids to given base address
@@ -648,8 +664,20 @@ public:
       , boost::uint64_t count
       , naming::address const& baseaddr
       , boost::uint64_t offset
-      , boost::uint32_t locality_id
+      , naming::gid_type const& locality
         );
+
+    hpx::future<bool> bind_range_async(
+        naming::gid_type const& lower_id
+      , boost::uint64_t count
+      , naming::address const& baseaddr
+      , boost::uint64_t offset
+      , boost::uint32_t locality_id
+        )
+    {
+        return bind_range_async(lower_id, count, baseaddr, offset,
+            naming::get_gid_from_locality_id(locality_id));
+    }
 
     /// \brief Unbind a global address
     ///
@@ -1159,125 +1187,6 @@ public:
       , error_code& ec = throws
         );
 
-#if !defined(HPX_NO_DEPRECATED)
-    /// \brief Register a global name with a global address (id)
-    ///
-    /// This function registers an association between a global name
-    /// (string) and a global address (id) usable with one of the functions
-    /// above (bind, unbind, and resolve).
-    ///
-    /// \param name       [in] The global name (string) to be associated
-    ///                   with the global address.
-    /// \param id         [in] The global address (id) to be associated
-    ///                   with the global address.
-    /// \param ec         [in,out] this represents the error status on exit,
-    ///                   if this is pre-initialized to \a hpx#throws
-    ///                   the function will throw on error instead.
-    ///
-    /// \returns          The function returns \a true if the global name
-    ///                   got an association with a global address for the
-    ///                   first time, and it returns \a false if this
-    ///                   function call replaced a previously registered
-    ///                   global address with the global address (id)
-    ///                   given as the parameter. Any error results in an
-    ///                   exception thrown from this function.
-    ///
-    /// \note             As long as \a ec is not pre-initialized to
-    ///                   \a hpx#throws this function doesn't
-    ///                   throw but returns the result code using the
-    ///                   parameter \a ec. Otherwise it throws an instance
-    ///                   of hpx#exception.
-    HPX_DEPRECATED("This function is deprecated; use "
-                   "hpx::agas::register_name instead.")
-    bool registerid(
-        std::string const& name
-      , naming::gid_type const& id
-      , error_code& ec = throws
-        )
-    {
-        return register_name(name, id, ec);
-    }
-
-    /// \brief Unregister a global name (release any existing association)
-    ///
-    /// This function releases any existing association of the given global
-    /// name with a global address (id).
-    ///
-    /// \param name       [in] The global name (string) for which any
-    ///                   association with a global address (id) has to be
-    ///                   released.
-    /// \param ec         [in,out] this represents the error status on exit,
-    ///                   if this is pre-initialized to \a hpx#throws
-    ///                   the function will throw on error instead.
-    ///
-    /// \returns          The function returns \a true if an association of
-    ///                   this global name has been released, and it returns
-    ///                   \a false, if no association existed. Any error
-    ///                   results in an exception thrown from this function.
-    ///
-    /// \note             As long as \a ec is not pre-initialized to
-    ///                   \a hpx#throws this function doesn't
-    ///                   throw but returns the result code using the
-    ///                   parameter \a ec. Otherwise it throws an instance
-    ///                   of hpx#exception.
-    HPX_DEPRECATED("This function is deprecated; use "
-                   "hpx::agas::unregister_name instead.")
-    bool unregisterid(
-        std::string const& name
-      , error_code& ec = throws
-        )
-    {
-        return unregister_name(name, ec);
-    }
-
-    HPX_DEPRECATED("This function is deprecated; use "
-                   "hpx::agas::unregister_name instead.")
-    bool unregisterid(
-        std::string const& name
-      , naming::gid_type& id
-      , error_code& ec = throws
-        )
-    {
-        return unregister_name(name, id, ec);
-    }
-
-    /// \brief Query for the global address associated with a given global name.
-    ///
-    /// This function returns the global address associated with the given
-    /// global name.
-    ///
-    /// \param name       [in] The global name (string) for which the
-    ///                   currently associated global address has to be
-    ///                   retrieved.
-    /// \param id         [out] The id currently associated with the given
-    ///                   global name (valid only if the return value is
-    ///                   true).
-    /// \param ec         [in,out] this represents the error status on exit,
-    ///                   if this is pre-initialized to \a hpx#throws
-    ///                   the function will throw on error instead.
-    ///
-    /// This function returns true if it returned global address (id),
-    /// which is currently associated with the given global name, and it
-    /// returns false, if currently there is no association for this global
-    /// name. Any error results in an exception thrown from this function.
-    ///
-    /// \note             As long as \a ec is not pre-initialized to
-    ///                   \a hpx#throws this function doesn't
-    ///                   throw but returns the result code using the
-    ///                   parameter \a ec. Otherwise it throws an instance
-    ///                   of hpx#exception.
-    HPX_DEPRECATED("This function is deprecated; use "
-                   "hpx::agas::resolve_name instead.")
-    bool queryid(
-        std::string const& name
-      , naming::gid_type& id
-      , error_code& ec = throws
-        )
-    {
-        return resolve_name(name, id, ec);
-    }
-#endif
-
     /// \brief Invoke the supplied \a hpx#function for every registered global
     ///        name.
     ///
@@ -1502,6 +1411,13 @@ public:
         error_code& ec = throws
         );
 
+    /// \warning This function is for internal use only. It is dangerous and
+    ///          may break your code if you use it.
+    void remove_cache_entry(
+        naming::gid_type const& gid
+      , error_code& ec = throws
+        );
+
     // Disable refcnt caching during shutdown
     void start_shutdown(
         error_code& ec = throws
@@ -1513,6 +1429,19 @@ public:
       , naming::gid_type& counter
       , error_code& ec = throws
         );
+
+    /// start/stop migration of an object
+    ///
+    /// \returns Current locality and address of the object to migrate
+    hpx::future<std::pair<naming::id_type, naming::address> >
+        begin_migration_async(
+            naming::id_type const& id
+          , naming::id_type const& target_locality
+            );
+    hpx::future<bool> end_migration_async(naming::id_type const& id);
+
+    /// Maintain list of migrated objects
+    bool was_object_migrated(naming::id_type const* ids, std::size_t size);
 };
 
 }}

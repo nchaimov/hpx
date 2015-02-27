@@ -1,5 +1,5 @@
 //  Copyright (c)      2013 Thomas Heller
-//  Copyright (c) 2007-2013 Hartmut Kaiser
+//  Copyright (c) 2007-2015 Hartmut Kaiser
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -31,11 +31,6 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/static_assert.hpp>
-
-#include <boost/preprocessor/enum.hpp>
-#include <boost/preprocessor/enum_params.hpp>
-#include <boost/preprocessor/iterate.hpp>
-#include <boost/preprocessor/cat.hpp>
 
 #include <algorithm>
 
@@ -121,8 +116,11 @@ namespace hpx { namespace lcos { namespace local
                   : policy_(std::move(policy))
                   , func_(std::forward<FFunc>(func))
                   , futures_(std::forward<FFutures>(futures))
+                  , done_(false)
             {}
 
+        protected:
+            ///////////////////////////////////////////////////////////////////
             BOOST_FORCEINLINE
             void execute(boost::mpl::false_)
             {
@@ -159,15 +157,15 @@ namespace hpx { namespace lcos { namespace local
             }
 
             ///////////////////////////////////////////////////////////////////
-            template <typename Iter>
             BOOST_FORCEINLINE
-            void await(
-                BOOST_SCOPED_ENUM(launch) policy, Iter && iter, boost::mpl::true_)
+            void finalize(BOOST_SCOPED_ENUM(launch) policy)
             {
+                done_ = false;      // avoid finalizing more than once
+
                 typedef
                     boost::mpl::bool_<boost::is_void<result_type>::value>
                     is_void;
-                if(policy == hpx::launch::sync)
+                if (policy == hpx::launch::sync)
                 {
                     execute(is_void());
                     return;
@@ -184,11 +182,11 @@ namespace hpx { namespace lcos { namespace local
                   , threads::thread_priority_boost);
             }
 
-            template <typename Iter>
             BOOST_FORCEINLINE
-            void await(
-                threads::executor& sched, Iter && iter, boost::mpl::true_)
+            void finalize(threads::executor& sched)
             {
+                done_ = false;      // avoid finalizing more than once
+
                 typedef
                     boost::mpl::bool_<boost::is_void<result_type>::value>
                     is_void;
@@ -198,8 +196,26 @@ namespace hpx { namespace lcos { namespace local
                 hpx::apply(sched, f, this_, is_void());
             }
 
+            ///////////////////////////////////////////////////////////////////
+            template <typename Policy_, typename Iter>
+            BOOST_FORCEINLINE
+            void await(Policy_ &&, Iter &&, boost::mpl::true_)
+            {
+                 done_ = true;
+            }
+
             // Current element is a not a future or future range, e.g. a just plain
             // value.
+            template <typename Iter, typename IsFuture, typename IsRange>
+            BOOST_FORCEINLINE
+            void await_next_respawn(Iter iter, IsFuture is_future,
+                IsRange is_range)
+            {
+                await_next(iter, is_future, is_range);
+                if (done_)
+                    finalize(policy_);
+            }
+
             template <typename Iter>
             BOOST_FORCEINLINE
             void await_next(Iter iter, boost::mpl::false_, boost::mpl::false_)
@@ -218,6 +234,14 @@ namespace hpx { namespace lcos { namespace local
             }
 
             template <typename TupleIter, typename Iter>
+            void await_range_respawn(TupleIter iter, Iter next, Iter end)
+            {
+                await_range(iter, next, end);
+                if (done_)
+                    finalize(policy_);
+            }
+
+            template <typename TupleIter, typename Iter>
             void await_range(TupleIter iter, Iter next, Iter end)
             {
                 for (/**/; next != end; ++next)
@@ -225,7 +249,7 @@ namespace hpx { namespace lcos { namespace local
                     if (!next->is_ready())
                     {
                         void (dataflow_frame::*f)(TupleIter, Iter, Iter)
-                            = &dataflow_frame::await_range;
+                            = &dataflow_frame::await_range_respawn;
 
                         typedef
                             typename std::iterator_traits<
@@ -303,7 +327,7 @@ namespace hpx { namespace lcos { namespace local
                 if(!f_.is_ready())
                 {
                     void (dataflow_frame::*f)(Iter, boost::mpl::true_, boost::mpl::false_)
-                        = &dataflow_frame::await_next;
+                        = &dataflow_frame::await_next_respawn;
 
                     typedef
                         typename traits::future_traits<
@@ -361,6 +385,7 @@ namespace hpx { namespace lcos { namespace local
                 await_next(std::move(iter), is_future(), is_range());
             }
 
+        public:
             BOOST_FORCEINLINE void await()
             {
                 typedef
@@ -374,11 +399,16 @@ namespace hpx { namespace lcos { namespace local
                         boost::is_same<begin_type, end_type>::value
                     >()
                 );
+
+                if (done_)
+                    finalize(policy_);
             }
 
+        private:
             Policy policy_;
             Func func_;
             Futures futures_;
+            bool done_;
         };
     }
 

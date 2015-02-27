@@ -18,6 +18,7 @@
 #include <hpx/util/assert.hpp>
 #include <hpx/util/logging.hpp>
 #include <hpx/util/filesystem_compatibility.hpp>
+#include <hpx/util/unused.hpp>
 
 #include <boost/cstdint.hpp>
 #include <boost/current_function.hpp>
@@ -83,6 +84,17 @@ namespace hpx
         ///////////////////////////////////////////////////////////////////////
         HPX_EXPORT boost::exception_ptr access_exception(error_code const&);
 
+        ///////////////////////////////////////////////////////////////////////
+        struct command_line_error : std::logic_error
+        {
+            explicit command_line_error(char const* msg)
+              : std::logic_error(msg)
+            {}
+
+            explicit command_line_error(std::string const& msg)
+              : std::logic_error(msg)
+            {}
+        };
     } // namespace detail
     /// \endcond
 
@@ -422,7 +434,7 @@ namespace hpx
         ///
         /// \param e    The parameter \p e holds the hpx::error code the new
         ///             exception should encapsulate.
-        explicit exception(error e)
+        explicit exception(error e = success)
           : boost::system::system_error(make_error_code(e, plain))
         {
             HPX_ASSERT(e >= success && e < last_error);
@@ -813,6 +825,12 @@ namespace hpx
         // isn't anything more we could do.
         HPX_EXPORT void report_exception_and_terminate(boost::exception_ptr const&);
         HPX_EXPORT void report_exception_and_terminate(hpx::exception const&);
+
+        // Report an early or late exception and locally exit execution. There
+        // isn't anything more we could do. The exception will be re-thrown
+        // from hpx::init
+        HPX_EXPORT void report_exception_and_continue(boost::exception_ptr const&);
+        HPX_EXPORT void report_exception_and_continue(hpx::exception const&);
     }
     /// \endcond
 
@@ -1575,6 +1593,13 @@ namespace hpx
     {
         hpx::detail::assertion_failed_msg(msg, expr, function, file, line);
     }
+
+    // For testing purposes we sometime expect to see exceptions, allow those
+    // to go through without attaching a debugger.
+    //
+    // This should be used carefully as it disables the possible attaching of
+    // a debugger for all exceptions, not only the expected ones.
+    HPX_EXPORT bool expect_exception(bool flag = true);
     // \endcond
 }
 

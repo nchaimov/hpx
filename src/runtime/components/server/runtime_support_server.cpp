@@ -248,9 +248,10 @@ namespace hpx { namespace components
 namespace hpx { namespace components { namespace server
 {
     ///////////////////////////////////////////////////////////////////////////
-    runtime_support::runtime_support()
+    runtime_support::runtime_support(hpx::util::runtime_configuration & cfg)
       : stopped_(false), terminated_(false), dijkstra_color_(false),
-        shutdown_all_invoked_(false)
+        shutdown_all_invoked_(false),
+        modules_(cfg.modules())
     {}
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1090,7 +1091,8 @@ namespace hpx { namespace components { namespace server
             }
 
             // Drop the locality from the partition table.
-            agas_client.unregister_locality(get_runtime().endpoints(), ec);
+            naming::gid_type here = agas_client.get_local_locality();
+            agas_client.unregister_locality(here, ec);
 
             // unregister fixed components
             agas_client.unbind_local(appl.get_runtime_support_raw_gid(), ec);
@@ -1123,13 +1125,23 @@ namespace hpx { namespace components { namespace server
         }
     }
 
+    void runtime_support::notify_waiting_main()
+    {
+        mutex_type::scoped_lock l(mtx_);
+        if (!stopped_) {
+            stopped_ = true;
+            wait_condition_.notify_all();
+            stop_condition_.wait(l);        // wait for termination
+        }
+    }
+
     // this will be called after the thread manager has exited
     void runtime_support::stopped()
     {
         mutex_type::scoped_lock l(mtx_);
         if (!terminated_) {
-            stop_condition_.notify_all();   // finished cleanup/termination
             terminated_ = true;
+            stop_condition_.notify_all();   // finished cleanup/termination
         }
     }
 
@@ -1145,8 +1157,6 @@ namespace hpx { namespace components { namespace server
         components::initial_static_loading = false;
 
         // then dynamic ones
-        ini.load_components(modules_);
-
         naming::resolver_client& client = get_runtime().get_agas_client();
         bool result = load_components(ini, client.get_local_locality(), client);
 
@@ -1247,6 +1257,7 @@ namespace hpx { namespace components { namespace server
             std::ostringstream strm;
             strm << "attempt to create message handler plugin instance of "
                     "invalid/unknown type: " << message_handler_type;
+            l.unlock();
             HPX_THROWS_IF(ec, hpx::bad_plugin_type,
                 "runtime_support::create_message_handler",
                 strm.str());
@@ -1591,7 +1602,8 @@ namespace hpx { namespace components { namespace server
                     std::cout << options << std::endl;
                 }
                 else {
-                    throw std::logic_error("unknown help option: " + help_option);
+                    throw hpx::detail::command_line_error(
+                        "unknown help option: " + help_option);
                 }
                 return false;
             }
@@ -1748,7 +1760,8 @@ namespace hpx { namespace components { namespace server
         std::set<std::string>& startup_handled)
     {
         modules_map_type::iterator it = modules_.find(HPX_MANGLE_STRING(component));
-        if (it != modules_.end()) {
+        if (it != modules_.cend())
+        {
             // use loaded module, instantiate the requested factory
             if (!load_component((*it).second, ini, instance, component, lib,
                     prefix, agas_client, isdefault, isenabled, options,

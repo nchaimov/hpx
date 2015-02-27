@@ -29,6 +29,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <cstddef>
 
 #include <hpx/config/warnings_prefix.hpp>
 
@@ -55,6 +56,8 @@ namespace hpx { namespace naming
 
         inline boost::uint64_t strip_internal_bits_and_locality_from_gid(
                 boost::uint64_t msb) HPX_SUPER_PURE;
+
+        inline bool is_locked(gid_type const& gid);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -100,6 +103,12 @@ namespace hpx { namespace naming
             id_lsb_(rhs.get_lsb())
         {
         }
+        gid_type (gid_type && rhs)
+          : id_msb_(naming::detail::strip_lock_from_gid(rhs.get_msb())),
+            id_lsb_(rhs.get_lsb())
+        {
+            rhs.id_lsb_ = rhs.id_msb_ = 0;
+        }
 
         ~gid_type()
         {
@@ -121,6 +130,18 @@ namespace hpx { namespace naming
                 HPX_ASSERT(!is_locked());
                 id_msb_ = naming::detail::strip_lock_from_gid(rhs.get_msb());
                 id_lsb_ = rhs.get_lsb();
+            }
+            return *this;
+        }
+        gid_type& operator=(gid_type && rhs)
+        {
+            if (this != &rhs)
+            {
+                HPX_ASSERT(!is_locked());
+                id_msb_ = naming::detail::strip_lock_from_gid(rhs.get_msb());
+                id_lsb_ = rhs.get_lsb();
+
+                rhs.id_lsb_ = rhs.id_msb_ = 0;
             }
             return *this;
         }
@@ -279,6 +300,8 @@ namespace hpx { namespace naming
                 lcos::local::spinlock::yield(k);
             }
 
+            util::register_lock(this);
+
             HPX_ITT_SYNC_ACQUIRED(this);
         }
 
@@ -289,6 +312,7 @@ namespace hpx { namespace naming
             if (acquire_lock())
             {
                 HPX_ITT_SYNC_ACQUIRED(this);
+                util::register_lock(this);
                 return true;
             }
 
@@ -301,6 +325,7 @@ namespace hpx { namespace naming
             HPX_ITT_SYNC_RELEASING(this);
 
             reliquish_lock();
+            util::unregister_lock(this);
 
             HPX_ITT_SYNC_RELEASED(this);
         }
@@ -330,7 +355,6 @@ namespace hpx { namespace naming
             bool was_locked = (id_msb_ & is_locked_mask) ? true : false;
             if (!was_locked)
             {
-                util::register_lock_globally(this);
                 id_msb_ |= is_locked_mask;
                 return true;
             }
@@ -339,15 +363,20 @@ namespace hpx { namespace naming
 
         void reliquish_lock()
         {
+            util::ignore_lock(this);
             internal_mutex_type::scoped_lock l(this);
+            util::reset_ignored(this);
+
             id_msb_ &= ~is_locked_mask;
-            util::unregister_lock_globally(this);
         }
 
+        // this is used for assertions only, no need to acquire the lock
         bool is_locked() const
         {
             return (id_msb_ & is_locked_mask) ? true : false;
         }
+
+        friend bool detail::is_locked(gid_type const& gid);
 
         // actual gid
         boost::uint64_t id_msb_;
@@ -519,7 +548,7 @@ namespace hpx { namespace naming
 
         inline bool is_locked(gid_type const& gid)
         {
-            return (gid.get_msb() & gid_type::is_locked_mask) ? true : false;
+            return gid.is_locked();
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -607,7 +636,7 @@ namespace hpx { namespace naming
 
         ///////////////////////////////////////////////////////////////////////
         HPX_EXPORT gid_type split_gid_if_needed(gid_type& id);
-        HPX_EXPORT gid_type split_gid_if_needed_locked(gid_type& id);
+        HPX_EXPORT gid_type split_gid_if_needed_locked(gid_type::mutex_type::scoped_try_lock &l, gid_type& gid);
         HPX_EXPORT gid_type replenish_new_gid_if_needed(gid_type const& id);
 
         HPX_EXPORT gid_type move_gid(gid_type& id);
@@ -898,6 +927,25 @@ namespace hpx
 {
     // pull invalid id into the main namespace
     using naming::invalid_id;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+namespace std
+{
+    // specialize std::hash for hpx::naming::gid_type
+    template <>
+    struct hash<hpx::naming::gid_type>
+    {
+        typedef hpx::naming::gid_type argument_type;
+        typedef std::size_t result_type;
+
+        result_type operator()(argument_type const& gid) const
+        {
+            result_type const h1 (std::hash<boost::uint64_t>()(gid.get_lsb()));
+            result_type const h2 (std::hash<boost::uint64_t>()(gid.get_msb()));
+            return h1 ^ (h2 << 1);
+        }
+    };
 }
 
 ///////////////////////////////////////////////////////////////////////////////

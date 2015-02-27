@@ -7,16 +7,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <hpx/config.hpp>
-#include <hpx/version.hpp>
-#include <hpx/exception.hpp>
-#include <hpx/hpx.hpp>
+#include <hpx/hpx_fwd.hpp>
+#include <hpx/runtime.hpp>
 #include <hpx/runtime/actions/plain_action.hpp>
 #include <hpx/runtime/components/plain_component_factory.hpp>
 #include <hpx/runtime/components/server/managed_component_base.hpp>
 #include <hpx/util/assert.hpp>
 #include <hpx/util/portable_binary_iarchive.hpp>
-#include <hpx/util/mpi_environment.hpp>
 #include <hpx/util/reinitializable_static.hpp>
+#include <hpx/util/safe_lexical_cast.hpp>
 #include <hpx/runtime/actions/action_support.hpp>
 #include <hpx/runtime/parcelset/parcel.hpp>
 #include <hpx/runtime/parcelset/parcelport.hpp>
@@ -87,9 +86,7 @@ void early_parcel_sink(
                 (threads::thread_state_ex(threads::wait_signaled));
         }
         catch (...) {
-            std::cerr << hpx::diagnostic_information(boost::current_exception())
-                      << std::endl;
-            std::abort();
+            hpx::report_error(boost::current_exception());
         }
 //     }
 } // }}}
@@ -428,18 +425,17 @@ void register_worker(registration_header const& header)
 
     parcelset::locality dest;
     parcelset::locality here = bbb.here();
-    BOOST_FOREACH(parcelset::locality const & loc, header.endpoints)
+    BOOST_FOREACH(parcelset::endpoints_type::value_type const & loc, header.endpoints)
     {
-        if(loc.get_type() == here.get_type())
+        if(loc.second.type() == here.type())
         {
-            dest = loc;
+            dest = loc.second;
             break;
         }
     }
 
     actions::base_action* p =
         new actions::transfer_action<notify_worker_action>(hdr);
-
 
     // TODO: Handle cases where localities try to connect to AGAS while it's
     // shutting down.
@@ -478,7 +474,7 @@ void register_worker(registration_header const& header)
     }
 }
 
-// AGAS callback to client (first roundtrip response)
+// AGAS callback to client (first round trip response)
 void notify_worker(notification_header const& header)
 {
     // This lock acquires the bbb mutex on creation. When it goes out of scope,
@@ -501,6 +497,7 @@ void notify_worker(notification_header const& header)
 
     // set our prefix
     agas_client.set_local_locality(header.prefix);
+    agas_client.register_console(header.agas_endpoints);
     cfg.parse("assigned locality",
         boost::str(boost::format("hpx.locality!=%1%")
                   % naming::get_locality_id_from_gid(header.prefix)));
@@ -556,34 +553,12 @@ void notify_worker(notification_header const& header)
 
     rt.get_id_pool().set_range(parcel_lower, parcel_upper);
 
-    //// assign the initial gid range to the unique id range allocator that our
-    //// response heap is using
-    //response_heap_type::get_heap().set_range(heap_lower, heap_upper);
-
-    //// allocate our first heap
-    //response_heap_type::block_type* p = response_heap_type::alloc_heap();
-
-    //// set the base gid that we bound to this heap
-    //p->set_gid(heap_lower);
-
-    //// push the heap onto the OSHL
-    //response_heap_type::get_heap().add_heap(p);
-
-    //// bind range of GIDs to head addresses
-    //agas_client.bind_range(
-    //    heap_lower
-    //  , response_heap_type::block_type::heap_step
-    //  , p->get_address()
-    //  , response_heap_type::block_type::heap_size);
-
     // store number of initial localities
     cfg.set_num_localities(header.num_localities);
 
     // store number of used cores by other localities
     cfg.set_first_used_core(header.used_cores);
     rt.assign_cores();
-
-    rt.get_parcel_handler().set_resolved_localities(naming::get_gid_from_locality_id(0), header.agas_endpoints);
 
 #if defined(HPX_HAVE_SECURITY)
     // initialize certificate store
@@ -605,7 +580,7 @@ void notify_worker(notification_header const& header)
 // }}}
 
 #if defined(HPX_HAVE_SECURITY)
-// remote call to AGAS (initiate second roundtrip)
+// remote call to AGAS (initiate second round trip)
 void register_worker_security(registration_header_security const& header)
 {
     // This lock acquires the bbb mutex on creation. When it goes out of scope,
@@ -727,27 +702,28 @@ inline std::size_t get_number_of_bootstrap_connections(
     }
 
 #if defined(HPX_HAVE_SECURITY)
-    result *= 2;        // we have to do 2 roundtrips
+    result *= 2;        // we have to do 2 round trips
 #endif
 
     return result;
 }
 
 big_boot_barrier::big_boot_barrier(
-    parcelset::parcelport& pp_
+    parcelset::parcelport *pp_
   , parcelset::endpoints_type const& endpoints_
   , util::runtime_configuration const& ini_
 ):
     pp(pp_)
   , endpoints(endpoints_)
   , service_type(ini_.get_agas_service_mode())
-  , bootstrap_agas(pp_.agas_locality(ini_))
+  , bootstrap_agas(pp_ ? pp_->agas_locality(ini_) : parcelset::locality())
   , cond()
   , mtx()
   , connected(get_number_of_bootstrap_connections(ini_))
   , thunks(32)
 {
-    pp_.register_event_handler(&early_parcel_sink);
+    if(pp_)
+        pp_->register_event_handler(&early_parcel_sink);
 }
 
 void big_boot_barrier::apply(
@@ -756,11 +732,12 @@ void big_boot_barrier::apply(
   , parcelset::locality const & dest
   , actions::base_action* act
 ) { // {{{
+    HPX_ASSERT(pp);
     naming::address addr(naming::get_gid_from_locality_id(target_locality_id));
     parcelset::parcel p(naming::get_id_from_locality_id(target_locality_id), addr, act);
     if (!p.get_parcel_id())
         p.set_parcel_id(parcelset::parcel::generate_unique_id(source_locality_id));
-    pp.send_early_parcel(dest, p);
+    pp->send_early_parcel(dest, p);
 } // }}}
 
 void big_boot_barrier::apply_late(
@@ -805,7 +782,8 @@ namespace detail
     }
 }
 
-void big_boot_barrier::wait_hosted(std::string const& locality_name,
+void big_boot_barrier::wait_hosted(
+    std::string const& locality_name,
     void* primary_ns_server, void* symbol_ns_server)
 { // {{{
     HPX_ASSERT(service_mode_bootstrap != service_type);
@@ -824,14 +802,12 @@ void big_boot_barrier::wait_hosted(std::string const& locality_name,
 
     naming::gid_type suggested_prefix;
 
-#if defined(HPX_PARCELPORT_MPI)
-    // if MPI parcelport is enabled we use the MPI rank as the suggested locality_id
-    if (util::mpi_environment::rank() != -1)
+    std::string locality_str = rt.get_config().get_entry("hpx.locality", "-1");
+    if(locality_str != "-1")
     {
         suggested_prefix = naming::get_gid_from_locality_id(
-            util::mpi_environment::rank());
+            util::safe_lexical_cast<boost::uint32_t>(locality_str, -1));
     }
-#endif
 
     // contact the bootstrap AGAS node
     registration_header hdr(
@@ -878,7 +854,7 @@ void big_boot_barrier::trigger()
 struct bbb_tag;
 
 void create_big_boot_barrier(
-    parcelset::parcelport& pp_
+    parcelset::parcelport *pp_
   , parcelset::endpoints_type const& endpoints_
   , util::runtime_configuration const& ini_
 ) {

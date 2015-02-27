@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //  Copyright (c) 2011 Bryce Adelstein-Lelbach
-//  Copyright (c) 2014 Hartmut Kaiser
+//  Copyright (c) 2014-2015 Hartmut Kaiser
 //  Copyright (c) 2014 Thomas Heller
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -18,6 +18,7 @@
 #include <hpx/runtime/naming/name.hpp>
 #include <hpx/runtime/components/component_type.hpp>
 #include <hpx/runtime/parcelset/parcel.hpp>
+#include <hpx/runtime/parcelset/locality.hpp>
 #include <hpx/traits/serialize_as_future.hpp>
 
 #include <boost/serialization/split_member.hpp>
@@ -25,7 +26,7 @@
 #include <boost/serialization/tracking.hpp>
 
 // The number of types that the request's variant can represent.
-#define HPX_AGAS_REQUEST_SUBTYPES 15
+#define HPX_AGAS_REQUEST_SUBTYPES 14
 
 namespace hpx { namespace agas
 {
@@ -66,7 +67,7 @@ struct HPX_EXPORT request
         namespace_action_code type_
       , naming::gid_type const& gid_
       , gva const& gva_
-      , boost::uint32_t locality_
+      , naming::gid_type locality_
         );
 
     request(
@@ -80,11 +81,6 @@ struct HPX_EXPORT request
       , boost::uint64_t count_
       , boost::uint32_t num_threads_
       , naming::gid_type prefix_ = naming::gid_type()
-        );
-
-    request(
-        namespace_action_code type_
-      , parcelset::endpoints_type const & endpoints_
         );
 
     request(
@@ -173,6 +169,10 @@ struct HPX_EXPORT request
         ) const;
 
     boost::uint32_t get_locality_id(
+        error_code& ec = throws
+        ) const;
+
+    naming::gid_type get_locality(
         error_code& ec = throws
         ) const;
 
