@@ -1232,11 +1232,15 @@ namespace hpx
                         "--hpx:queuing");
                 }
             }
-            catch (...) {
-                 std::cerr << "{env}: " << hpx::detail::get_execution_environment();
-                 std::cerr << "hpx::init: unexpected exception caught\n";
-                 return -1;
-             }
+            catch (detail::command_line_error const& e) {
+                std::cerr << "{env}: " << hpx::detail::get_execution_environment();
+                std::cerr << "hpx::init: std::exception caught: " << e.what() << "\n";
+                return -1;
+            //} catch (...) {
+            //     std::cerr << "{env}: " << hpx::detail::get_execution_environment();
+            //     std::cerr << "hpx::init: unexpected exception caught\n";
+            //     return -1;
+            }
             return result;
         }
 

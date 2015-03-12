@@ -8,6 +8,7 @@ set(example_programs
     apex_policy_engine_periodic
     apex_policy_engine_events
     apex_policy_engine_active_thread_count
+    apex_balance
    )
 
 foreach(example_program ${example_programs})
@@ -20,7 +21,7 @@ foreach(example_program ${example_programs})
   add_hpx_executable(${example_program}
                      SOURCES ${sources}
                      ${${example_program}_FLAGS}
-                     FOLDER "Examples/APEX/${example_program}")
+                     FOLDER "examples/apex/${example_program}")
 
   # add a custom target for this example
   add_hpx_pseudo_target(examples.apex.${example_program})

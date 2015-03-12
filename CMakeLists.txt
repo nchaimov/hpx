@@ -504,10 +504,13 @@ if(HPX_WITH_HWLOC)
   if(NOT HWLOC_FOUND)
     hpx_error("Hwloc could not be found and HPX_WITH_HWLOC=ON, please specify HWLOC_ROOT to point to the correct location or set HPX_WITH_HWLOC to OFF")
   endif()
+  hpx_info("hwloc" "hwloc libraries ${HWLOC_LIBRARIES}")
   hpx_libraries(${HWLOC_LIBRARIES})
   include_directories(${HWLOC_INCLUDE_DIR})
   hpx_add_config_define(HPX_HAVE_HWLOC)
 endif()
+
+
 
 ################################################################################
 # Enable integration with Intel Amplifier and Inspector tools
@@ -565,6 +568,19 @@ endif()
 if(HPX_THROTTLE_SCHEDULER)
   hpx_info("Compiling with throttling scheduler")
   hpx_add_config_define(HPX_THROTTLE_SCHEDULER 1)
+endif()
+
+if(HPX_WITH_PAPI)
+  find_package(PAPI)
+  if(NOT PAPI_FOUND)
+      hpx_error("PAPI could not be found and HPX_WITH_PAPI=ON, please specify PAPI_ROOT to point to the correct location or set HPX_WITH_PAPI to OFF")
+  endif()
+  hpx_info("PAPI" "PAPI libraries ${PAPI_LIBRARIES}")
+  hpx_libraries(${PAPI_LIBRARIES} -lpapi)
+  include_directories(${PAPI_INCLUDE_DIR})
+  hpx_add_config_define(HPX_HAVE_PAPI)
+    set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
+        ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} -lpapi)
 endif()
 
 if(HPX_WITH_GOOGLE_PERFTOOLS)

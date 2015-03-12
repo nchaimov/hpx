@@ -8,6 +8,7 @@
 //
 // This example builds on example seven.
 
+
 #include <hpx/hpx_init.hpp>
 #include <hpx/hpx.hpp>
 #include <hpx/lcos/gather.hpp>
@@ -18,6 +19,14 @@
 #include "print_time_results.hpp"
 
 #include <stack>
+#include <hpx/include/performance_counters.hpp>
+#include <hpx/include/actions.hpp>
+#include <hpx/include/util.hpp>
+
+#include <boost/cstdint.hpp>
+#include <boost/format.hpp>
+
+#include <apex.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Command-line variables
@@ -29,6 +38,58 @@ double dx = 1.;     // grid spacing
 char const* stepper_basename = "/1d_stencil_8/stepper/";
 char const* gather_basename = "/1d_stencil_8/gather/";
 
+using hpx::naming::id_type;
+using hpx::performance_counters::get_counter;
+using hpx::performance_counters::stubs::performance_counter;
+using hpx::performance_counters::counter_value;
+using hpx::performance_counters::status_is_valid;
+static bool counters_initialized = false;
+static const char * counter_name = "/threadqueue{locality#%d/total}/length";
+hpx::naming::id_type counter_id;
+
+id_type get_counter_id() {
+    // Resolve the GID of the performances counter using it's symbolic name.
+    boost::uint32_t const prefix = hpx::get_locality_id();
+    //boost::format active_threads("/threads{locality#%d/total}/count/instantaneous/active");
+    boost::format active_threads(counter_name);
+    id_type id = get_counter(boost::str(active_threads % prefix));
+    return id;
+}
+
+void setup_counters() {
+    try {
+        id_type id = get_counter_id();
+        // We need to explicitly start all counters before we can use them. For
+        // certain counters this could be a no-op, in which case start will return
+        // 'false'.
+        performance_counter::start(id);
+        std::cout << "Counters initialized! " << id << std::endl;
+        counter_value value = performance_counter::get_value(id);
+        std::cout << "Active threads " << value.get_value<int>() << std::endl;
+        counter_id = id;
+    }
+    catch(hpx::exception const& e) {
+        std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
+    }
+    counters_initialized = true;
+}
+
+bool test_function(apex_context const& context) {
+    if (!counters_initialized) return false;
+    try {
+        counter_value value1 = performance_counter::get_value(counter_id);
+        apex::sample_value(std::string(counter_name), value1.get_value<int>());
+        return APEX_NOERROR;
+    }
+    catch(hpx::exception const& e) {
+        std::cerr << "apex_policy_engine_active_thread_count: caught exception: " << e.what() << std::endl;
+        return APEX_ERROR;
+    }
+}
+
+void register_policies() {
+    apex::register_periodic_policy(100000, test_function);
+}
 ///////////////////////////////////////////////////////////////////////////////
 // Use a special allocator for the partition data to remove a major contention
 // point - the constant allocation and deallocation of the data arrays.
@@ -630,6 +691,9 @@ int main(int argc, char* argv[])
     // localities
     std::vector<std::string> cfg;
     cfg.push_back("hpx.run_hpx_main!=1");
+
+    hpx::register_startup_function(&setup_counters);
+    hpx::register_startup_function(&register_policies);
 
     return hpx::init(desc_commandline, argc, argv, cfg);
 }
