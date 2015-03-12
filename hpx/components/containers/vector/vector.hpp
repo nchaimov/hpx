@@ -9,13 +9,6 @@
 #ifndef HPX_VECTOR_HPP
 #define HPX_VECTOR_HPP
 
-/// \brief The hpx::vector and its API's are defined here.
-///
-/// The hpx::vector is a segmented data structure which is a collection of one
-/// or more hpx::partition_vectors. The hpx::vector stores the global IDs of each
-/// hpx::partition_vector and the index (with respect to whole vector) of the first
-/// element in that hpx::partition_vector. These two are stored in std::pair.
-
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/components.hpp>
@@ -33,6 +26,7 @@
 #include <boost/cstdint.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
+/// \cond NOINTERNAL
 namespace hpx { namespace server
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -104,14 +98,36 @@ namespace hpx { namespace server
 HPX_DISTRIBUTED_METADATA_DECLARATION(hpx::server::vector_config_data,
     hpx_server_vector_config_data);
 
+/// \endcond
+
 namespace hpx
 {
-    ///////////////////////////////////////////////////////////////////////////
-    /// \brief This is the vector class which define hpx::vector functionality.
+    /// hpx::vector is a sequence container that encapsulates dynamic size arrays.
+    ///
+    /// \note A hpx::vector does not stores all elements in a contiguous block of
+    ///       memory. Memory is contiguous inside each of the segmented partitions
+    ///       only.
+    ///
+    /// The hpx::vector is a segmented data structure which is a collection of one
+    /// or more hpx::server::partition_vectors. The hpx::vector stores the global
+    /// ids of each hpx::server::partition_vector and the size of each
+    /// hpx::server::partition_vector.
+    ///
+    /// The storage of the vector is handled automatically, being expanded and
+    /// contracted as needed. Vectors usually occupy more space than static arrays,
+    /// because more memory is allocated to handle future growth. This way a vector
+    /// does not need to reallocate each time an element is inserted, but only when
+    /// the additional memory is exhausted.
     ///
     ///  This contains the client side implementation of the hpx::vector. This
     ///  class defines the synchronous and asynchronous API's for each of the
     ///  exposed functionalities.
+    ///
+    /// \tparam T   The type of the elements. The requirements that are imposed
+    ///             on the elements depend on the actual operations performed
+    ///             on the container. Generally, it is required that element type
+    ///             is a complete type and meets the requirements of Erasable,
+    ///             but many member functions impose stricter requirements.
     ///
     template <typename T>
     class vector
@@ -288,6 +304,10 @@ namespace hpx
             return this->base_type::connect_to(symbolic_name,
                 util::bind(&vector::connect_to_helper, this, _1));
         }
+        void connect_to_sync(std::string const& symbolic_name)
+        {
+            connect_to(symbolic_name).get();
+        }
 
         // Register this vector with AGAS using the given symbolic name
         future<void> register_as(std::string const& symbolic_name)
@@ -306,6 +326,10 @@ namespace hpx
 
             registered_name_ = symbolic_name;
             return this->base_type::register_as(symbolic_name);
+        }
+        void register_as_sync(std::string const& symbolic_name)
+        {
+            register_as(symbolic_name).get();
         }
 
     public:
@@ -633,15 +657,6 @@ namespace hpx
             partition_size_(std::size_t(-1))
         {}
 
-        /// Construct a new vector representation from the data associated with
-        /// the given symbolic name.
-        vector(std::string const& symbolic_name)
-          : size_(0),
-            partition_size_(std::size_t(-1))
-        {
-            connect_to(symbolic_name).get();
-        }
-
         /// Constructor which create hpx::vector with the given overall \a size
         ///
         /// \param size             The overall size of the vector
@@ -669,14 +684,6 @@ namespace hpx
             if (size != 0)
                 create(val, hpx::layout);
         }
-        vector(size_type size, T const& val, std::string const& symbolic_name)
-          : size_(size)
-        {
-            if (size != 0)
-                create(val, hpx::layout);
-
-            register_as(symbolic_name).get();
-        }
 
         /// Constructor which create and initialize vector of size
         /// \a size using the given distribution policy.
@@ -696,20 +703,6 @@ namespace hpx
         {
             if (size != 0)
                 create(policy);
-        }
-        template <typename DistPolicy>
-        vector(size_type size, DistPolicy const& policy,
-                std::string const& symbolic_name,
-                typename std::enable_if<
-                        is_vector_distribution_policy<DistPolicy>::value
-                    >::type* = 0)
-          : size_(size),
-            partition_size_(std::size_t(-1))
-        {
-            if (size != 0)
-                create(policy);
-
-            register_as(symbolic_name).get();
         }
 
         /// Constructor which create and initialize vector with the
@@ -732,20 +725,6 @@ namespace hpx
         {
             if (size != 0)
                 create(val, policy);
-        }
-        template <typename DistPolicy>
-        vector(size_type size, T const& val, DistPolicy const& policy,
-                std::string const& symbolic_name,
-                typename std::enable_if<
-                        is_vector_distribution_policy<DistPolicy>::value
-                    >::type* = 0)
-          : size_(size),
-            partition_size_(std::size_t(-1))
-        {
-            if (size != 0)
-                create(val, policy);
-
-            register_as(symbolic_name).get();
         }
 
         ~vector()
@@ -784,16 +763,26 @@ namespace hpx
         /// \param pos Position of the element in the vector [Note the first
         ///            position in the partition is 0]
         ///
-        /// \return Returns the value of the element at position represented by
-        ///         \a pos.
-        ///
-        /// \note The non-const version of is operator returns a proxy object
-        ///       instead of a real reference to the element.
+        /// \return Returns a proxy object which represents the indexed element.
+        ///         A (possibly remote) access operation is performed only once
+        ///         this proxy instance is used.
         ///
         detail::vector_value_proxy<T> operator[](size_type pos)
         {
             return detail::vector_value_proxy<T>(*this, pos);
         }
+
+        /// \brief Array subscript operator. This does not throw any exception.
+        ///
+        /// \param pos Position of the element in the vector [Note the first
+        ///            position in the partition is 0]
+        ///
+        /// \return Returns the value of the element at position represented by
+        ///         \a pos.
+        ///
+        /// \note This function does not return a reference to the actual
+        ///       element but a copy of its value.
+        ///
         T operator[](size_type pos) const
         {
             return get_value_sync(pos);
@@ -830,7 +819,6 @@ namespace hpx
 
         ///////////////////////////////////////////////////////////////////////
         // Capacity related API's in vector class
-        ///////////////////////////////////////////////////////////////////////
 
         /// \brief Compute the size as the number of elements it contains.
         ///

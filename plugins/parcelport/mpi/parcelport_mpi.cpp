@@ -4,6 +4,12 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <hpx/config/defines.hpp>
+
+#if defined(HPX_PARCELPORT_MPI)
+#include <mpi.h>
+#endif
+
 #include <hpx/hpx_fwd.hpp>
 
 #include <hpx/plugins/parcelport/mpi/mpi_environment.hpp>
@@ -94,7 +100,8 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
 
         ~parcelport()
         {
-            receive_early_parcels_thread_.join();
+            if(receive_early_parcels_thread_.joinable())
+                receive_early_parcels_thread_.join();
             util::mpi_environment::finalize();
         }
 
@@ -372,7 +379,7 @@ namespace hpx { namespace traits
 #if defined(HPX_PARCELPORT_MPI_ENV)
                 "env = ${HPX_PARCELPORT_MPI_ENV:" HPX_PARCELPORT_MPI_ENV "}\n"
 #else
-                "env = ${HPX_PARCELPORT_MPI_ENV:MV2_COMM_WORLD_RANK,PMI_RANK,OMPI_COMM_WORLD_SIZE}\n"
+                "env = ${HPX_PARCELPORT_MPI_ENV:MV2_COMM_WORLD_RANK,PMI_RANK,OMPI_COMM_WORLD_SIZE,ALPS_APP_PE}\n"
 #endif
                 "multithreaded = ${HPX_PARCELPORT_MPI_MULTITHREADED:1}\n"
                 "max_connections = ${HPX_PARCELPORT_MPI_MAX_CONNECTIONS:8192}\n"
