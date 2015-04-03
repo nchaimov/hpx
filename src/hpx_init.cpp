@@ -729,7 +729,7 @@ namespace hpx
 
             // Build and configure this runtime instance.
             typedef hpx::runtime_impl<throttle_queue_policy> runtime_type;
-            HPX_STD_UNIQUE_PTR<hpx::runtime> rt(
+            std::unique_ptr<hpx::runtime> rt(
                 new runtime_type(cfg.rtcfg_, cfg.mode_, cfg.num_threads_, init,
                     affinity_init));
 
