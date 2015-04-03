@@ -78,7 +78,9 @@ bool test_function(apex_context const& context) {
     if (!counters_initialized) return false;
     try {
         counter_value value1 = performance_counter::get_value(counter_id);
-        apex::sample_value(std::string(counter_name), value1.get_value<int>());
+        boost::uint32_t const prefix = hpx::get_locality_id();
+        boost::format active_threads(counter_name);
+        apex::sample_value(boost::str(active_threads % prefix), value1.get_value<int>());
         return APEX_NOERROR;
     }
     catch(hpx::exception const& e) {

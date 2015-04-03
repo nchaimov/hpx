@@ -44,6 +44,8 @@ endif()
 ################################################################################
 project(hpx CXX C)
 
+#add_definitions("-O0 -ggdb")
+
 set(HPX_MAJOR_VERSION 0)
 set(HPX_MINOR_VERSION 9)
 set(HPX_PATCH_LEVEL   11)
@@ -555,6 +557,8 @@ if(HPX_WITH_APEX)
   hpx_add_config_define(HPX_HAVE_APEX 1)
   set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
       ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} apex_lib)
+  set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
+      ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} -L/home/users/nchaimov/src/libmsr/lib -lmsr)
 
   # handle optional ITTNotify library
   if(HPX_WITH_ITTNOTIFY)

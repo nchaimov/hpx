@@ -24,17 +24,23 @@
 #include <boost/noncopyable.hpp>
 #include <boost/atomic.hpp>
 #include <boost/mpl/bool.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread.hpp>
 
 #include <hpx/config/warnings_prefix.hpp>
 
 #include <stdio.h>
+#include <time.h>
 
 static bool apex_init = false;
+static boost::shared_mutex init_mutex;
 static int foo1 = 0;
 static volatile int64_t ** energy;
 static int64_t * savedEnergy;
 static struct timeval startts, curts;
 static int64_t maxThreads, minThreads;
+
+#define VALUE_THROTTLING "/threadqueue{locality#0/total}/length"
 
 
 /* Notes on building and running Throttling scheduler
@@ -145,9 +151,10 @@ namespace hpx { namespace threads { namespace policies
             outside_numa_domain_masks_(init.num_queues_, topology_.get_machine_affinity_mask())
 #endif
         {
-	  printf("starting Throttling Scheduler\n");
+            std::cerr << "starting Throttling Scheduler\n" << std::endl;
           apex_current_desired_active_threads = queue_count_;
           apex_current_threads = queue_count_;
+
 
             if (!deferred_initialization)
             {
@@ -334,21 +341,35 @@ namespace hpx { namespace threads { namespace policies
             std::size_t count_other_numa_domain = 0;
             std::size_t queues_size = queues_.size();
 
-
+#ifndef VALUE_THROTTLING
             if (HPX_UNLIKELY(apex_init == false)) {
-                if(apex::setup_power_cap_throttling() != APEX_NOERROR) {
-                    std::cerr << "Error initializing APEX power throttling." << std::endl;
+                boost::unique_lock<boost::shared_mutex> l{init_mutex};
+                if(apex_init == true || apex::setup_power_cap_throttling() != APEX_NOERROR) {
                     return true; // Don't throttle
                 } else {
                     apex_init = true;
                 }
             }
+#else
+            if (HPX_UNLIKELY(apex_init == false)) {
+                boost::unique_lock<boost::shared_mutex> l{init_mutex};
+                if(apex_init == true || apex::setup_timer_throttling(VALUE_THROTTLING, APEX_MINIMIZE_ACCUMULATED, APEX_DISCRETE_HILL_CLIMBING, 1000000) != APEX_NOERROR) {
+                    return true; // Don't throttle
+                } else {
+                    std::cerr << "Thread " << num_thread << " initialized apex throttling." << std::endl;
+                    apex_init = true;
+                }
+            }
+#endif
 
             // check if we should throttle
             const int desired_active_threads = apex::get_thread_cap();
             if(num_thread < desired_active_threads) {
                 return true;
             } else {
+                // Sleep so that we don't continue using energy repeatedly checking for work.
+                static const struct timespec tim{0, 100000};
+                nanosleep(&tim, nullptr);
                 return false;
             }
         }
