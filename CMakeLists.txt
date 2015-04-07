@@ -552,8 +552,10 @@ if(HPX_WITH_APEX)
   hpx_add_config_define(HPX_HAVE_APEX 1)
   set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
       ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} apex_lib)
+if(APEX_WITH_MSR)
   set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
-      ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} -L/home/users/nchaimov/src/libmsr/lib -lmsr)
+      ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} -L${MSR_ROOT}/lib -lmsr)
+endif()
 
   # handle optional ITTNotify library
   if(HPX_WITH_ITTNOTIFY)
