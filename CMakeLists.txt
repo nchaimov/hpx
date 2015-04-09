@@ -540,6 +540,12 @@ endif()
 set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES CACHE INTERNAL "")
 if(HPX_WITH_APEX)
   # handle APEX library
+  include(GitExternal)
+  git_external(apex
+    https://github.com/khuck/xpress-apex.git
+    master
+    NO_UPDATE VERBOSE)
+
   add_subdirectory(apex/src/apex)
   if(NOT APEX_FOUND)
     hpx_error("Apex could not be found and HPX_WITH_APEX=On")
@@ -552,8 +558,10 @@ if(HPX_WITH_APEX)
   hpx_add_config_define(HPX_HAVE_APEX 1)
   set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
       ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} apex_lib)
+if(APEX_WITH_MSR)
   set(HPX_ADDITIONAL_RUNTIME_DEPENDENCIES
-      ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} -L/home/users/nchaimov/src/libmsr/lib -lmsr)
+      ${HPX_ADDITIONAL_RUNTIME_DEPENDENCIES} -L${MSR_ROOT}/lib -lmsr)
+endif()
 
   # handle optional ITTNotify library
   if(HPX_WITH_ITTNOTIFY)
@@ -902,7 +910,7 @@ if(HPX_COMPILER_WARNINGS)
     hpx_add_compile_flag(-wd4180)
 
     # OpenMPI triggers a lot of forcing value to bool 'true' or 'false' (performance warning)
-    if(MPI_FOUND)
+    if(MPI_FOUND OR APEX_FOUND)
       hpx_add_compile_flag(-wd4800)
     endif()
   else() # Trial and error approach for any other compiler ...
