@@ -13,8 +13,6 @@
 #include <hpx/runtime/components/stubs/runtime_support.hpp>
 #include <hpx/runtime/agas/interface.hpp>
 
-#include <boost/serialization/shared_ptr.hpp>
-
 namespace hpx { namespace components { namespace server
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -198,15 +196,6 @@ namespace hpx { namespace components { namespace server
           , trigger_migrate_component_action<Component> >
     {};
 }}}
-
-HPX_REGISTER_PLAIN_ACTION_TEMPLATE(
-    (template <typename Component>),
-    (hpx::components::server::migrate_component_action<Component>)
-)
-HPX_REGISTER_PLAIN_ACTION_TEMPLATE(
-    (template <typename Component>),
-    (hpx::components::server::trigger_migrate_component_action<Component>)
-)
 
 #endif
 

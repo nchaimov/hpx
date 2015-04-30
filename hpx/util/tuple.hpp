@@ -9,9 +9,12 @@
 #define HPX_UTIL_TUPLE_HPP
 
 #include <hpx/config.hpp>
+#include <hpx/runtime/serialization/serialize.hpp>
+#include <hpx/runtime/serialization/serialize_sequence.hpp>
+#include <hpx/traits/is_bitwise_serializable.hpp>
+#include <hpx/traits/serialize_as_future.hpp>
 #include <hpx/util/decay.hpp>
 #include <hpx/util/move.hpp>
-#include <hpx/util/serialize_sequence.hpp>
 #include <hpx/util/detail/pack.hpp>
 #include <hpx/util/detail/qualify_as.hpp>
 
@@ -19,7 +22,6 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/size_t.hpp>
-#include <boost/serialization/is_bitwise_serializable.hpp>
 #include <boost/type_traits/add_const.hpp>
 #include <boost/type_traits/add_cv.hpp>
 #include <boost/type_traits/add_volatile.hpp>
@@ -30,6 +32,7 @@
 
 #include <cstddef> // for size_t
 #include <utility>
+#include <algorithm>
 
 #if defined(BOOST_MSVC)
 #pragma warning(push)
@@ -926,16 +929,81 @@ namespace hpx { namespace util
 
 #include <hpx/util/detail/fusion_adapt_tuple.hpp>
 
-namespace boost { namespace serialization
+namespace hpx { namespace traits
 {
     ///////////////////////////////////////////////////////////////////////////
     template <typename ...Ts>
     struct is_bitwise_serializable<
         ::hpx::util::tuple<Ts...>
     > : ::hpx::util::detail::all_of<
-            boost::serialization::is_bitwise_serializable<Ts>...
+            hpx::traits::is_bitwise_serializable<Ts>...
         >
     {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    namespace detail
+    {
+        template <typename Is, typename ...Ts>
+        struct serialize_as_future_helper;
+
+        template <std::size_t ...Is, typename ...Ts>
+        struct serialize_as_future_helper<
+                util::detail::pack_c<std::size_t, Is...>, Ts...
+            >
+        {
+            static bool call_if(util::tuple<Ts...>& t)
+            {
+                bool const _sequencer[] = {
+                    serialize_as_future<Ts>::call_if(util::get<Is>(t))...
+                };
+
+                return std::any_of(_sequencer,
+                    _sequencer+sizeof(_sequencer)/sizeof(_sequencer[0]),
+                    [](bool b) { return b; });
+            }
+
+            static void call(util::tuple<Ts...>& t)
+            {
+                int const _sequencer[] = {
+                    (serialize_as_future<Ts>::call(util::get<Is>(t)), 0)...
+                };
+                (void)_sequencer;
+            }
+        };
+    }
+
+    template <>
+    struct serialize_as_future<util::tuple<> >
+      : boost::mpl::false_
+    {
+        static BOOST_FORCEINLINE bool call_if(util::tuple<>&) { return false; }
+        static BOOST_FORCEINLINE void call(util::tuple<>&) {}
+    };
+
+    template <typename ...Ts>
+    struct serialize_as_future<util::tuple<Ts...> >
+      : util::detail::any_of<serialize_as_future<Ts>...>
+    {
+        static bool call_if(util::tuple<Ts...>& t)
+        {
+            return util::detail::any_of<serialize_as_future<Ts>...>::value ||
+                traits::detail::serialize_as_future_helper<
+                    typename util::detail::make_index_pack<sizeof...(Ts)>::type,
+                    Ts...
+                >::call_if(t);
+        }
+
+        static void call(util::tuple<Ts...>& t)
+        {
+            traits::detail::serialize_as_future_helper<
+                typename util::detail::make_index_pack<sizeof...(Ts)>::type,
+                Ts...
+            >::call(t);
+        }
+    };
+}}
+
+namespace hpx { namespace serialization {
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Archive, typename ...Ts>
@@ -946,13 +1014,13 @@ namespace boost { namespace serialization
       , unsigned int const version
     )
     {
-        ::hpx::util::serialize_sequence(ar, t);
+        ::hpx::serialization::serialize_sequence(ar, t);
     }
 
     // These are needed to avoid conflicts with serialize_empty_type
     BOOST_FORCEINLINE
     void serialize(
-        hpx::util::portable_binary_oarchive&
+        serialization::output_archive&
       , ::hpx::util::tuple<>&
       , unsigned int const
     )
@@ -960,7 +1028,7 @@ namespace boost { namespace serialization
 
     BOOST_FORCEINLINE
     void serialize(
-        hpx::util::portable_binary_iarchive&
+        serialization::input_archive&
       , ::hpx::util::tuple<>&
       , unsigned int const
     )

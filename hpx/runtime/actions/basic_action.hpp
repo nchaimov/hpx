@@ -13,9 +13,9 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/lcos/async_fwd.hpp>
 #include <hpx/runtime/get_lva.hpp>
+#include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/runtime/actions/action_support.hpp>
 #include <hpx/runtime/actions/continuation.hpp>
-#include <hpx/runtime/actions/transfer_action.hpp>
 #include <hpx/runtime/threads/thread_helpers.hpp>
 #include <hpx/traits/action_decorate_function.hpp>
 #include <hpx/traits/is_future.hpp>
@@ -26,10 +26,8 @@
 #include <hpx/util/tuple.hpp>
 #include <hpx/util/detail/count_num_args.hpp>
 #include <hpx/util/detail/pack.hpp>
-#include <hpx/util/detail/serialization_registration.hpp>
 
 #include <boost/mpl/if.hpp>
-#include <boost/serialization/access.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -41,6 +39,10 @@
 
 namespace hpx { namespace actions
 {
+    // transfer_action forward declaration
+    template <typename Action>
+    struct transfer_action;
+
     /// \cond NOINTERNAL
 
     ///////////////////////////////////////////////////////////////////////////
@@ -314,7 +316,7 @@ namespace hpx { namespace actions
 
     private:
         // serialization support
-        friend class boost::serialization::access;
+        friend class hpx::serialization::access;
 
         template <typename Archive>
         BOOST_FORCEINLINE void serialize(Archive& ar, const unsigned int) {}
@@ -419,14 +421,6 @@ namespace hpx { namespace actions
 /// \cond NOINTERNAL
 
 ///////////////////////////////////////////////////////////////////////////////
-#define HPX_REGISTER_BASE_HELPER(action, actionname)                          \
-    hpx::actions::detail::register_base_helper<action>                        \
-            BOOST_PP_CAT(                                                     \
-                BOOST_PP_CAT(__hpx_action_register_base_helper_, __LINE__),   \
-                _##actionname);                                               \
-/**/
-
-///////////////////////////////////////////////////////////////////////////////
 // Helper macro for action serialization, each of the defined actions needs to
 // be registered with the serialization library
 #define HPX_DEFINE_GET_ACTION_NAME(action)                                    \
@@ -442,12 +436,6 @@ namespace hpx { namespace actions
     }}}                                                                       \
 /**/
 
-#define HPX_ACTION_REGISTER_ACTION_FACTORY(Action, Name)                      \
-    static ::hpx::actions::detail::action_registration<Action>                \
-        const BOOST_PP_CAT(Name, _action_factory_registration) =              \
-        ::hpx::actions::detail::action_registration<Action>();                \
-/**/
-
 #define HPX_REGISTER_ACTION_(...)                                             \
     HPX_UTIL_EXPAND_(BOOST_PP_CAT(                                            \
         HPX_REGISTER_ACTION_, HPX_UTIL_PP_NARG(__VA_ARGS__)                   \
@@ -457,19 +445,16 @@ namespace hpx { namespace actions
     HPX_REGISTER_ACTION_2(action, action)                                     \
 /**/
 #define HPX_REGISTER_ACTION_2(action, actionname)                             \
-    HPX_ACTION_REGISTER_ACTION_FACTORY(hpx::actions::transfer_action<action>, \
-        actionname)                                                           \
     HPX_DEFINE_GET_ACTION_NAME_(action, actionname)                           \
 /**/
 
 ///////////////////////////////////////////////////////////////////////////////
-#define HPX_REGISTER_ACTION_DECLARATION_NO_DEFAULT_GUID1(action)              \
+#define HPX_REGISTER_ACTION_DECLARATION_NO_DEFAULT_GUID(action)               \
     namespace hpx { namespace actions { namespace detail {                    \
         template <> HPX_ALWAYS_EXPORT                                         \
         char const* get_action_name<action>();                                \
     }}}                                                                       \
-/**/
-#define HPX_REGISTER_ACTION_DECLARATION_NO_DEFAULT_GUID2(action)              \
+                                                                              \
     namespace hpx { namespace traits {                                        \
         template <>                                                           \
         struct needs_automatic_registration<action>                           \
@@ -487,9 +472,7 @@ namespace hpx { namespace actions
     HPX_REGISTER_ACTION_DECLARATION_2(action, action)                         \
 /**/
 #define HPX_REGISTER_ACTION_DECLARATION_2(action, actionname)                 \
-    HPX_REGISTER_ACTION_DECLARATION_NO_DEFAULT_GUID1(action)                  \
-    HPX_REGISTER_ACTION_DECLARATION_NO_DEFAULT_GUID2(                         \
-        hpx::actions::transfer_action<action>)                                \
+    HPX_REGISTER_ACTION_DECLARATION_NO_DEFAULT_GUID(action)                   \
 /**/
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -594,67 +577,6 @@ namespace hpx { namespace actions
     HPX_REGISTER_ACTION_DECLARATION_(__VA_ARGS__)                             \
 /**/
 
-/// \def HPX_REGISTER_ACTION_DECLARATION_TEMPLATE(template, action)
-///
-/// \brief Declare the necessary component action boilerplate code for actions
-///        taking template type arguments.
-///
-/// The macro \a HPX_REGISTER_ACTION_DECLARATION_TEMPLATE can be used to
-/// declare all the boilerplate code which is required for proper functioning
-/// of component actions in the context of HPX, if those actions take template
-/// type arguments.
-///
-/// The parameter \a template specifies the list of template type declarations
-/// for the action type. This argument has to be wrapped into an additional
-/// pair of parenthesis.
-///
-/// The parameter \a action is the type of the action to declare the
-/// boilerplate for. This argument has to be wrapped into an additional pair
-/// of parenthesis.
-///
-/// \par Example:
-///
-/// \code
-///      namespace app
-///      {
-///          // Define a simple component exposing one action 'print_greating'
-///          class HPX_COMPONENT_EXPORT server
-///            : public hpx::components::simple_component_base<server>
-///          {
-///              template <typename T>
-///              void print_greating (T t)
-///              {
-///                  hpx::cout << "Hey " << t << ", how are you?\n" << hpx::flush;
-///              }
-///
-///              // Component actions need to be declared, this also defines the
-///              // type 'print_greating_action' representing the action.
-///
-///              // Actions with template arguments (like print_greating<>()
-///              // above) require special type definitions. The simplest way
-///              // to define such an action type is by deriving from the HPX
-///              // facility make_action:
-///              template <typename T>
-///              struct print_greating_action
-///                : hpx::actions::make_action<
-///                      void (server::*)(T), &server::template print_greating<T>,
-///                      print_greating_action<T> >
-///              {};
-///          };
-///      }
-///
-///      // Declare boilerplate code required for each of the component actions.
-///      HPX_REGISTER_ACTION_DECLARATION_TEMPLATE((template T), (app::server::print_greating_action<T>));
-/// \endcode
-///
-/// \note This macro has to be used once for each of the component actions
-/// defined as above. It has to be visible in all translation units using the
-/// action, thus it is recommended to place it into the header file defining the
-/// component.
-#define HPX_REGISTER_ACTION_DECLARATION_TEMPLATE(TEMPLATE, TYPE)              \
-    HPX_SERIALIZATION_REGISTER_TEMPLATE_ACTION(TEMPLATE, TYPE)                \
-/**/
-
 /// \def HPX_REGISTER_ACTION(action)
 ///
 /// \brief Define the necessary component action boilerplate code.
@@ -674,11 +596,10 @@ namespace hpx { namespace actions
 /// as '<', '>', or ':'.
 ///
 /// \note This macro has to be used once for each of the component actions
-/// defined using one of the \a HPX_DEFINE_COMPONENT_ACTION macros. It has to
-/// occur exactly once for each of the actions, thus it is recommended to
-/// place it into the source file defining the component. There is no need
-/// to use this macro for actions which have template type arguments (see
-/// \a HPX_REGISTER_ACTION_DECLARATION_TEMPLATE)
+/// defined using one of the \a HPX_DEFINE_COMPONENT_ACTION or
+/// \a HPX_DEFINE_PLAIN_ACTION macros. It has to occur exactly once for each of
+/// the actions, thus it is recommended to place it into the source file defining
+/// the component.
 #define HPX_REGISTER_ACTION(...)                                              \
     HPX_REGISTER_ACTION_(__VA_ARGS__)                                         \
 /**/

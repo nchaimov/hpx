@@ -12,7 +12,6 @@
 
 #include <hpx/runtime/components/component_factory.hpp>
 #include <hpx/runtime/components/derived_component_factory.hpp>
-#include <hpx/runtime/components/plain_component_factory.hpp>
 
 #include <hpx/runtime/components/component_startup_shutdown.hpp>
 #include <hpx/runtime/components/component_commandline.hpp>
@@ -41,6 +40,10 @@
 #include <hpx/runtime/components/new.hpp>
 #include <hpx/runtime/components/copy_component.hpp>
 #include <hpx/runtime/components/migrate_component.hpp>
+
+#include <hpx/runtime/components/default_distribution_policy.hpp>
+#include <hpx/runtime/components/colocating_distribution_policy.hpp>
+#include <hpx/runtime/components/binpacking_distribution_policy.hpp>
 
 #include <hpx/runtime/get_ptr.hpp>
 

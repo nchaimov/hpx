@@ -1,4 +1,4 @@
-//  Copyright (c) 2012 Hartmut Kaiser
+//  Copyright (c) 2015 Hartmut Kaiser
 //  Copyright (c) 2011 Thomas Heller
 //  Copyright (c) 2013 Agustin Berge
 //
@@ -13,11 +13,10 @@
 #include <hpx/traits/is_action.hpp>
 #include <hpx/traits/is_bind_expression.hpp>
 #include <hpx/traits/is_placeholder.hpp>
+#include <hpx/traits/serialize_as_future.hpp>
 #include <hpx/util/bind.hpp>
 #include <hpx/util/decay.hpp>
 #include <hpx/util/move.hpp>
-#include <hpx/util/portable_binary_iarchive.hpp>
-#include <hpx/util/portable_binary_oarchive.hpp>
 #include <hpx/util/tuple.hpp>
 
 #include <boost/mpl/eval_if.hpp>
@@ -72,11 +71,11 @@ namespace hpx { namespace util
             static BOOST_FORCEINLINE
             type call(
                 detail::pack_c<std::size_t, Is...>
-              , naming::id_type const& contgid
+              , naming::id_type const& cont
               , BoundArgs& bound_args, UnboundArgs&& unbound_args
             )
             {
-                return hpx::apply_c<Action>(contgid, bind_eval<Action>(
+                return hpx::apply_c<Action>(cont, bind_eval<Action>(
                     util::get<Is>(bound_args),
                     std::forward<UnboundArgs>(unbound_args))...);
             }
@@ -85,15 +84,52 @@ namespace hpx { namespace util
         template <typename Action, typename BoundArgs, typename UnboundArgs>
         BOOST_FORCEINLINE
         bool
-        bind_action_apply_cont(naming::id_type const& contgid,
+        bind_action_apply_cont(naming::id_type const& cont,
             BoundArgs& bound_args, UnboundArgs&& unbound_args
         )
         {
-            return bind_action_apply_cont_impl<Action, BoundArgs, UnboundArgs>::call(
-                typename detail::make_index_pack<
-                    util::tuple_size<BoundArgs>::value
-                >::type(), contgid,
-                bound_args, std::forward<UnboundArgs>(unbound_args));
+            return bind_action_apply_cont_impl<
+                    Action, BoundArgs, UnboundArgs
+                >::call(
+                    typename detail::make_index_pack<
+                        util::tuple_size<BoundArgs>::value
+                    >::type(), cont,
+                    bound_args, std::forward<UnboundArgs>(unbound_args));
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        template <typename Action, typename BoundArgs, typename UnboundArgs>
+        struct bind_action_apply_cont_impl2
+        {
+            typedef bool type;
+
+            template <std::size_t ...Is>
+            static BOOST_FORCEINLINE
+            type call(
+                detail::pack_c<std::size_t, Is...>
+              , hpx::actions::continuation_type const& cont
+              , BoundArgs& bound_args, UnboundArgs&& unbound_args
+            )
+            {
+                return hpx::apply<Action>(cont, bind_eval<Action>(
+                    util::get<Is>(bound_args),
+                    std::forward<UnboundArgs>(unbound_args))...);
+            }
+        };
+
+        template <typename Action, typename BoundArgs, typename UnboundArgs>
+        BOOST_FORCEINLINE
+        bool
+        bind_action_apply_cont2(hpx::actions::continuation_type const& cont,
+            BoundArgs& bound_args, UnboundArgs&& unbound_args)
+        {
+            return bind_action_apply_cont_impl2<
+                    Action, BoundArgs, UnboundArgs
+                >::call(
+                    typename detail::make_index_pack<
+                        util::tuple_size<BoundArgs>::value
+                    >::type(), cont,
+                    bound_args, std::forward<UnboundArgs>(unbound_args));
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -195,6 +231,15 @@ namespace hpx { namespace util
 
             template <typename ...Us>
             BOOST_FORCEINLINE
+            bool
+            apply_c(actions::continuation_type const& cont, Us&&... us) const
+            {
+                return detail::bind_action_apply_cont2<Action>(cont,
+                    _bound_args, util::forward_as_tuple(std::forward<Us>(us)...));
+            }
+
+            template <typename ...Us>
+            BOOST_FORCEINLINE
             hpx::lcos::future<result_type>
             async(Us&&... us) const
             {
@@ -260,25 +305,42 @@ namespace hpx { namespace util
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace traits
 {
+    ///////////////////////////////////////////////////////////////////////////
     template <typename Action, typename BoundArgs>
     struct is_bind_expression<util::detail::bound_action<Action, BoundArgs> >
       : boost::mpl::true_
     {};
 
-    ///////////////////////////////////////////////////////////////////////////
     template <typename Action, typename BoundArgs>
     struct is_bound_action<util::detail::bound_action<Action, BoundArgs> >
       : boost::mpl::true_
     {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Action, typename BoundArgs>
+    struct serialize_as_future<util::detail::bound_action<Action, BoundArgs> >
+      : serialize_as_future<BoundArgs>
+    {
+        static bool
+        call_if(util::detail::bound_action<Action, BoundArgs>& b)
+        {
+            return serialize_as_future<BoundArgs>::call_if(b._bound_args);
+        }
+
+        static void call(util::detail::bound_action<Action, BoundArgs>& b)
+        {
+            traits::serialize_as_future<BoundArgs>::call(b._bound_args);
+        }
+    };
 }}
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace boost { namespace serialization
+namespace hpx { namespace serialization
 {
     // serialization of the bound action object
     template <typename Action, typename BoundArgs>
     void serialize(
-        ::hpx::util::portable_binary_iarchive& ar
+        ::hpx::serialization::input_archive& ar
       , ::hpx::util::detail::bound_action<Action, BoundArgs>& bound
       , unsigned int const /*version*/)
     {
@@ -287,7 +349,7 @@ namespace boost { namespace serialization
 
     template <typename Action, typename BoundArgs>
     void serialize(
-        ::hpx::util::portable_binary_oarchive& ar
+        ::hpx::serialization::output_archive& ar
       , ::hpx::util::detail::bound_action<Action, BoundArgs>& bound
       , unsigned int const /*version*/)
     {

@@ -52,7 +52,7 @@ struct test_server
 };
 
 typedef hpx::components::simple_component<test_server> server_type;
-HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(server_type, test_server);
+HPX_REGISTER_COMPONENT(server_type, test_server);
 
 typedef test_server::call_void_action call_void_action;
 HPX_REGISTER_ACTION_DECLARATION(call_void_action);
@@ -124,9 +124,9 @@ void plain_void()
 }
 
 HPX_DEFINE_PLAIN_ACTION(plain_void, plain_void_action);
-HPX_REGISTER_PLAIN_ACTION_DECLARATION(plain_void_action);
+HPX_REGISTER_ACTION_DECLARATION(plain_void_action);
 HPX_ACTION_INVOKE_NO_MORE_THAN(plain_void_action, 1);  // limit to max one
-HPX_REGISTER_PLAIN_ACTION(plain_void_action);
+HPX_REGISTER_ACTION(plain_void_action);
 
 hpx::future<void> plain_future_void()
 {
@@ -144,9 +144,9 @@ hpx::future<void> plain_future_void()
 }
 
 HPX_DEFINE_PLAIN_ACTION(plain_future_void, plain_future_void_action);
-HPX_REGISTER_PLAIN_ACTION_DECLARATION(plain_future_void_action);
+HPX_REGISTER_ACTION_DECLARATION(plain_future_void_action);
 HPX_ACTION_INVOKE_NO_MORE_THAN(plain_future_void_action, 1);  // limit to max one
-HPX_REGISTER_PLAIN_ACTION(plain_future_void_action);
+HPX_REGISTER_ACTION(plain_future_void_action);
 
 void test_plain_call_void()
 {

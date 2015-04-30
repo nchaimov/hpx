@@ -6,7 +6,7 @@
 
 #include <hpx/config/defines.hpp>
 
-#if defined(HPX_PARCELPORT_MPI)
+#if defined(HPX_HAVE_PARCELPORT_MPI)
 #include <mpi.h>
 #endif
 
@@ -33,6 +33,8 @@
 #include <hpx/util/memory_chunk_pool.hpp>
 #include <hpx/util/runtime_configuration.hpp>
 #include <hpx/util/safe_lexical_cast.hpp>
+
+#include <boost/archive/basic_archive.hpp>
 
 namespace hpx
 {
@@ -81,20 +83,20 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
             std::string endian_out = get_config_entry("hpx.parcel.endian_out", "little");
 #endif
             if (endian_out == "little")
-                archive_flags_ |= util::endian_little;
+                archive_flags_ |= serialization::endian_little;
             else if (endian_out == "big")
-                archive_flags_ |= util::endian_big;
+                archive_flags_ |= serialization::endian_big;
             else {
                 HPX_ASSERT(endian_out =="little" || endian_out == "big");
             }
 
             if (!this->allow_array_optimizations()) {
-                archive_flags_ |= util::disable_array_optimization;
-                archive_flags_ |= util::disable_data_chunking;
+                archive_flags_ |= serialization::disable_array_optimization;
+                archive_flags_ |= serialization::disable_data_chunking;
             }
             else {
                 if (!this->allow_zero_copy_optimizations())
-                    archive_flags_ |= util::disable_data_chunking;
+                    archive_flags_ |= serialization::disable_data_chunking;
             }
         }
 
@@ -380,15 +382,15 @@ namespace hpx { namespace traits
         static char const* call()
         {
             return
-#if defined(HPX_PARCELPORT_MPI_ENV)
-                "env = ${HPX_PARCELPORT_MPI_ENV:" HPX_PARCELPORT_MPI_ENV "}\n"
+#if defined(HPX_HAVE_PARCELPORT_MPI_ENV)
+                "env = ${HPX_HAVE_PARCELPORT_MPI_ENV:" HPX_HAVE_PARCELPORT_MPI_ENV "}\n"
 #else
-                "env = ${HPX_PARCELPORT_MPI_ENV:"
+                "env = ${HPX_HAVE_PARCELPORT_MPI_ENV:"
                         "MV2_COMM_WORLD_RANK,PMI_RANK,OMPI_COMM_WORLD_SIZE,ALPS_APP_PE"
                     "}\n"
 #endif
-                "multithreaded = ${HPX_PARCELPORT_MPI_MULTITHREADED:1}\n"
-                "max_connections = ${HPX_PARCELPORT_MPI_MAX_CONNECTIONS:8192}\n"
+                "multithreaded = ${HPX_HAVE_PARCELPORT_MPI_MULTITHREADED:1}\n"
+                "max_connections = ${HPX_HAVE_PARCELPORT_MPI_MAX_CONNECTIONS:8192}\n"
                 ;
         }
     };

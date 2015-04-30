@@ -10,10 +10,8 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/runtime.hpp>
 #include <hpx/runtime/actions/plain_action.hpp>
-#include <hpx/runtime/components/plain_component_factory.hpp>
 #include <hpx/runtime/components/server/managed_component_base.hpp>
 #include <hpx/util/assert.hpp>
-#include <hpx/util/portable_binary_iarchive.hpp>
 #include <hpx/util/reinitializable_static.hpp>
 #include <hpx/util/safe_lexical_cast.hpp>
 #include <hpx/runtime/actions/action_support.hpp>
@@ -40,7 +38,6 @@
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/serialization/vector.hpp>
 
 #include <sstream>
 
@@ -292,10 +289,10 @@ using hpx::agas::notify_worker_action;
 HPX_ACTION_HAS_CRITICAL_PRIORITY(register_worker_action);
 HPX_ACTION_HAS_CRITICAL_PRIORITY(notify_worker_action);
 
-HPX_REGISTER_PLAIN_ACTION(register_worker_action,
-    register_worker_action, hpx::components::factory_enabled)
-HPX_REGISTER_PLAIN_ACTION(notify_worker_action,
-    notify_worker_action, hpx::components::factory_enabled)
+HPX_REGISTER_ACTION(register_worker_action,
+    register_worker_action)
+HPX_REGISTER_ACTION(notify_worker_action,
+    notify_worker_action)
 
 #if defined(HPX_HAVE_SECURITY)
 using hpx::agas::register_worker_security_action;
@@ -304,10 +301,10 @@ using hpx::agas::notify_worker_security_action;
 HPX_ACTION_HAS_CRITICAL_PRIORITY(register_worker_security_action);
 HPX_ACTION_HAS_CRITICAL_PRIORITY(notify_worker_security_action);
 
-HPX_REGISTER_PLAIN_ACTION(register_worker_security_action,
-    register_worker_security_action, hpx::components::factory_enabled)
-HPX_REGISTER_PLAIN_ACTION(notify_worker_security_action,
-    notify_worker_security_action, hpx::components::factory_enabled)
+HPX_REGISTER_ACTION(register_worker_security_action,
+    register_worker_security_action)
+HPX_REGISTER_ACTION(notify_worker_security_action,
+    notify_worker_security_action)
 #endif
 
 namespace hpx { namespace agas
@@ -425,7 +422,7 @@ void register_worker(registration_header const& header)
 
     parcelset::locality dest;
     parcelset::locality here = bbb.here();
-    BOOST_FOREACH(parcelset::endpoints_type::value_type const & loc, header.endpoints)
+    for (parcelset::endpoints_type::value_type const & loc : header.endpoints)
     {
         if(loc.second.type() == here.type())
         {
@@ -616,7 +613,7 @@ void register_worker_security(registration_header_security const& header)
 
     parcelset::locality dest;
     parcelset::locality here = bbb.here();
-    BOOST_FOREACH(parcelset::locality const & loc, header.endpoints)
+    for (parcelset::locality const& loc : header.endpoints)
     {
         if(loc.get_type() == here.get_type())
         {

@@ -8,7 +8,6 @@
 #include <boost/config.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
 
 #include <hpx/state.hpp>
 #include <hpx/exception.hpp>
@@ -174,25 +173,25 @@ namespace hpx {
 #endif
 
         // copy over all startup functions registered so far
-        BOOST_FOREACH(util::function_nonser<void()> const& f, global_pre_startup_functions)
+        for (util::function_nonser<void()> const& f : global_pre_startup_functions)
         {
             add_pre_startup_function(f);
         }
         global_pre_startup_functions.clear();
 
-        BOOST_FOREACH(util::function_nonser<void()> const& f, global_startup_functions)
+        for (util::function_nonser<void()> const& f : global_startup_functions)
         {
             add_startup_function(f);
         }
         global_startup_functions.clear();
 
-        BOOST_FOREACH(util::function_nonser<void()> const& f, global_pre_shutdown_functions)
+        for (util::function_nonser<void()> const& f : global_pre_shutdown_functions)
         {
             add_pre_shutdown_function(f);
         }
         global_pre_shutdown_functions.clear();
 
-        BOOST_FOREACH(util::function_nonser<void()> const& f, global_shutdown_functions)
+        for (util::function_nonser<void()> const& f : global_shutdown_functions)
         {
             add_shutdown_function(f);
         }
@@ -731,7 +730,7 @@ namespace hpx {
 
 ///////////////////////////////////////////////////////////////////////////////
 /// explicit template instantiation for the thread manager of our choice
-#if defined(HPX_LOCAL_SCHEDULER)
+#if defined(HPX_HAVE_LOCAL_SCHEDULER)
 #include <hpx/runtime/threads/policies/local_queue_scheduler.hpp>
 template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::local_queue_scheduler<>,
@@ -745,7 +744,7 @@ template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::callback_notifier>;
 #endif
 
-#if defined(HPX_STATIC_PRIORITY_SCHEDULER)
+#if defined(HPX_HAVE_STATIC_PRIORITY_SCHEDULER)
 #include <hpx/runtime/threads/policies/static_priority_queue_scheduler.hpp>
 template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::static_priority_queue_scheduler<>,
@@ -757,20 +756,20 @@ template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::local_priority_queue_scheduler<>,
     hpx::threads::policies::callback_notifier>;
 
-#if defined(HPX_ABP_SCHEDULER)
+#if defined(HPX_HAVE_ABP_SCHEDULER)
 template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::abp_fifo_priority_queue_scheduler,
     hpx::threads::policies::callback_notifier>;
 #endif
 
-#if defined(HPX_HIERARCHY_SCHEDULER)
+#if defined(HPX_HAVE_HIERARCHY_SCHEDULER)
 #include <hpx/runtime/threads/policies/hierarchy_scheduler.hpp>
 template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::hierarchy_scheduler<>,
     hpx::threads::policies::callback_notifier>;
 #endif
 
-#if defined(HPX_PERIODIC_PRIORITY_SCHEDULER)
+#if defined(HPX_HAVE_PERIODIC_PRIORITY_SCHEDULER)
 #include <hpx/runtime/threads/policies/periodic_priority_queue_scheduler.hpp>
 template class HPX_EXPORT hpx::runtime_impl<
     hpx::threads::policies::periodic_priority_queue_scheduler<>,

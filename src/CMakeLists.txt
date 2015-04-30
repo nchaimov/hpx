@@ -6,7 +6,7 @@
 
 add_subdirectory(components)
 
-foreach(lib "hpx hpx_serialization")
+foreach(lib "hpx")
   set(${lib}_SOURCES "" CACHE INTERNAL "Sources for lib${lib}." FORCE)
 
   if(MSVC)
@@ -16,10 +16,6 @@ endforeach()
 
 ################################################################################
 # gather sources
-
-# libhpx_serialization sources
-add_hpx_library_sources(hpx_serialization
-  GLOB_RECURSE GLOBS "${hpx_SOURCE_DIR}/src/util/*_binary_*archive.cpp")
 
 # libhpx sources
 add_hpx_library_sources(hpx
@@ -36,7 +32,6 @@ add_hpx_library_sources(hpx
   APPEND)
 add_hpx_library_sources(hpx
   GLOB_RECURSE GLOBS "${hpx_SOURCE_DIR}/src/util/*.cpp"
-  EXCLUDE ".*_binary_.*archive[.]cpp"
   APPEND)
 add_hpx_library_sources(hpx
   GLOB_RECURSE GLOBS "${hpx_SOURCE_DIR}/src/lcos/*.cpp"
@@ -56,7 +51,7 @@ add_hpx_library_sources(hpx_init
 set(hpx_external_SOURCES "" CACHE INTERNAL "Sources for libhpx_external." FORCE)
 
 if(MSVC)
-  if(HPX_HAVE_SWAP_CONTEXT_EMULATION)
+  if(HPX_WITH_SWAP_CONTEXT_EMULATION)
     set(switch_to_fiber_source "${hpx_SOURCE_DIR}/src/util/coroutine/switch_to_fiber.asm")
     add_hpx_library_sources(hpx_external_objects
       GLOB GLOBS "${switch_to_fiber_source}")
@@ -76,16 +71,6 @@ endif()
 
 ################################################################################
 # gather headers
-
-# libhpx_serialization headers
-add_hpx_library_headers(hpx_serialization
-  GLOB_RECURSE GLOBS "${hpx_SOURCE_DIR}/hpx/util/*_binary_*.hpp")
-add_hpx_library_headers(hpx_serialization
-  GLOB_RECURSE GLOBS "${hpx_SOURCE_DIR}/hpx/util/ichunk_manager.hpp"
-  APPEND)
-add_hpx_library_headers(hpx_serialization
-  GLOB_RECURSE GLOBS "${hpx_SOURCE_DIR}/hpx/util/ochunk_manager.hpp"
-  APPEND)
 
 # libhpx headers
 add_hpx_library_headers(hpx
@@ -123,7 +108,7 @@ add_hpx_library_headers(hpx
   GLOB_RECURSE GLOBS "${hpx_SOURCE_DIR}/hpx/parallel/*.hpp"
   APPEND)
 
-if(HPX_STATIC_LINKING)
+if(HPX_WITH_STATIC_LINKING)
   add_hpx_library_headers(hpx
     GLOB GLOBS "${hpx_SOURCE_DIR}/hpx/components/*.hpp"
     APPEND)
@@ -135,18 +120,6 @@ add_hpx_library_headers(hpx_init
 
 ################################################################################
 # make source groups
-add_hpx_source_group(
-  NAME hpx_serialization
-  CLASS "Source Files"
-  ROOT "${hpx_SOURCE_DIR}/src/util"
-  TARGETS ${hpx_serialization_SOURCES})
-
-add_hpx_source_group(
-  NAME hpx_serialization
-  CLASS "Header Files"
-  ROOT "${hpx_SOURCE_DIR}/hpx/util"
-  TARGETS ${hpx_serialization_HEADERS})
-
 add_hpx_source_group(
   NAME hpx CLASS "Source Files"
   ROOT "${hpx_SOURCE_DIR}/src"
@@ -175,53 +148,14 @@ add_hpx_source_group(
   ROOT "${hpx_SOURCE_DIR}/hpx"
   TARGETS ${hpx_init_HEADERS})
 
-################################################################################
-# libhpx_serialization
-if(NOT HPX_STATIC_LINKING)
+if(NOT HPX_WITH_STATIC_LINKING)
   if(MSVC)
     # The MSVC linker can't handle a static library as large as we get when
-    # statically linking the main HPX library.
+    # statically linking the main HPX library
     set(hpx_library_link_mode_core SHARED)
   else()
     set(hpx_library_link_mode_core ${hpx_library_link_mode})
   endif()
-
-  if(HPX_BUILD_DEFAULT_TARGETS)
-    add_library(hpx_serialization ${hpx_library_link_mode_core}
-      ${hpx_serialization_SOURCES} ${hpx_serialization_HEADERS})
-  else()
-    add_library(hpx_serialization ${hpx_library_link_mode_core} EXCLUDE_FROM_ALL
-      ${hpx_serialization_SOURCES} ${hpx_serialization_HEADERS})
-  endif()
-
-  set_target_properties(hpx_serialization PROPERTIES
-    VERSION ${HPX_LIBRARY_VERSION}
-    SOVERSION ${HPX_SOVERSION}
-    CLEAN_DIRECT_OUTPUT 1
-    OUTPUT_NAME hpx_serialization
-    FOLDER "Core")
-
-  set(hpx_serialization_lib_dependencies
-    ${hpx_MALLOC_LIBRARY})
-
-  if(NOT MSVC)
-    set(hpx_serialization_lib_dependencies
-        ${hpx_serialization_lib_dependencies}
-        debug ${Boost_SYSTEM_LIBRARY_DEBUG}
-        optimized ${Boost_SYSTEM_LIBRARY_RELEASE}
-        debug ${Boost_SERIALIZATION_LIBRARY_DEBUG}
-        optimized ${Boost_SERIALIZATION_LIBRARY_RELEASE})
-  endif()
-
-  target_link_libraries(hpx_serialization
-    ${hpx_serialization_lib_dependencies})
-
-  set_property(TARGET hpx_serialization APPEND
-    PROPERTY COMPILE_DEFINITIONS
-    "HPX_EXPORTS"
-    "HPX_SERIALIZATION_EXPORTS"
-    "HPX_COROUTINE_EXPORTS")
-  set(hpx_targets ${hpx_targets} hpx_serialization)
 endif()
 
 # Add static parcelport sources ...
@@ -231,10 +165,10 @@ set(hpx_SOURCES ${hpx_SOURCES} ${HPX_STATIC_PARCELPORT_PLUGINS_SOURCES})
 
 ################################################################################
 # libhpx
-if(HPX_STATIC_LINKING)
-  set(hpx_SOURCES ${hpx_SOURCES} ${hpx_serialization_SOURCES} ${hpx_init_SOURCES})
+if(HPX_WITH_STATIC_LINKING)
+  set(hpx_SOURCES ${hpx_SOURCES} {hpx_init_SOURCES})
 endif()
-if(HPX_BUILD_DEFAULT_TARGETS)
+if(HPX_WITH_DEFAULT_TARGETS)
   add_library(hpx ${hpx_library_link_mode_core}
     ${hpx_SOURCES} ${hpx_external_SOURCES} ${hpx_external_OBJECTS} ${hpx_HEADERS})
 else()
@@ -242,7 +176,7 @@ else()
     ${hpx_SOURCES} ${hpx_external_SOURCES} ${hpx_external_OBJECTS} ${hpx_HEADERS})
 endif()
 
-#if(HPX_STATIC_LINKING)
+#if(HPX_WITH_STATIC_LINKING)
 #  add_dependencies(hpx static_component_data_hpp)
 #endif()
 
@@ -284,7 +218,7 @@ set_property(TARGET hpx APPEND
 # Emulation of SwapContext on Windows
 ################################################################################
 if(MSVC)
-  if(HPX_HAVE_SWAP_CONTEXT_EMULATION)
+  if(HPX_WITH_SWAP_CONTEXT_EMULATION)
     set_property(TARGET hpx APPEND
       PROPERTY LINK_FLAGS
       "/EXPORT:switch_to_fiber")
@@ -296,8 +230,8 @@ set(hpx_targets ${hpx_targets} hpx)
 ################################################################################
 # libhpx_init
 
-if(NOT HPX_STATIC_LINKING)
-  if(HPX_BUILD_DEFAULT_TARGETS)
+if(NOT HPX_WITH_STATIC_LINKING)
+  if(HPX_WITH_DEFAULT_TARGETS)
     add_library(hpx_init STATIC
       ${hpx_init_SOURCES} ${hpx_init_HEADERS})
   else()
@@ -316,7 +250,7 @@ if(NOT HPX_STATIC_LINKING)
 endif()
 
 set(_optional)
-if(HPX_BUILD_DEFAULT_TARGETS)
+if(HPX_WITH_DEFAULT_TARGETS)
   set(_optional OPTIONAL)
 endif()
 

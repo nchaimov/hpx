@@ -16,7 +16,6 @@
 #include <hpx/runtime/actions/basic_action.hpp>
 #include <hpx/runtime/components/console_error_sink.hpp>
 #include <hpx/util/unused.hpp>
-#include <hpx/util/void_cast.hpp>
 #include <hpx/util/detail/count_num_args.hpp>
 #include <hpx/util/detail/pp_strip_parens.hpp>
 
@@ -191,7 +190,7 @@ namespace hpx { namespace actions
     struct name : hpx::actions::make_direct_action<                           \
         decltype(&component::func), &component::func, name>::type {}          \
     /**/
-    /**/
+
 #define HPX_DEFINE_COMPONENT_DIRECT_ACTION_2(component, func)                 \
     HPX_DEFINE_COMPONENT_DIRECT_ACTION_3(component, func,                     \
         BOOST_PP_CAT(func, _action))                                          \

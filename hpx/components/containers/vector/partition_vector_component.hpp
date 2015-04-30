@@ -84,7 +84,7 @@ namespace hpx { namespace server
             partition_vector_(rhs.partition_vector_)
         {}
 
-        partition_vector operator=(partition_vector const& rhs)
+        partition_vector& operator=(partition_vector const& rhs)
         {
             if (this != &rhs)
             {
@@ -99,7 +99,7 @@ namespace hpx { namespace server
             partition_vector_(std::move(rhs.partition_vector_))
         {}
 
-        partition_vector operator=(partition_vector && rhs)
+        partition_vector& operator=(partition_vector && rhs)
         {
             if (this != &rhs)
             {
@@ -432,7 +432,7 @@ namespace hpx { namespace server
     typedef ::hpx::components::simple_component<                              \
         ::hpx::server::partition_vector<type>                                 \
     > BOOST_PP_CAT(__vector_, name);                                          \
-    HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(BOOST_PP_CAT(__vector_, name))     \
+    HPX_REGISTER_COMPONENT(BOOST_PP_CAT(__vector_, name))                     \
 /**/
 
 ///////////////////////////////////////////////////////////////////////////////

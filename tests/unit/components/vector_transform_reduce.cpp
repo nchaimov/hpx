@@ -10,6 +10,8 @@
 
 #include <hpx/util/lightweight_test.hpp>
 
+#include <boost/range/functions.hpp>
+
 ///////////////////////////////////////////////////////////////////////////////
 // Define the vector types to be used.
 HPX_REGISTER_VECTOR(double);
@@ -88,8 +90,8 @@ void transform_reduce_tests()
     }
 
     {
-        hpx::vector<T> xvalues(num, T(1), hpx::layout(2));
-        hpx::vector<T> yvalues(num, T(1), hpx::layout(2));
+        hpx::vector<T> xvalues(num, T(1), hpx::container_layout(2));
+        hpx::vector<T> yvalues(num, T(1), hpx::container_layout(2));
 
         transform_reduce_tests(num, xvalues, yvalues);
     }

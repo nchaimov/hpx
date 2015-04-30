@@ -39,7 +39,7 @@ struct hello_world_server
         hpx::threads::thread_state_enum initial_state)
     {
         char const* desc = 0;
-#ifdef HPX_THREAD_MAINTAIN_DESCRIPTION
+#ifdef HPX_HAVE_THREAD_DESCRIPTION
         desc = data.description;
 #endif
 
@@ -55,7 +55,7 @@ private:
 };
 
 typedef hpx::components::managed_component<hello_world_server> server_type;
-HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(server_type, hello_world_server);
+HPX_REGISTER_COMPONENT(server_type, hello_world_server);
 
 typedef hello_world_server::print_action print_action;
 HPX_REGISTER_ACTION_DECLARATION(print_action);
