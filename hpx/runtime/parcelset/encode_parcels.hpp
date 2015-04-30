@@ -11,7 +11,6 @@
 #define HPX_PARCELSET_ENCODE_PARCEL_HPP
 
 #include <hpx/runtime/parcelset/parcel_buffer.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/util/high_resolution_timer.hpp>
 #include <hpx/traits/is_chunk_allocator.hpp>
 
@@ -47,9 +46,9 @@ namespace hpx
             chunks.reserve(buffer.chunks_.size());
 
             std::size_t index = 0;
-            for (serialization::serialization_chunk& c : buffer.chunks_)
+            BOOST_FOREACH(util::serialization_chunk& c, buffer.chunks_)
             {
-                if (c.type_ == serialization::chunk_type_pointer)
+                if (c.type_ == util::chunk_type_pointer)
                     chunks.push_back(transmission_chunk_type(index, c.size_));
                 ++index;
             }
@@ -61,9 +60,9 @@ namespace hpx
 
             if (!chunks.empty()) {
                 // the remaining number of chunks are non-zero-copy
-                for (serialization::serialization_chunk& c : buffer.chunks_)
+                BOOST_FOREACH(util::serialization_chunk& c, buffer.chunks_)
                 {
-                    if (c.type_ == serialization::chunk_type_index) {
+                    if (c.type_ == util::chunk_type_index) {
                         chunks.push_back(
                             transmission_chunk_type(c.data_.index_, c.size_));
                     }
@@ -110,21 +109,21 @@ namespace hpx
 
                     {
                         // Serialize the data
-                        std::unique_ptr<serialization::binary_filter> filter(
+                        std::unique_ptr<util::binary_filter> filter(
                             ps[0].get_serialization_filter());
 
                         int archive_flags = archive_flags_;
                         if (filter.get() != 0) {
                             filter->set_max_length(buffer.data_.capacity());
-                            archive_flags |= serialization::enable_compression;
+                            archive_flags |= util::enable_compression;
                         }
 
-                        serialization::output_archive archive(
+                        util::portable_binary_oarchive archive(
                             buffer.data_
-                          , archive_flags
-                          , dest_locality_id
                           , &buffer.chunks_
-                          , filter.get());
+                          , dest_locality_id
+                          , filter.get()
+                          , archive_flags);
 
                         if(num_parcels != std::size_t(-1))
                             archive << parcels_sent;

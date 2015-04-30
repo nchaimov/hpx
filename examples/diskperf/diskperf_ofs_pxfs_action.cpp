@@ -15,7 +15,6 @@
 #include <hpx/include/actions.hpp>
 #include <hpx/include/components.hpp>
 #include <hpx/include/runtime.hpp>
-#include <hpx/include/serialization.hpp>
 
 #include <fstream>
 #include <cstdlib>
@@ -63,11 +62,11 @@ typedef hpx::runtime rt_type;
 typedef hpx::lcos::local::spinlock mutex_type;
 
 struct RESULT {
-    double real;
-    double user;
-    double sys;
+    double	real;
+    double	user;
+    double	sys;
 
-    friend class hpx::serialization::access;
+    friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
@@ -87,7 +86,7 @@ struct ofs_test_info_type
     std::string pvfs2tab_file;
 
 
-    friend class hpx::serialization::access;
+    friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
@@ -152,10 +151,10 @@ RESULT write_files_test(ofs_test_info_type ofs_test_info, int proc)
 {
     // perform the I/O operations here
    char filename[1024];
-   clock_t start;
-   clock_t end;
-   struct tms t1;
-   struct tms t2;
+   clock_t	start;
+   clock_t	end;
+   struct tms	t1;
+   struct tms	t2;
    RESULT r;
 
    uint64_t wfiles = ofs_test_info.wfiles;
@@ -186,7 +185,7 @@ RESULT write_files_test(ofs_test_info_type ofs_test_info, int proc)
    for(boost::uint64_t i=0; i<wfiles; i++)
    {
        // using OrageFS syscalls
-       int oflags;
+       int	oflags;
 
        oflags = O_WRONLY|O_CREAT;
        sprintf(filename, "%s/loc_%d_file%d.%ld", ofspath.c_str(), hpx::get_locality_id(), proc, i);
@@ -278,10 +277,10 @@ RESULT read_files_test(ofs_test_info_type ofs_test_info, int proc)
 {
     // perform the I/O operations here
    char filename[1024];
-   clock_t start;
-   clock_t end;
-   struct tms t1;
-   struct tms t2;
+   clock_t	start;
+   clock_t	end;
+   struct tms	t1;
+   struct tms	t2;
    RESULT r;
 
    uint64_t rfiles = ofs_test_info.rfiles;
@@ -308,7 +307,7 @@ RESULT read_files_test(ofs_test_info_type ofs_test_info, int proc)
    for(boost::uint64_t i=0; i<rfiles; i++)
    {
        // using OrageFS syscalls
-       int oflags;
+       int	oflags;
 
        oflags = O_RDONLY;
        sprintf(filename, "%s/loc_%d_file%d.%ld", ofspath.c_str(), hpx::get_locality_id(), proc, i);
@@ -473,7 +472,7 @@ int hpx_main(variables_map& vm)
         {
             ofs_test_info.rfiles = rfiles;
 
-            for (hpx::naming::id_type const& node : localities)
+            BOOST_FOREACH(hpx::naming::id_type const& node, localities)
             {
                 // Initiate an asynchronous IO operation wait for it to complete without
                 // blocking any of the HPX thread-manager threads.
@@ -489,7 +488,7 @@ int hpx_main(variables_map& vm)
         {
             ofs_test_info.wfiles = wfiles;
 
-            for (hpx::naming::id_type const& node : localities)
+            BOOST_FOREACH(hpx::naming::id_type const& node, localities)
             {
                 for(int proc=0; proc < procs; proc++)
                 {

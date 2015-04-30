@@ -8,8 +8,6 @@
 #include <hpx/include/parallel_all_any_none_of.hpp>
 #include <hpx/util/lightweight_test.hpp>
 
-#include <boost/range/functions.hpp>
-
 #include "test_utils.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -9,11 +9,10 @@
 
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/error.hpp>
+#include <hpx/runtime/actions/guid_initialization.hpp>
 #include <hpx/util/detail/function_template.hpp>
 #include <hpx/util/detail/pp_strip_parens.hpp>
 #include <hpx/util/decay.hpp>
-#include <hpx/traits/needs_automatic_registration.hpp>
-#include <hpx/traits/serialize_as_future.hpp>
 
 #include <boost/preprocessor/cat.hpp>
 
@@ -42,8 +41,7 @@
             std::pair<                                                        \
                 function_vtable_ptr<                                          \
                     Sig                                                       \
-                  , ::hpx::serialization::input_archive                       \
-                  , ::hpx::serialization::output_archive                      \
+                  , portable_binary_iarchive, portable_binary_oarchive        \
                 >                                                             \
               , util::decay<HPX_UTIL_STRIP(Functor)>::type                    \
             >                                                                 \
@@ -95,7 +93,7 @@ namespace hpx { namespace util { namespace detail
         std::pair<
             hpx::util::detail::function_vtable_ptr<
                 Sig
-              , hpx::serialization::input_archive, hpx::serialization::output_archive
+              , hpx::util::portable_binary_iarchive, hpx::util::portable_binary_oarchive
             >
           , hpx::util::detail::empty_function<Sig>
         >
@@ -111,57 +109,19 @@ namespace hpx { namespace util { namespace detail
     };
 }}}
 
-namespace hpx { namespace traits
-{
-    ///////////////////////////////////////////////////////////////////////////
+namespace hpx { namespace traits {
     template <typename Sig>
     struct needs_automatic_registration<
         std::pair<
             hpx::util::detail::function_vtable_ptr<
                 Sig
-              , hpx::serialization::input_archive, hpx::serialization::output_archive
+              , hpx::util::portable_binary_iarchive, hpx::util::portable_binary_oarchive
             >
           , hpx::util::detail::empty_function<Sig>
         >
     >
       : boost::mpl::false_
     {};
-
-    ///////////////////////////////////////////////////////////////////////////
-    template <typename Sig, typename IArchive, typename OArchive>
-    struct serialize_as_future<util::function<Sig, IArchive, OArchive> >
-      : boost::mpl::false_
-    {
-        static bool
-        call_if(util::function<Sig, IArchive, OArchive>& f)
-        {
-            return !f.vptr->empty && f.vptr->has_to_wait_for_futures(&f.object);
-        }
-
-        static void call(util::function<Sig, IArchive, OArchive>& f)
-        {
-            if (!f.vptr->empty)
-                f.vptr->wait_for_future(&f.object);
-        }
-    };
-
-    template <typename Sig>
-    struct serialize_as_future<util::function<Sig, void, void> >
-      : boost::mpl::false_
-    {
-        static bool call_if(util::function<Sig, void, void>&) { return false; }
-        static void call(util::function<Sig, void, void>&) {}
-    };
-
-#ifdef BOOST_NO_CXX11_TEMPLATE_ALIASES
-    template <typename Sig>
-    struct serialize_as_future<util::function_nonser<Sig> >
-      : boost::mpl::false_
-    {
-        static bool call_if(util::function_nonser<Sig>&) { return false; }
-        static void call(util::function_nonser<Sig>&) {}
-    };
-#endif
 }}
 
 #endif

@@ -5,7 +5,14 @@
 
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/runtime/naming/address.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
+
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
+
+#include <boost/serialization/version.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/is_bitwise_serializable.hpp>
+#include <boost/serialization/array.hpp>
 
 #include <boost/mpl/bool.hpp>
 
@@ -13,20 +20,13 @@ namespace hpx { namespace naming { namespace detail
 {
     struct name_serialization_data
     {
-        gid_type locality_;
-        address::component_type type_;
         address::address_type address_;
+        address::component_type type_;
         address::address_type offset_;
-
-        template <class Archive>
-        void serialize(Archive& ar, unsigned)
-        {
-            ar & locality_ & type_ & address_ & offset_;
-        }
     };
 }}}
 
-namespace hpx { namespace traits
+namespace boost { namespace serialization
 {
     template <>
     struct is_bitwise_serializable<
@@ -41,9 +41,18 @@ namespace hpx { namespace naming
     template <typename Archive>
     void address::save(Archive& ar, const unsigned int version) const
     {
-        detail::name_serialization_data data{
-            locality_, type_, address_, offset_};
-        ar << data;
+        if (ar.flags() & util::disable_array_optimization) {
+            ar << locality_ << type_ << address_ << offset_;
+        }
+        else {
+            ar << locality_;
+
+            detail::name_serialization_data data;
+            data.type_ = type_;
+            data.address_ = address_;
+            data.offset_ = offset_;
+            ar.save(data);
+        }
     }
 
     template <typename Archive>
@@ -56,17 +65,23 @@ namespace hpx { namespace naming
                 "trying to load address with unknown version");
         }
 
-        detail::name_serialization_data data;
-        ar >> data;
-        locality_ = data.locality_;
-        type_ = data.type_;
-        address_ = data.address_;
-        offset_ = data.offset_;
+        if (ar.flags() & util::disable_array_optimization) {
+            ar >> locality_ >> type_ >> address_ >> offset_;
+        }
+        else {
+            ar >> locality_;
+
+            detail::name_serialization_data data;
+            ar.load(data);
+            type_ = data.type_;
+            address_ = data.address_;
+            offset_ = data.offset_;
+        }
     }
 
     template HPX_EXPORT
-    void address::save(serialization::output_archive&, const unsigned int) const;
+    void address::save(util::portable_binary_oarchive&, const unsigned int) const;
 
     template HPX_EXPORT
-    void address::load(serialization::input_archive&, const unsigned int);
+    void address::load(util::portable_binary_iarchive&, const unsigned int);
 }}

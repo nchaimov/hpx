@@ -3,8 +3,6 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <hpx/include/apply.hpp>
-#include <hpx/include/async.hpp>
 #include <hpx/include/components.hpp>
 #include <hpx/components/component_storage/server/migrate_to_storage.hpp>
 
@@ -14,7 +12,7 @@ HPX_REGISTER_COMPONENT_MODULE()
 
 typedef hpx::components::server::component_storage component_storage_type;
 
-HPX_REGISTER_COMPONENT(
+HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(
     hpx::components::simple_component<component_storage_type>,
     component_storage_factory, hpx::components::factory_enabled)
 HPX_DEFINE_GET_COMPONENT_TYPE(component_storage_type)

@@ -171,7 +171,7 @@ namespace hpx { namespace threads { namespace detail
         bool need_restore_state_;
     };
 
-#ifdef HPX_HAVE_THREAD_IDLE_RATES
+#ifdef HPX_THREAD_MAINTAIN_IDLE_RATES
     struct idle_collect_rate
     {
         idle_collect_rate(boost::uint64_t& tfunc_time, boost::uint64_t& exec_time)
@@ -329,7 +329,7 @@ namespace hpx { namespace threads { namespace detail
 #endif
                             }
 
-#ifdef HPX_HAVE_THREAD_CUMULATIVE_COUNTS
+#ifdef HPX_THREAD_MAINTAIN_CUMULATIVE_COUNTS
                             ++executed_thread_phases;
 #endif
                         }
@@ -397,7 +397,7 @@ namespace hpx { namespace threads { namespace detail
                 // REVIEW: what has to be done with depleted HPX threads?
                 if (state_val == depleted || state_val == terminated)
                 {
-#ifdef HPX_HAVE_THREAD_CUMULATIVE_COUNTS
+#ifdef HPX_THREAD_MAINTAIN_CUMULATIVE_COUNTS
                     ++executed_threads;
 #endif
                     scheduler.SchedulingPolicy::destroy_thread(thrd, busy_loop_count);

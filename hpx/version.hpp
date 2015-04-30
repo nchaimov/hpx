@@ -5,8 +5,6 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// Make Boost inspect tool happy: boostinspect:nounnamed
-
 #if !defined(HPX_VERSION_AUG_18_2011_0854PM)
 #define HPX_VERSION_AUG_18_2011_0854PM
 
@@ -43,8 +41,8 @@
 
 #define HPX_VERSION_TAG          "-trunk"
 
-#if !defined(HPX_HAVE_GIT_COMMIT)
-    #define HPX_HAVE_GIT_COMMIT  "unknown"
+#if !defined(HPX_GIT_COMMIT)
+    #define HPX_GIT_COMMIT       "unknown"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

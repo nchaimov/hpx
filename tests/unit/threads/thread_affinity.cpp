@@ -21,6 +21,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
+#include <boost/foreach.hpp>
 
 #if defined(HPX_HAVE_HWLOC) && !defined(__APPLE__)
 #  include <hwloc.h>
@@ -112,7 +113,7 @@ void thread_affinity_foreman()
         std::vector<hpx::lcos::future<std::size_t> > futures;
         futures.reserve(attendance.size());
 
-        for (std::size_t worker : attendance)
+        BOOST_FOREACH(std::size_t worker, attendance)
         {
             // Asynchronously start a new task. The task is encapsulated in a
             // future, which we can query to determine if the task has
@@ -146,7 +147,7 @@ int hpx_main(boost::program_options::variables_map& /*vm*/)
         std::vector<hpx::lcos::future<void> > futures;
         futures.reserve(localities.size());
 
-        for (hpx::naming::id_type const& node : localities)
+        BOOST_FOREACH(hpx::naming::id_type const& node, localities)
         {
             // Asynchronously start a new task. The task is encapsulated in a
             // future, which we can query to determine if the task has

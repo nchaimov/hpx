@@ -20,6 +20,7 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+#include <boost/foreach.hpp>
 #include <boost/assign/std/vector.hpp>
 #include <boost/program_options.hpp>
 
@@ -230,12 +231,12 @@ namespace hpx { namespace util
                         "must be greater than 0");
                 }
 
-#if defined(HPX_HAVE_MAX_CPU_COUNT)
-                if (threads > HPX_HAVE_MAX_CPU_COUNT) {
+#if defined(HPX_MAX_CPU_COUNT)
+                if (threads > HPX_MAX_CPU_COUNT) {
                     throw hpx::detail::command_line_error("Requested more than "
-                        BOOST_PP_STRINGIZE(HPX_HAVE_MAX_CPU_COUNT)" --hpx:threads "
+                        BOOST_PP_STRINGIZE(HPX_MAX_CPU_COUNT)" --hpx:threads "
                         "to use for this application, use the option "
-                        "-DHPX_WITH_MAX_CPU_COUNT=<N> when configuring HPX.");
+                        "-DHPX_MAX_CPU_COUNT=<N> when configuring HPX.");
                 }
 #endif
             }
@@ -447,7 +448,7 @@ namespace hpx { namespace util
             if (vm.count("hpx:worker")) {
                 mode_ = hpx::runtime_mode_worker;
 
-#if !defined(HPX_HAVE_RUN_MAIN_EVERYWHERE)
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
                 // do not execute any explicit hpx_main except if asked
                 // otherwise
                 if (!vm.count("hpx:run-hpx-main") &&
@@ -468,7 +469,7 @@ namespace hpx { namespace util
             // when connecting we need to select a unique port
             hpx_port = HPX_CONNECTING_IP_PORT;
 
-#if !defined(HPX_HAVE_RUN_MAIN_EVERYWHERE)
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
             // do not execute any explicit hpx_main except if asked
             // otherwise
             if (!vm.count("hpx:run-hpx-main") &&
@@ -500,7 +501,7 @@ namespace hpx { namespace util
                     hpx_port = static_cast<boost::uint16_t>(hpx_port + node);
                     mode_ = hpx::runtime_mode_worker;
 
-#if !defined(HPX_HAVE_RUN_MAIN_EVERYWHERE)
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
                     // do not execute any explicit hpx_main except if asked
                     // otherwise
                     if (!vm.count("hpx:run-hpx-main") &&
@@ -570,7 +571,7 @@ namespace hpx { namespace util
             // should not run the AGAS server we assume to be in worker mode
             mode_ = hpx::runtime_mode_worker;
 
-#if !defined(HPX_HAVE_RUN_MAIN_EVERYWHERE)
+#if !defined(HPX_RUN_MAIN_EVERYWHERE)
             // do not execute any explicit hpx_main except if asked
             // otherwise
             if (!vm.count("hpx:run-hpx-main") &&
@@ -661,7 +662,7 @@ namespace hpx { namespace util
         if (debug_clp) {
             std::cerr << "Configuration before runtime start:\n";
             std::cerr << "-----------------------------------\n";
-            for (std::string const& s : ini_config) {
+            BOOST_FOREACH(std::string const& s, ini_config) {
                 std::cerr << s << std::endl;
             }
             std::cerr << "-----------------------------------\n";
@@ -914,7 +915,8 @@ namespace hpx { namespace util
         // will be considered now.
 
         parcelset::parcelhandler::init(&argc, &argv, *this);
-        for (boost::shared_ptr<plugins::plugin_registry_base>& reg : plugin_registries)
+        BOOST_FOREACH(boost::shared_ptr<plugins::plugin_registry_base> & reg,
+            plugin_registries)
         {
             reg->init(&argc, &argv, *this);
         }

@@ -5,7 +5,6 @@
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/hpx.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/lcos/local/detail/invoke_when_ready.hpp>
 
 #include <hpx/include/parallel_algorithm.hpp>
@@ -82,29 +81,29 @@ struct sub_block
         return data_[i];
     }
 
-    void load(hpx::serialization::input_archive & ar, unsigned version)
+    void load(hpx::util::portable_binary_iarchive & ar, unsigned version)
     {
         ar & size_;
         if(size_ > 0)
         {
             data_ = new double[size_];
-            hpx::serialization::array<double> arr(data_, size_);
-            ar >> arr;
+            boost::serialization::array<double> arr(data_, size_);
+            ar.load_array(arr, version);
             mode_ = owning;
         }
     }
 
-    void save(hpx::serialization::output_archive & ar, unsigned version) const
+    void save(hpx::util::portable_binary_oarchive & ar, unsigned version) const
     {
         ar & size_;
         if(size_ > 0)
         {
-            hpx::serialization::array<double> arr(data_, size_);
-            ar << arr;
+            boost::serialization::array<double> arr(data_, size_);
+            ar.save_array(arr, version);
         }
     }
 
-    HPX_SERIALIZATION_SPLIT_MEMBER()
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     boost::uint64_t size_;
     double * data_;
@@ -161,10 +160,10 @@ struct block
 // The macros below are necessary to generate the code required for exposing
 // our partition type remotely.
 //
-// HPX_REGISTER_COMPONENT() exposes the component creation
+// HPX_REGISTER_MINIMAL_COMPONENT_FACTORY() exposes the component creation
 // through hpx::new_<>().
 typedef hpx::components::simple_component<block_component> block_component_type;
-HPX_REGISTER_COMPONENT(block_component_type, block_component);
+HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(block_component_type, block_component);
 
 // HPX_REGISTER_ACTION() exposes the component member function for remote
 // invocation.

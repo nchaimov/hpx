@@ -142,14 +142,14 @@ struct channel
     {
         HPX_ASSERT(data_);
         T tmp = data_->get_data(ec);
-        return tmp;
+        return std::move(tmp);
     }
 
     T move(hpx::error_code& ec = hpx::throws) const
     {
         HPX_ASSERT(data_);
         T tmp = data_->move_data(ec);
-        return tmp;
+        return std::move(tmp);
     }
 
     void post(T && result)

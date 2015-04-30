@@ -8,6 +8,8 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/include/iostreams.hpp>
 
+#include <boost/foreach.hpp>
+
 #include <sstream>
 
 #include <tests/unit/agas/components/server/managed_refcnt_checker.hpp>
@@ -27,7 +29,7 @@ managed_refcnt_checker::~managed_refcnt_checker()
         strm << ( boost::format("[%1%/%2%]: held references\n")
                 % prefix_ % this_);
 
-        for (naming::id_type const& ref : references_)
+        BOOST_FOREACH(naming::id_type const& ref, references_)
         {
             strm << "  " << ref << " "
                  << naming::get_management_type_name(ref.get_management_type())

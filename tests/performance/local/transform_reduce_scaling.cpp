@@ -12,9 +12,8 @@
 
 #include <stdexcept>
 
-#include <boost/cstdint.hpp>
 #include <boost/format.hpp>
-#include <boost/range/functions.hpp>
+#include <boost/cstdint.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 int test_count = 100;

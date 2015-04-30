@@ -6,6 +6,8 @@
 #ifndef HPX_COMPONENTS_SECURITY_SERVER_KEY_PAIR_HPP
 #define HPX_COMPONENTS_SECURITY_SERVER_KEY_PAIR_HPP
 
+#include <boost/serialization/serialization.hpp>
+
 #include "public_key.hpp"
 #include "secret_key.hpp"
 #include "signed_type.hpp"

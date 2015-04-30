@@ -8,8 +8,6 @@
 #include <hpx/include/parallel_move.hpp>
 #include <hpx/util/lightweight_test.hpp>
 
-#include <boost/range/functions.hpp>
-
 #include "test_utils.hpp"
 
 #include <boost/noncopyable.hpp>

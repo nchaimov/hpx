@@ -54,13 +54,13 @@ namespace hpx { namespace parcelset
                 return util::safe_bool<locality>()(port_ != boost::uint16_t(-1));
             }
 
-            void save(serialization::output_archive & ar) const
+            void save(util::portable_binary_oarchive & ar) const
             {
                 ar.save(address_);
                 ar.save(port_);
             }
 
-            void load(serialization::input_archive & ar)
+            void load(util::portable_binary_iarchive & ar)
             {
                 ar.load(address_);
                 ar.load(port_);

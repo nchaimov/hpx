@@ -7,6 +7,8 @@
 #include <hpx/hpx_fwd.hpp>
 #include "row.hpp"
 
+#include <boost/serialization/vector.hpp>
+
 namespace jacobi
 {
     namespace server
@@ -22,7 +24,7 @@ typedef hpx::components::managed_component<
     jacobi::server::row
 > row_type;
 
-HPX_REGISTER_COMPONENT(row_type, row);
+HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(row_type, row);
 
 HPX_REGISTER_ACTION(
     jacobi::server::row::init_action

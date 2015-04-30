@@ -14,6 +14,7 @@
 
 #include <boost/dynamic_bitset.hpp>
 #include <utility>
+#include <boost/foreach.hpp>
 
 #include <list>
 
@@ -67,7 +68,7 @@ namespace hpx { namespace lcos { namespace local
         {
             bool triggered = false;
             error_code rc(lightweight);
-            for (conditional_trigger* c : conditions_)
+            BOOST_FOREACH(conditional_trigger* c, conditions_)
             {
                 triggered |= c->set(rc);
                 if (rc && (&ec != &throws))

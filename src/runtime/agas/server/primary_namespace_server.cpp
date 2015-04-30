@@ -21,6 +21,7 @@
 
 #include <list>
 
+#include <boost/foreach.hpp>
 #include <boost/fusion/include/at_c.hpp>
 
 #if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION < 408000
@@ -330,7 +331,7 @@ parcelset::policies::message_handler* primary_namespace::get_message_handler(
     return routed_p.get_message_handler(ph, loc);
 }
 
-serialization::binary_filter* primary_namespace::get_serialization_filter(
+util::binary_filter* primary_namespace::get_serialization_filter(
     parcelset::parcel const& p
     )
 {
@@ -359,7 +360,7 @@ std::vector<response> primary_namespace::bulk_service(
     std::vector<response> r;
     r.reserve(reqs.size());
 
-    for (request const& req : reqs)
+    BOOST_FOREACH(request const& req, reqs)
     {
         r.push_back(service(req, ec));
         if (ec)
@@ -861,7 +862,7 @@ response primary_namespace::allocate(
       , naming::get_locality_id_from_gid(next_id_), success);
 } // }}}
 
-#if defined(HPX_HAVE_AGAS_DUMP_REFCNT_ENTRIES)
+#if defined(HPX_AGAS_DUMP_REFCNT_ENTRIES)
     void primary_namespace::dump_refcnt_matches(
         refcnt_table_type::iterator lower_it
       , refcnt_table_type::iterator upper_it
@@ -907,7 +908,7 @@ void primary_namespace::increment(
 { // {{{ increment implementation
     mutex_type::scoped_lock l(mutex_);
 
-#if defined(HPX_HAVE_AGAS_DUMP_REFCNT_ENTRIES)
+#if defined(HPX_AGAS_DUMP_REFCNT_ENTRIES)
     if (LAGAS_ENABLED(debug))
     {
         typedef refcnt_table_type::iterator iterator;
@@ -991,7 +992,7 @@ void primary_namespace::resolve_free_list(
 
     typedef refcnt_table_type::iterator iterator;
 
-    for (iterator const& it : free_list)
+    BOOST_FOREACH(iterator const& it, free_list)
     {
         typedef refcnt_table_type::key_type key_type;
 
@@ -1084,7 +1085,7 @@ void primary_namespace::decrement_sweep(
     {
         mutex_type::scoped_lock l(mutex_);
 
-#if defined(HPX_HAVE_AGAS_DUMP_REFCNT_ENTRIES)
+#if defined(HPX_AGAS_DUMP_REFCNT_ENTRIES)
         if (LAGAS_ENABLED(debug))
         {
             typedef refcnt_table_type::iterator iterator;
@@ -1189,7 +1190,7 @@ void primary_namespace::free_components_sync(
     // Delete the objects on the free list.
     components::server::runtime_support::free_component_action act;
 
-    for (free_entry const& e : free_list)
+    BOOST_FOREACH(free_entry const& e, free_list)
     {
         // Bail if we're in late shutdown and non-local.
         if (HPX_UNLIKELY(!threads::threadmanager_is(running)) &&

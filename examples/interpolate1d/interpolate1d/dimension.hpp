@@ -8,6 +8,8 @@
 
 #include <hpx/hpx_fwd.hpp>
 
+#include <boost/serialization/serialization.hpp>
+
 ///////////////////////////////////////////////////////////////////////////////
 namespace interpolate1d
 {
@@ -21,7 +23,7 @@ namespace interpolate1d
 
 ///////////////////////////////////////////////////////////////////////////////
 // non-intrusive serialization
-namespace hpx { namespace serialization
+namespace boost { namespace serialization
 {
     template <typename Archive>
     void serialize(Archive&, interpolate1d::dimension&, unsigned int const);

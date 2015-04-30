@@ -7,6 +7,7 @@
 #ifndef JACOBI_ROW_RANGE_HPP
 #define JACOBI_ROW_RANGE_HPP
 
+#include <boost/serialization/split_member.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/detail/atomic_count.hpp>
 #include <boost/range/iterator.hpp>
@@ -119,7 +120,7 @@ namespace jacobi
             ar & tmp;
         }
 
-        HPX_SERIALIZATION_SPLIT_MEMBER()
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     };
 

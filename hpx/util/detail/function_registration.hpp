@@ -10,7 +10,7 @@
 
 #include <hpx/config.hpp>
 #include <hpx/util/detail/get_table.hpp>
-#include <hpx/runtime/serialization/detail/polymorphic_intrusive_factory.hpp>
+#include <hpx/util/polymorphic_factory.hpp>
 #include <hpx/util/demangle_helper.hpp>
 
 #include <boost/mpl/assert.hpp>
@@ -24,7 +24,7 @@ namespace hpx { namespace util { namespace detail
     struct get_function_name_impl
     {
         static char const* call()
-#ifndef HPX_HAVE_AUTOMATIC_SERIALIZATION_REGISTRATION
+#ifdef HPX_DISABLE_AUTOMATIC_SERIALIZATION_REGISTRATION
         ;
 #else
         {
@@ -69,18 +69,17 @@ namespace hpx { namespace util { namespace detail
     template <typename VTable, typename T>
     struct function_registration
     {
-        typedef function_registration_info_base base_type;
+        typedef boost::shared_ptr<function_registration_info_base> pointer_type;
 
-        static void * create()
+        static pointer_type create()
         {
-            static function_registration_info<VTable, T> ri;
-            return &ri;
+            return pointer_type(new function_registration_info<VTable, T>());
         }
 
         function_registration()
         {
-            hpx::serialization::detail::polymorphic_intrusive_factory::instance().
-                register_class(
+            util::polymorphic_factory<function_registration_info_base>::get_instance().
+                add_factory_function(
                     detail::get_function_name<std::pair<VTable, T> >()
                   , &function_registration::create
                 );
@@ -90,11 +89,10 @@ namespace hpx { namespace util { namespace detail
     template <typename VTable>
     VTable const* get_table_ptr(std::string const& name)
     {
-        detail::function_registration_info_base *
-            p(
-                hpx::serialization::detail::polymorphic_intrusive_factory::instance().
-                    create<function_registration_info_base>(name)
-            );
+        boost::shared_ptr<detail::function_registration_info_base> p(
+            util::polymorphic_factory<
+                detail::function_registration_info_base
+            >::create(name));
 
         return static_cast<VTable const*>(p->get_table_ptr());
     }

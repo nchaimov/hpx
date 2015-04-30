@@ -6,10 +6,11 @@
 #ifndef HPX_UTIL_DEFERRED_CALL_HPP
 #define HPX_UTIL_DEFERRED_CALL_HPP
 
-#include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/util/decay.hpp>
 #include <hpx/util/invoke_fused.hpp>
 #include <hpx/util/move.hpp>
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
 #include <hpx/util/result_of.hpp>
 #include <hpx/util/tuple.hpp>
 
@@ -95,12 +96,12 @@ namespace hpx { namespace util
 }}
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace hpx { namespace serialization
+namespace boost { namespace serialization
 {
     // serialization of the deferred_call_impl object
     template <typename F, typename Args>
     void serialize(
-        ::hpx::serialization::input_archive& ar
+        ::hpx::util::portable_binary_iarchive& ar
       , ::hpx::util::detail::deferred_call_impl<F, Args>& deferred_call_impl
       , unsigned int const /*version*/)
     {
@@ -110,7 +111,7 @@ namespace hpx { namespace serialization
 
     template <typename F, typename Args>
     void serialize(
-        ::hpx::serialization::output_archive& ar
+        ::hpx::util::portable_binary_oarchive& ar
       , ::hpx::util::detail::deferred_call_impl<F, Args>& deferred_call_impl
       , unsigned int const /*version*/)
     {

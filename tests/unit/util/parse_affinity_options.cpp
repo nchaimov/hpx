@@ -9,6 +9,7 @@
 #include <hpx/util/lightweight_test.hpp>
 
 #include <boost/assign/std/vector.hpp>
+#include <boost/foreach.hpp>
 
 #include <iostream>
 #include <algorithm>
@@ -27,7 +28,7 @@ namespace hpx { namespace threads { namespace detail
     std::ostream& operator<<(std::ostream& os, spec_type const& data)
     {
         os << spec_type::type_name(data.type_);
-        for (std::size_t i : data.index_bounds_)
+        BOOST_FOREACH(std::size_t i, data.index_bounds_)
         {
             os  << "," << i;
         }
@@ -948,7 +949,7 @@ namespace test
             hpx::threads::detail::mappings_spec_type mappings_specs(
                 boost::get<hpx::threads::detail::mappings_spec_type>(mappings));
 
-            for (hpx::threads::detail::full_mapping_type const& m : mappings_specs)
+            BOOST_FOREACH(hpx::threads::detail::full_mapping_type const& m, mappings_specs)
             {
                 HPX_TEST_EQ(t->t[i].thread, m.first);
                 HPX_TEST_EQ(m.second.size(), 3u);
@@ -970,7 +971,7 @@ namespace test
         HPX_TEST_EQ(std::count(affinities.begin(), affinities.end(), 0), 0);
 
         i = 0;
-        for (hpx::threads::mask_type m : affinities)
+        BOOST_FOREACH(hpx::threads::mask_type m, affinities)
         {
             HPX_TEST_EQ(t->masks[i], m);
             ++i;

@@ -13,18 +13,19 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/lcos/future.hpp>
 #include <hpx/runtime/actions/continuation.hpp>
-#include <hpx/runtime/serialization/output_archive.hpp>
-#include <hpx/runtime/serialization/input_archive.hpp>
-#include <hpx/runtime/serialization/base_object.hpp>
 #include <hpx/runtime/threads/thread_helpers.hpp>
 #include <hpx/runtime/threads/thread_init_data.hpp>
 #include <hpx/util/move.hpp>
+#include <hpx/util/polymorphic_factory.hpp>
 #include <hpx/util/tuple.hpp>
 #include <hpx/util/detail/count_num_args.hpp>
+#include <hpx/util/detail/serialization_registration.hpp>
 
 #include <boost/cstdint.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/preprocessor/cat.hpp>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/is_bitwise_serializable.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 #include <hpx/config/warnings_prefix.hpp>
@@ -35,41 +36,34 @@ namespace hpx { namespace actions { namespace detail
     struct action_serialization_data
     {
         action_serialization_data()
-          : parent_locality_(naming::invalid_locality_id)
-          , parent_id_(static_cast<boost::uint64_t>(-1))
+          : parent_id_(0)
           , parent_phase_(0)
-          , priority_(static_cast<threads::thread_priority>(0))
-          , stacksize_(static_cast<threads::thread_stacksize>(0))
+          , parent_locality_(0)
+          , priority_(0)
+          , stacksize_(0)
         {}
 
-        action_serialization_data(boost::uint32_t parent_locality,
-                boost::uint64_t parent_id,
+        action_serialization_data(boost::uint64_t parent_id,
                 boost::uint64_t parent_phase,
-                threads::thread_priority priority,
-                threads::thread_stacksize stacksize)
-          : parent_locality_(parent_locality)
-          , parent_id_(parent_id)
+                boost::uint32_t parent_locality,
+                boost::uint16_t priority,
+                boost::uint16_t stacksize)
+          : parent_id_(parent_id)
           , parent_phase_(parent_phase)
+          , parent_locality_(parent_locality)
           , priority_(priority)
           , stacksize_(stacksize)
         {}
 
-        boost::uint32_t parent_locality_;
         boost::uint64_t parent_id_;
         boost::uint64_t parent_phase_;
-        threads::thread_priority priority_;
-        threads::thread_stacksize stacksize_;
-
-        template <class Archive>
-        void serialize(Archive& ar, unsigned)
-        {
-            ar & parent_id_ & parent_phase_ & parent_locality_
-               & priority_ & stacksize_;
-        }
+        boost::uint32_t parent_locality_;
+        boost::uint16_t priority_;
+        boost::uint16_t stacksize_;
     };
 }}}
 
-namespace hpx { namespace traits
+namespace boost { namespace serialization
 {
     template <>
     struct is_bitwise_serializable<
@@ -92,7 +86,7 @@ namespace hpx { namespace actions
     {
         template <typename Action>
         char const* get_action_name()
-#ifndef HPX_HAVE_AUTOMATIC_SERIALIZATION_REGISTRATION
+#ifdef HPX_DISABLE_AUTOMATIC_SERIALIZATION_REGISTRATION
         ;
 #else
         {
@@ -145,6 +139,53 @@ namespace hpx { namespace actions
         struct remote_action_result<lcos::shared_future<void> >
         {
             typedef hpx::util::unused_type type;
+        };
+
+        ///////////////////////////////////////////////////////////////////////
+        template <typename Action>
+        struct action_registration
+        {
+            static boost::shared_ptr<base_action> create()
+            {
+                return boost::shared_ptr<base_action>(new Action());
+            }
+
+            action_registration()
+            {
+                util::polymorphic_factory<base_action>::get_instance().
+                    add_factory_function(
+                        detail::get_action_name<typename Action::derived_type>()
+                      , &action_registration::create
+                    );
+            }
+        };
+
+        template <typename Action, typename Enable =
+            typename traits::needs_automatic_registration<Action>::type>
+        struct automatic_action_registration
+        {
+            automatic_action_registration()
+            {
+                action_registration<Action> auto_register;
+            }
+
+            automatic_action_registration & register_action()
+            {
+                return *this;
+            }
+        };
+
+        template <typename Action>
+        struct automatic_action_registration<Action, boost::mpl::false_>
+        {
+            automatic_action_registration()
+            {
+            }
+
+            automatic_action_registration & register_action()
+            {
+                return *this;
+            }
         };
     }
 
@@ -237,6 +278,9 @@ namespace hpx { namespace actions
         /// Return whether the embedded action is part of termination detection
         virtual bool does_termination_detection() const = 0;
 
+        virtual void load(hpx::util::portable_binary_iarchive & ar) = 0;
+        virtual void save(hpx::util::portable_binary_oarchive & ar) const = 0;
+
         /// Wait for embedded futures to become ready
         virtual void wait_for_futures() = 0;
 
@@ -261,7 +305,7 @@ namespace hpx { namespace actions
 
         /// Return a pointer to the filter to be used while serializing an
         /// instance of this action type.
-        virtual serialization::binary_filter* get_serialization_filter(
+        virtual util::binary_filter* get_serialization_filter(
             parcelset::parcel const& p) const = 0;
 
         /// Return a pointer to the message handler to be used for this action.
@@ -274,11 +318,6 @@ namespace hpx { namespace actions
         virtual components::security::capability get_required_capabilities(
             naming::address::address_type lva) const = 0;
 #endif
-
-        template <typename Archive>
-        void serialize(Archive & ar, unsigned)
-        {}
-        HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(base_action);
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -344,6 +383,10 @@ namespace hpx { namespace actions
             }
         };
     }
+
+    template <typename Action>
+    struct init_registration;
+
     /// \endcond
 }}
 

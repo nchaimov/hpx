@@ -8,8 +8,8 @@
 
 #include <hpx/hpx_fwd.hpp>
 
-#include <hpx/runtime/serialization/serialize.hpp>
-#include <hpx/traits/is_bitwise_serializable.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/is_bitwise_serializable.hpp>
 
 #include <hpx/components/security/signature.hpp>
 
@@ -74,12 +74,12 @@ namespace hpx { namespace components { namespace security
         }
 
     private:
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template <typename Archive>
         void serialize(Archive & ar, const unsigned int)
         {
-            ar & hpx::serialization::make_array(begin(), size());
+            ar & boost::serialization::make_array(begin(), size());
         }
 
         signature signature_;
@@ -96,7 +96,7 @@ namespace hpx { namespace components { namespace security
 
 }}}
 
-namespace hpx { namespace traits
+namespace boost { namespace serialization
 {
     template <typename T>
     struct is_bitwise_serializable<

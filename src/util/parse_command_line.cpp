@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 #include <boost/scoped_array.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -290,7 +291,7 @@ namespace hpx { namespace util
                 std::vector<std::string> const &cfg_files =
                     vm["hpx:options-file"].as<std::vector<std::string> >();
 
-                for (std::string const& cfg_file : cfg_files)
+                BOOST_FOREACH(std::string const& cfg_file, cfg_files)
                 {
                     // parse a single config file and store the results
                     read_config_file_options(cfg_file, desc_cfgfile, vm, ini,
@@ -714,7 +715,7 @@ namespace hpx { namespace util
             value_type;
 
         std::string command_line;
-        for (value_type const& v : vm)
+        BOOST_FOREACH(value_type const& v, vm)
         {
             boost::any const& value = v.second.value();
             if (boost::any_cast<std::string>(&value)) {
@@ -738,7 +739,7 @@ namespace hpx { namespace util
             else if (boost::any_cast<std::vector<std::string> >(&value)) {
                 std::vector<std::string> const& vec =
                     v.second.as<std::vector<std::string> >();
-                for (std::string const& e : vec)
+                BOOST_FOREACH(std::string const& e, vec)
                 {
                     add_as_option(command_line, v.first, embed_in_quotes(e));
                     if (!command_line.empty())

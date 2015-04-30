@@ -12,6 +12,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/foreach.hpp>
 
 #include "central_tuplespace/simple_central_tuplespace.hpp"
 #include "small_big_object.hpp"
@@ -134,7 +135,7 @@ int hpx_main()
 
         std::vector<hpx::lcos::future<void> > futures;
 
-        for (hpx::naming::id_type const& node : localities)
+        BOOST_FOREACH(hpx::naming::id_type const& node, localities)
         {
             // Asynchronously start a new task. The task is encapsulated in a
             // future, which we can query to determine if the task has

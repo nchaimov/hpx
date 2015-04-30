@@ -6,11 +6,14 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/exception.hpp>
 #include <hpx/util/serialize_exception.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
 
 #include <boost/version.hpp>
 #include <boost/config.hpp>
 #include <boost/exception_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/split_free.hpp>
 
 #include <stdexcept>
 #ifndef BOOST_NO_TYPEID
@@ -18,7 +21,7 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace hpx { namespace serialization
+namespace boost { namespace serialization
 {
     ///////////////////////////////////////////////////////////////////////////
     // TODO: This is not scalable, and painful to update.
@@ -381,11 +384,11 @@ namespace hpx { namespace serialization
     ///////////////////////////////////////////////////////////////////////////
     // explicit instantiation for the correct archive types
     template HPX_EXPORT void
-    save(hpx::serialization::output_archive&, boost::exception_ptr const&,
+    save(hpx::util::portable_binary_oarchive&, boost::exception_ptr const&,
         unsigned int);
 
     template HPX_EXPORT void
-    load(hpx::serialization::input_archive&, boost::exception_ptr&,
+    load(hpx::util::portable_binary_iarchive&, boost::exception_ptr&,
         unsigned int);
 }}
 

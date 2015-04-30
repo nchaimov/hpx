@@ -31,6 +31,7 @@
 #include <boost/format.hpp>
 #include <boost/icl/closed_interval.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace hpx { namespace agas
 {
@@ -2072,7 +2073,7 @@ lcos::future<bool> addressing_service::register_name_async(
         );
     }
 
-    return f;
+    return std::move(f);
 } // }}}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2209,7 +2210,7 @@ namespace hpx { namespace agas
         std::vector<hpx::id_type> find_all_symbol_namespace_services()
         {
             std::vector<hpx::id_type> ids;
-            for (hpx::id_type const& id : hpx::find_all_localities())
+            BOOST_FOREACH(hpx::id_type const& id, hpx::find_all_localities())
             {
                 ids.push_back(hpx::id_type(
                     agas::stubs::symbol_namespace::get_service_instance(id),
@@ -2864,7 +2865,7 @@ void addressing_service::send_refcnt_requests(
         ec = make_success_code();
 }
 
-#if defined(HPX_HAVE_AGAS_DUMP_REFCNT_ENTRIES)
+#if defined(HPX_AGAS_DUMP_REFCNT_ENTRIES)
     void dump_refcnt_requests(
         addressing_service::mutex_type::scoped_lock& l
       , addressing_service::refcnt_requests_type const& requests
@@ -2879,7 +2880,7 @@ void addressing_service::send_refcnt_requests(
         typedef addressing_service::refcnt_requests_type::const_reference
             const_reference;
 
-        for (const_reference e : requests)
+        BOOST_FOREACH(const_reference e, requests)
         {
             // The [client] tag is in there to make it easier to filter
             // through the logs.
@@ -2917,7 +2918,7 @@ void addressing_service::send_refcnt_requests_non_blocking(
             "requests(%1%)")
             % p->size());
 
-#if defined(HPX_HAVE_AGAS_DUMP_REFCNT_ENTRIES)
+#if defined(HPX_AGAS_DUMP_REFCNT_ENTRIES)
         if (LAGAS_ENABLED(debug))
             dump_refcnt_requests(l, *p,
                 "addressing_service::send_refcnt_requests_non_blocking");
@@ -2927,7 +2928,7 @@ void addressing_service::send_refcnt_requests_non_blocking(
         typedef std::map<naming::id_type, std::vector<request> > requests_type;
         requests_type requests;
 
-        for (refcnt_requests_type::const_reference e : *p)
+        BOOST_FOREACH(refcnt_requests_type::const_reference e, *p)
         {
             HPX_ASSERT(e.second < 0);
 
@@ -2981,7 +2982,7 @@ addressing_service::send_refcnt_requests_async(
         "requests(%1%)")
         % p->size());
 
-#if defined(HPX_HAVE_AGAS_DUMP_REFCNT_ENTRIES)
+#if defined(HPX_AGAS_DUMP_REFCNT_ENTRIES)
     if (LAGAS_ENABLED(debug))
         dump_refcnt_requests(l, *p,
             "addressing_service::send_refcnt_requests_sync");
@@ -2992,7 +2993,7 @@ addressing_service::send_refcnt_requests_async(
     requests_type requests;
 
     std::vector<hpx::future<std::vector<response> > > lazy_results;
-    for (refcnt_requests_type::const_reference e : *p)
+    BOOST_FOREACH(refcnt_requests_type::const_reference e, *p)
     {
         HPX_ASSERT(e.second < 0);
 
@@ -3028,10 +3029,10 @@ void addressing_service::send_refcnt_requests_sync(
 
     wait_all(lazy_results);
 
-    for (hpx::future<std::vector<response> >& f : lazy_results)
+    BOOST_FOREACH(hpx::future<std::vector<response> > & f, lazy_results)
     {
         std::vector<response> const& reps = f.get();
-        for (response const& rep : reps)
+        BOOST_FOREACH(response const& rep, reps)
         {
             if (success != rep.get_status())
             {
@@ -3186,7 +3187,7 @@ namespace hpx
         }
 
         std::vector<hpx::future<hpx::id_type> > results;
-        for (std::size_t i : ids)
+        BOOST_FOREACH(std::size_t i, ids)
         {
             std::string name = detail::name_from_basename(basename, i);
             results.push_back(agas::on_symbol_namespace_event(

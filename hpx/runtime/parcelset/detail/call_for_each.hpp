@@ -31,7 +31,7 @@ namespace hpx { namespace parcelset
                 boost::system::error_code const& e,
                 parcel const& p) const
             {
-                for (parcelport::write_handler_type const& f : fv_)
+                BOOST_FOREACH(parcelport::write_handler_type f, fv_)
                 {
                     f(e, p);
                 }
@@ -41,7 +41,7 @@ namespace hpx { namespace parcelset
                 boost::system::error_code const& e,
                 std::size_t) const
             {
-                for (parcelport::write_handler_type const& f : fv_)
+                BOOST_FOREACH(parcelport::write_handler_type f, fv_)
                 {
                     f(e, p_);
                 }

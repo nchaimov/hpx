@@ -17,6 +17,7 @@
 #include <hpx/performance_counters/stubs/performance_counter.hpp>
 #include <hpx/lcos/wait_all.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 
 #include <iostream>
@@ -72,7 +73,7 @@ namespace hpx { namespace util
 
             ids_.reserve(names.size());
             uoms_.reserve(names.size());
-            for (std::string& name : names)
+            BOOST_FOREACH(std::string& name, names)
             {
                 // do INI expansion on counter name
                 util::expand(name);
@@ -93,7 +94,7 @@ namespace hpx { namespace util
         using performance_counters::stubs::performance_counter;
 
         // add counter prefix, if necessary
-        for (std::string& name : names_)
+        BOOST_FOREACH(std::string& name, names_)
             performance_counters::ensure_counter_prefix(name);
 
         find_counters();
@@ -108,7 +109,7 @@ namespace hpx { namespace util
         // wait for all counters to be started
         wait_all(started);
 
-        for (future<bool>& f : started)
+        BOOST_FOREACH(future<bool>& f, started)
         {
             if (f.has_exception())
             {
@@ -149,7 +150,7 @@ namespace hpx { namespace util
 
         ids_.clear();      // give up control over all performance counters
 
-        for (future<bool>& f : stopped)
+        BOOST_FOREACH(future<bool>& f, stopped)
         {
             if (f.has_exception())
             {
@@ -187,7 +188,7 @@ namespace hpx { namespace util
         // wait for all counters to be started
         wait_all(reset);
 
-        for (future<void>& f : reset)
+        BOOST_FOREACH(future<void>& f, reset)
         {
             if (f.has_exception())
             {

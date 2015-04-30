@@ -61,11 +61,11 @@ namespace hpx { namespace test
 
     template HPX_COMPONENT_EXPORT
     void movable_object::serialize(
-        serialization::output_archive&, const unsigned int);
+        util::portable_binary_oarchive&, const unsigned int);
 
     template HPX_COMPONENT_EXPORT
     void movable_object::serialize(
-        serialization::input_archive&, const unsigned int);
+        util::portable_binary_iarchive&, const unsigned int);
 
     ///////////////////////////////////////////////////////////////////////////
     std::size_t non_movable_object::count = 0;
@@ -108,7 +108,11 @@ namespace hpx { namespace test
 
     template HPX_COMPONENT_EXPORT
     void non_movable_object::save(
-        serialization::output_archive&, const unsigned int) const;
+        util::portable_binary_oarchive&, const unsigned int) const;
+
+    template HPX_COMPONENT_EXPORT
+    void non_movable_object::save(
+        util::portable_binary_iarchive&, const unsigned int) const;
 
     template <typename Archive>
     void non_movable_object::load(Archive& ar, const unsigned int)
@@ -120,7 +124,11 @@ namespace hpx { namespace test
 
     template HPX_COMPONENT_EXPORT
     void non_movable_object::load(
-        serialization::input_archive&, const unsigned int);
+        util::portable_binary_oarchive&, const unsigned int);
+
+    template HPX_COMPONENT_EXPORT
+    void non_movable_object::load(
+        util::portable_binary_iarchive&, const unsigned int);
 }}
 
 

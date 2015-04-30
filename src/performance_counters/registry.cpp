@@ -15,6 +15,7 @@
 #include <hpx/util/function.hpp>
 #include <hpx/util/logging.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 
@@ -289,7 +290,7 @@ namespace hpx { namespace performance_counters
                 discover_counter, boost::ref(ec));
         }
 
-        for (counter_type_map_type::value_type const& d : countertypes_)
+        BOOST_FOREACH(counter_type_map_type::value_type const& d, countertypes_)
         {
             if (!d.second.discover_counters_.empty() &&
                 !d.second.discover_counters_(

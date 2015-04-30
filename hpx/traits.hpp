@@ -24,9 +24,6 @@ namespace hpx { namespace traits
     struct is_component;
 
     template <typename Component, typename Enable = void>
-    struct is_component_or_component_array;
-
-    template <typename Component, typename Enable = void>
     struct component_type_database;
 
     template <typename Component, typename Enable = void>
@@ -53,6 +50,10 @@ namespace hpx { namespace traits
     {
         typedef managed_object_controls_lifetime type;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Action, typename Enable = void>
+    struct needs_guid_initialization;
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Action, typename Enable = void>
@@ -148,10 +149,6 @@ namespace hpx { namespace traits
 
     template <typename Iterator, typename Enable = void>
     struct segmented_local_iterator_traits;
-
-    ///////////////////////////////////////////////////////////////////////////
-    template <typename T, typename Enable = void>
-    struct is_distribution_policy;
 }}
 
 #endif

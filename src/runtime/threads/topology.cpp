@@ -10,6 +10,8 @@
 #include <hpx/runtime.hpp>
 #include <hpx/util/static.hpp>
 
+#include <boost/foreach.hpp>
+
 #if defined(__ANDROID__) && defined(ANDROID)
 #include <cpu-features.h>
 #endif

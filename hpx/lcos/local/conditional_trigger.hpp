@@ -51,7 +51,7 @@ namespace hpx { namespace lcos { namespace local
 
             set(ec);      // trigger as soon as possible
 
-            return f;
+            return std::move(f);
         }
 
         void reset()

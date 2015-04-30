@@ -7,11 +7,11 @@
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/hpx.hpp>
-#include <hpx/runtime/serialization/serialize_buffer.hpp>
+#include <hpx/util/serialize_buffer.hpp>
 #include <hpx/util/lightweight_test.hpp>
 
 #include <boost/shared_ptr.hpp>
-
+#include <boost/foreach.hpp>
 #include <algorithm>
 #include <memory>
 
@@ -52,7 +52,7 @@ public:
 };
 
 //----------------------------------------------------------------------------
-typedef hpx::serialization::serialize_buffer<char, test_allocator<char> >
+typedef hpx::util::serialize_buffer<char, test_allocator<char> >
     buffer_allocator_type;
 
 buffer_allocator_type allocator_message(buffer_allocator_type const& receive_buffer)
@@ -89,7 +89,7 @@ int hpx_main(int argc, char* argv[])
     // alloc buffer to send
     boost::shared_array<char> send_buffer(new char[MEMORY_BLOCK_SIZE]);
 
-    for (hpx::id_type const& loc : hpx::find_all_localities())
+    BOOST_FOREACH(hpx::id_type const& loc, hpx::find_all_localities())
     {
         receive(loc, send_buffer.get(), MEMORY_BLOCK_SIZE, 1);
     }

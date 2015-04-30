@@ -17,13 +17,11 @@ void run_async(guard_task *task);
 // to a guard
 struct guard_task : DebugObject {
     guard_atomic next;
-    util::function_nonser<void()> run;
+    boost::function<void()> run;
     const bool single_guard;
 
-    guard_task()
-      : next((guard_task *)0), run((void(*)())0), single_guard(true) {}
-    guard_task(bool sg)
-      : next((guard_task*)0), run((void(*)())0), single_guard(sg) {}
+    guard_task() : next((guard_task *)0), run(0), single_guard(true) {}
+    guard_task(bool sg) : next((guard_task*)0), run(0), single_guard(sg) {}
 };
 
 void free(guard_task *task) {
@@ -33,8 +31,7 @@ void free(guard_task *task) {
     delete task;
 }
 
-bool sort_guard(boost::shared_ptr<guard> const& l1,
-        boost::shared_ptr<guard> const& l2) {
+bool sort_guard(boost::shared_ptr<guard> const& l1,boost::shared_ptr<guard> const& l2) {
     return boost::get_pointer(l1) < boost::get_pointer(l2);
 }
 
@@ -48,9 +45,9 @@ void guard_set::sort() {
 
 struct stage_data : public DebugObject {
     guard_set gs;
-    util::function_nonser<void()> task;
+    boost::function<void()> task;
     guard_task **stages;
-    stage_data(util::function_nonser<void()> task_,
+    stage_data(boost::function<void()> task_,
         std::vector<boost::shared_ptr<guard> >& guards);
     ~stage_data() {
         delete[] stages;
@@ -114,7 +111,7 @@ void stage_task(stage_data *sd,std::size_t i,std::size_t n) {
 }
 
 
-stage_data::stage_data(util::function_nonser<void()> task_,
+stage_data::stage_data(boost::function<void()> task_,
         std::vector<boost::shared_ptr<guard> >& guards)
   : task(task_), stages(new guard_task*[guards.size()])
 {
@@ -124,7 +121,7 @@ stage_data::stage_data(util::function_nonser<void()> task_,
     }
 }
 
-void run_guarded(guard_set& guards,util::function_nonser<void()> task) {
+void run_guarded(guard_set& guards,boost::function<void()> task) {
     std::size_t n = guards.guards.size();
     if(n == 0) {
         task();
@@ -143,7 +140,7 @@ void run_guarded(guard_set& guards,util::function_nonser<void()> task) {
     run_guarded(*sd->gs.get(k),stage); //-V106
 }
 
-void run_guarded(guard& guard,util::function_nonser<void()> task) {
+void run_guarded(guard& guard,boost::function<void()> task) {
     guard_task *tptr = new guard_task();
     tptr->run = task;
     run_guarded(guard,tptr);

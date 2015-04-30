@@ -9,13 +9,15 @@
 
 #include <cstring>
 #include <boost/config.hpp>
+#include <boost/serialization/serialization.hpp>
 
 #include <hpx/config/warnings_prefix.hpp>
 #include <hpx/exception.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
+#include <hpx/util/portable_binary_iarchive.hpp>
 #include <hpx/runtime/actions/action_support.hpp>
-#include <hpx/runtime/serialization/array.hpp>
-#include <hpx/runtime/serialization/base_object.hpp>
-#include <hpx/runtime/serialization/serialize_buffer.hpp>
+#include <hpx/util/void_cast.hpp>
+#include <hpx/util/base_object.hpp>
 #include <hpx/util/reinitializable_static.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,8 +31,8 @@ namespace hpx { namespace actions
         typedef void (*assign_function)(void*, void const*, std::size_t);
         typedef void (*destruct_function)(void*);
 
-        typedef serialization::output_archive oarchive_type;
-        typedef serialization::input_archive iarchive_type;
+        typedef util::portable_binary_oarchive oarchive_type;
+        typedef util::portable_binary_iarchive iarchive_type;
 
         typedef void (*serialize_save_function)(
             boost::uint8_t const*, std::size_t, oarchive_type&,
@@ -57,13 +59,15 @@ namespace hpx { namespace actions
             oarchive_type& ar, const unsigned int,
             boost::uint8_t const*)
         {
-            ar << hpx::serialization::make_array(data, size);
+            using boost::serialization::make_array;
+            ar << make_array(data, size);
         }
         static void load_(boost::uint8_t* data, std::size_t size,
             iarchive_type& ar, const unsigned int,
             boost::uint8_t const*)
         {
-            ar >> hpx::serialization::make_array(data, size);
+            using boost::serialization::make_array;
+            ar >> make_array(data, size);
         }
 
     public:
@@ -104,12 +108,10 @@ namespace hpx { namespace actions
 
     private:
         // serialization support, just serialize the type
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template<class Archive>
         void serialize(Archive&, const unsigned int) {}
-
-        HPX_SERIALIZATION_POLYMORPHIC(manage_object_action_base);
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -197,17 +199,21 @@ namespace hpx { namespace actions
             return instance.get();
         }
 
+        /// serialization support
+        static void register_base()
+        {
+            util::void_cast_register_nonvirt<manage_object_action, manage_object_action_base>();
+        }
+
     private:
         // serialization support, just serialize the type
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template<class Archive>
         void serialize(Archive& ar, const unsigned int)
         {
-            ar & hpx::serialization::base_object<manage_object_action_base>(*this);
+            ar & util::base_object_nonvirt<manage_object_action_base>(*this);
         }
-
-        HPX_SERIALIZATION_POLYMORPHIC_TEMPLATE(manage_object_action);
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -216,17 +222,21 @@ namespace hpx { namespace actions
     {
         manage_object_action() {}
 
+        /// serialization support
+        static void register_base()
+        {
+            util::void_cast_register_nonvirt<manage_object_action, manage_object_action_base>();
+        }
+
     private:
         // serialization support, just serialize the type
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template<class Archive>
         void serialize(Archive& ar, const unsigned int)
         {
-            ar & hpx::serialization::base_object<manage_object_action_base>(*this);
+            ar & util::base_object_nonvirt<manage_object_action_base>(*this);
         }
-
-        HPX_SERIALIZATION_POLYMORPHIC(manage_object_action);
     };
 
     inline manage_object_action_base const&
@@ -290,19 +300,29 @@ namespace hpx { namespace actions
             return instance.get();
         }
 
+        /// serialization support
+        static void register_base()
+        {
+            util::void_cast_register_nonvirt<manage_object_action, manage_object_action<T> >();
+            manage_object_action<T>::register_base();
+        }
+
     private:
         // serialization support, just serialize the type
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template<class Archive>
         void serialize(Archive& ar, const unsigned int)
         {
-            ar & hpx::serialization::base_object<manage_object_action<T> >(*this);
+            ar & util::base_object_nonvirt<manage_object_action<T> >(*this);
         }
-
-        HPX_SERIALIZATION_POLYMORPHIC_TEMPLATE(manage_object_action);
     };
 }}
+
+#define HPX_REGISTER_MANAGE_OBJECT_ACTION(object_action, name)                \
+        BOOST_CLASS_EXPORT(object_action)                                     \
+        HPX_REGISTER_BASE_HELPER(object_action, name)                         \
+    /***/
 
 #include <hpx/config/warnings_suffix.hpp>
 

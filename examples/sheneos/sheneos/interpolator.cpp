@@ -13,6 +13,7 @@
 #include <hpx/lcos/local/packaged_task.hpp>
 #include <hpx/util/assert.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/move/move.hpp>
 
@@ -170,7 +171,7 @@ namespace sheneos
         distributing_factory::iterator_range_type parts =
             hpx::util::locality_results(results);
 
-        for (hpx::naming::id_type id : parts)
+        BOOST_FOREACH(hpx::naming::id_type id, parts)
         {
             std::cout << "Partition " << partitions_.size() << ": " << id << "\n";
             partitions_.push_back(id);
@@ -249,7 +250,7 @@ namespace sheneos
         std::size_t i = 0;
 
         // Register symbolic names of all involved components.
-        for (hpx::naming::id_type const& id : partitions_)
+        BOOST_FOREACH(hpx::naming::id_type const& id, partitions_)
         {
             using boost::lexical_cast;
             hpx::agas::register_name(
@@ -379,7 +380,7 @@ namespace sheneos
             lazy_results.reserve(partitions->size());
 
             typedef std::map<naming::id_type, context_data>::value_type value_type;
-            for (value_type& p : *partitions)
+            BOOST_FOREACH(value_type& p, *partitions)
             {
                 typedef sheneos::server::partition3d::interpolate_one_bulk_action
                     action_type;
@@ -497,7 +498,7 @@ namespace sheneos
             lazy_results.reserve(partitions->size());
 
             typedef std::map<naming::id_type, context_data>::value_type value_type;
-            for (value_type& p : *partitions)
+            BOOST_FOREACH(value_type& p, *partitions)
             {
                 typedef sheneos::server::partition3d::interpolate_bulk_action
                     action_type;

@@ -11,21 +11,16 @@
 #include <hpx/util/bind.hpp>
 #include <hpx/exception.hpp>
 #include <hpx/runtime/naming/name.hpp>
-#include <hpx/runtime/serialization/output_archive.hpp>
-#include <hpx/runtime/serialization/input_archive.hpp>
-#include <hpx/runtime/serialization/base_object.hpp>
 #include <hpx/util/invoke.hpp>
+#include <hpx/util/polymorphic_factory.hpp>
 #include <hpx/util/logging.hpp>
+#include <hpx/util/serialize_empty_type.hpp>
 #include <hpx/util/demangle_helper.hpp>
 #include <hpx/traits/is_action.hpp>
 #include <hpx/traits/is_callable.hpp>
-#include <hpx/traits/serialize_as_future.hpp>
 
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/type_traits/remove_reference.hpp>
-#ifndef BOOST_MSVC
-#include <boost/utility/enable_if.hpp>
-#endif
 
 #include <hpx/config/warnings_prefix.hpp>
 
@@ -40,14 +35,6 @@ namespace hpx
     apply(hpx::actions::basic_action<Component, Signature, Derived>,
         naming::id_type const&, Ts&&... vs);
 
-    template <typename Component, typename Signature, typename Derived,
-        typename ...Ts>
-    inline bool
-    apply(hpx::actions::continuation_type const& c,
-        hpx::actions::basic_action<Component, Signature, Derived>,
-        naming::id_type const& contgid, naming::id_type const& gid,
-        Ts&&... vs);
-
     // MSVC complains about ambiguities if it sees this forward declaration
 #ifndef BOOST_MSVC
     template <typename F, typename ...Ts>
@@ -59,7 +46,6 @@ namespace hpx
       , bool
     >::type
     apply(F&& f, Ts&&... vs);
-#endif
 
     template <
         typename Component, typename Signature, typename Derived,
@@ -67,6 +53,7 @@ namespace hpx
     bool apply_continue(
         hpx::actions::basic_action<Component, Signature, Derived>,
         Cont&& cont, naming::id_type const& gid, Ts&&... vs);
+#endif
 
     template <typename Component, typename Signature, typename Derived,
         typename ...Ts>
@@ -109,7 +96,7 @@ namespace hpx { namespace actions
     {
         template <typename Continuation>
         char const* get_continuation_name()
-#ifndef HPX_HAVE_AUTOMATIC_SERIALIZATION_REGISTRATION
+#ifdef HPX_DISABLE_AUTOMATIC_SERIALIZATION_REGISTRATION
         ;
 #else
         {
@@ -125,6 +112,53 @@ namespace hpx { namespace actions
             return util::type_id<Continuation>::typeid_.type_id();
         }
 #endif
+
+        ///////////////////////////////////////////////////////////////////////
+        template <typename Continuation>
+        struct continuation_registration
+        {
+            static boost::shared_ptr<continuation> create()
+            {
+                return boost::shared_ptr<continuation>(new Continuation());
+            }
+
+            continuation_registration()
+            {
+                util::polymorphic_factory<continuation>::get_instance().
+                    add_factory_function(
+                        detail::get_continuation_name<Continuation>()
+                      , &continuation_registration::create
+                    );
+            }
+        };
+
+        template <typename Continuation, typename Enable =
+            typename traits::needs_automatic_registration<Continuation>::type>
+        struct automatic_continuation_registration
+        {
+            automatic_continuation_registration()
+            {
+                continuation_registration<Continuation> auto_register;
+            }
+
+            automatic_continuation_registration & register_continuation()
+            {
+                return *this;
+            }
+        };
+
+        template <typename Continuation>
+        struct automatic_continuation_registration<Continuation, boost::mpl::false_>
+        {
+            automatic_continuation_registration()
+            {
+            }
+
+            automatic_continuation_registration & register_continuation()
+            {
+                return *this;
+            }
+        };
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -165,20 +199,19 @@ namespace hpx { namespace actions
         virtual char const* get_continuation_name() const = 0;
 
         // serialization support
-        template <typename Archive>
-        void serialize(Archive & ar, unsigned)
+        virtual void load(hpx::util::portable_binary_iarchive& ar)
         {
-            ar & gid_;
+            ar >> gid_;
         }
-        HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(continuation);
+        virtual void save(hpx::util::portable_binary_oarchive& ar) const
+        {
+            ar << gid_;
+        }
 
         naming::id_type const& get_gid() const
         {
             return gid_;
         }
-
-        virtual bool has_to_wait_for_futures() = 0;
-        virtual void wait_for_futures() = 0;
 
     protected:
         naming::id_type gid_;
@@ -243,10 +276,6 @@ namespace hpx { namespace actions
     template <typename Cont>
     struct continuation_impl
     {
-    private:
-        typedef typename util::decay<Cont>::type cont_type;
-
-    public:
         template <typename T>
         struct result;
 
@@ -263,8 +292,6 @@ namespace hpx { namespace actions
           : cont_(std::forward<Cont_>(cont)), target_(target)
         {}
 
-        virtual ~continuation_impl() {}
-
         template <typename T>
         T operator()(hpx::id_type const& lco, T && t) const
         {
@@ -275,19 +302,9 @@ namespace hpx { namespace actions
             return std::move(t);
         }
 
-        virtual bool has_to_wait_for_futures()
-        {
-            return traits::serialize_as_future<cont_type>::call_if(cont_);
-        }
-
-        virtual void wait_for_futures()
-        {
-            traits::serialize_as_future<cont_type>::call(cont_);
-        }
-
     private:
         // serialization support
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template <typename Archive>
         BOOST_FORCEINLINE void serialize(Archive& ar, unsigned int const)
@@ -295,6 +312,7 @@ namespace hpx { namespace actions
             ar & cont_ & target_;
         }
 
+        typedef typename util::decay<Cont>::type cont_type;
         cont_type cont_;
         hpx::id_type target_;
     };
@@ -303,11 +321,6 @@ namespace hpx { namespace actions
     template <typename Cont, typename F>
     struct continuation2_impl
     {
-    private:
-        typedef typename boost::remove_reference<Cont>::type cont_type;
-        typedef typename boost::remove_reference<F>::type function_type;
-
-    public:
         template <typename T>
         struct result;
 
@@ -327,8 +340,6 @@ namespace hpx { namespace actions
             f_(std::forward<F_>(f))
         {}
 
-        virtual ~continuation2_impl() {}
-
         template <typename T>
         T operator()(hpx::id_type const& lco, T && t) const
         {
@@ -341,21 +352,9 @@ namespace hpx { namespace actions
             return std::move(t);
         }
 
-        virtual bool has_to_wait_for_futures()
-        {
-            return traits::serialize_as_future<cont_type>::call_if(cont_) ||
-                traits::serialize_as_future<function_type>::call_if(f_);
-        }
-
-        virtual void wait_for_futures()
-        {
-            traits::serialize_as_future<cont_type>::call(cont_);
-            traits::serialize_as_future<function_type>::call(f_);
-        }
-
     private:
         // serialization support
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template <typename Archive>
         BOOST_FORCEINLINE void serialize(Archive& ar, unsigned int const)
@@ -363,19 +362,23 @@ namespace hpx { namespace actions
             ar & cont_ & target_ & f_;
         }
 
+        typedef typename boost::remove_reference<Cont>::type cont_type;
+        typedef typename boost::remove_reference<F>::type function_type;
+
         cont_type cont_;        // continuation type
         hpx::id_type target_;
         function_type f_;       // set_value action  (default: set_lco_value_continuation)
     };
 
     ///////////////////////////////////////////////////////////////////////////
+    template <typename Continuation>
+    struct init_registration;
+
+    ///////////////////////////////////////////////////////////////////////////
     template <typename Result>
     struct typed_continuation : continuation
     {
-    private:
-        typedef util::function<void(naming::id_type, Result)> function_type;
 
-    public:
         typed_continuation()
         {}
 
@@ -388,12 +391,14 @@ namespace hpx { namespace actions
         {}
 
         template <typename F>
-        explicit typed_continuation(naming::id_type const& gid, F && f)
+        explicit typed_continuation(naming::id_type const& gid,
+                F && f)
           : continuation(gid), f_(std::forward<F>(f))
         {}
 
         template <typename F>
-        explicit typed_continuation(naming::id_type && gid, F && f)
+        explicit typed_continuation(naming::id_type && gid,
+                F && f)
           : continuation(std::move(gid)), f_(std::forward<F>(f))
         {}
 
@@ -402,12 +407,16 @@ namespace hpx { namespace actions
           : f_(std::forward<F>(f))
         {}
 
+        virtual ~typed_continuation()
+        {
+            init_registration<typed_continuation>::g.register_continuation();
+        }
+
         virtual void trigger_value(Result && result) const
         {
             LLCO_(info)
                 << "typed_continuation<Result>::trigger_value("
                 << this->get_gid() << ")";
-
             if (f_.empty()) {
                 if (!this->get_gid()) {
                     HPX_THROW_EXCEPTION(invalid_status,
@@ -422,16 +431,6 @@ namespace hpx { namespace actions
             }
         }
 
-        virtual bool has_to_wait_for_futures()
-        {
-            return traits::serialize_as_future<function_type>::call_if(f_);
-        }
-
-        virtual void wait_for_futures()
-        {
-            traits::serialize_as_future<function_type>::call(f_);
-        }
-
     private:
         char const* get_continuation_name() const
         {
@@ -439,40 +438,50 @@ namespace hpx { namespace actions
         }
 
         /// serialization support
-        friend class hpx::serialization::access;
-
-        void serialize(serialization::input_archive & ar)
+        void load(hpx::util::portable_binary_iarchive& ar)
         {
+            // serialize base class
+            typedef continuation base_type;
+            this->base_type::load(ar);
+
             // serialize function
             bool have_function = false;
-            ar >> have_function;
+            ar.load(have_function);
             if (have_function)
                 ar >> f_;
         }
-
-        void serialize(serialization::output_archive & ar)
+        void save(hpx::util::portable_binary_oarchive& ar) const
         {
+            // serialize base class
+            typedef continuation base_type;
+            this->base_type::save(ar);
+
             // serialize function
             bool have_function = !f_.empty();
-            ar << have_function;
+            ar.save(have_function);
             if (have_function)
                 ar << f_;
         }
-        template <typename Archive>
-        void serialize(Archive & ar, unsigned)
-        {
-            // serialize base class
-            ar & hpx::serialization::base_object<continuation>(*this);
 
-            serialize(ar);
-        }
-        HPX_SERIALIZATION_POLYMORPHIC_WITH_NAME(
-            typed_continuation
-          , detail::get_continuation_name<typed_continuation>()
-        );
-
-        function_type f_;
+        util::function<void(naming::id_type, Result)> f_;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // registration code for serialization
+    template <typename Result>
+    struct init_registration<typed_continuation<Result> >
+    {
+        static detail::automatic_continuation_registration<typed_continuation<Result> > g;
+    };
+}}
+
+namespace hpx { namespace traits
+{
+    template <>
+    struct needs_automatic_registration<
+            hpx::actions::typed_continuation<void> >
+        : boost::mpl::false_
+    {};
 }}
 
 namespace hpx { namespace actions
@@ -481,10 +490,6 @@ namespace hpx { namespace actions
     template <>
     struct typed_continuation<void> : continuation
     {
-    private:
-        typedef util::function<void(naming::id_type)> function_type;
-
-    public:
         typed_continuation()
         {}
 
@@ -497,12 +502,14 @@ namespace hpx { namespace actions
         {}
 
         template <typename F>
-        explicit typed_continuation(naming::id_type const& gid, F && f)
+        explicit typed_continuation(naming::id_type const& gid,
+                F && f)
           : continuation(gid), f_(std::forward<F>(f))
         {}
 
         template <typename F>
-        explicit typed_continuation(naming::id_type && gid, F && f)
+        explicit typed_continuation(naming::id_type && gid,
+                F && f)
           : continuation(std::move(gid)), f_(std::forward<F>(f))
         {}
 
@@ -511,12 +518,16 @@ namespace hpx { namespace actions
           : f_(std::forward<F>(f))
         {}
 
+        virtual ~typed_continuation()
+        {
+            init_registration<typed_continuation>::g.register_continuation();
+        }
+
         void trigger() const
         {
             LLCO_(info)
                 << "typed_continuation<void>::trigger("
                 << this->get_gid() << ")";
-
             if (f_.empty()) {
                 if (!this->get_gid()) {
                     HPX_THROW_EXCEPTION(invalid_status,
@@ -536,16 +547,6 @@ namespace hpx { namespace actions
             this->trigger();
         }
 
-        virtual bool has_to_wait_for_futures()
-        {
-            return traits::serialize_as_future<function_type>::call_if(f_);
-        }
-
-        virtual void wait_for_futures()
-        {
-            traits::serialize_as_future<function_type>::call(f_);
-        }
-
     private:
         char const* get_continuation_name() const
         {
@@ -553,39 +554,32 @@ namespace hpx { namespace actions
         }
 
         /// serialization support
-        friend class hpx::serialization::access;
-
-        void serialize(serialization::input_archive & ar)
+        void load(hpx::util::portable_binary_iarchive& ar)
         {
+            // serialize base class
+            typedef continuation base_type;
+            this->base_type::load(ar);
+
             // serialize function
             bool have_function = false;
-            ar >> have_function;
+            ar.load(have_function);
             if (have_function)
                 ar >> f_;
         }
-
-        void serialize(serialization::output_archive & ar)
+        void save(hpx::util::portable_binary_oarchive& ar) const
         {
+            // serialize base class
+            typedef continuation base_type;
+            this->base_type::save(ar);
+
             // serialize function
             bool have_function = !f_.empty();
-            ar << have_function;
+            ar.save(have_function);
             if (have_function)
                 ar << f_;
         }
-        template <typename Archive>
-        void serialize(Archive & ar, unsigned)
-        {
-            // serialize base class
-            ar & hpx::serialization::base_object<continuation>(*this);
 
-            serialize(ar);
-        }
-        HPX_SERIALIZATION_POLYMORPHIC_WITH_NAME(
-            typed_continuation
-          , "hpx_void_typed_continuation"
-        );
-
-        function_type f_;
+        util::function<void(naming::id_type)> f_;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -597,6 +591,12 @@ namespace hpx { namespace actions
         static_cast<typed_continuation<Arg0> const*>(this)->trigger_value(
             std::forward<Arg0>(arg0));
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Result>
+    detail::automatic_continuation_registration<typed_continuation<Result> >
+        init_registration<typed_continuation<Result> >::g =
+            detail::automatic_continuation_registration<typed_continuation<Result> >();
 }}
 
 //////////////////////////////////////////////////////////////////////////////
@@ -667,6 +667,11 @@ namespace hpx
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+#define HPX_CONTINUATION_REGISTER_CONTINUATION_FACTORY(Continuation, Name)    \
+    static ::hpx::actions::detail::continuation_registration<Continuation>    \
+        const BOOST_PP_CAT(Name, _continuation_factory_registration) =        \
+        ::hpx::actions::detail::continuation_registration<Continuation>();    \
+/**/
 
 #define HPX_DECLARE_GET_CONTINUATION_NAME_(continuation, name)                \
     namespace hpx { namespace actions { namespace detail {                    \
@@ -698,6 +703,8 @@ namespace hpx
 /**/
 
 #define HPX_REGISTER_TYPED_CONTINUATION(Result, Name)                         \
+    HPX_CONTINUATION_REGISTER_CONTINUATION_FACTORY(                           \
+        hpx::actions::typed_continuation<Result>, Name)                       \
     HPX_DEFINE_GET_CONTINUATION_NAME_(                                        \
         hpx::actions::typed_continuation<Result>, Name)                       \
 /**/

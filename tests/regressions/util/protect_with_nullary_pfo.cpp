@@ -19,6 +19,8 @@
 #include <vector>
 #include <utility>
 
+#include <boost/foreach.hpp>
+
 template <typename T>
 struct print_obj
 {
@@ -68,7 +70,7 @@ int hpx_main()
     (void)itr_o;
     
     std::size_t i = 0;
-    for (std::size_t const& v : my_range)
+    BOOST_FOREACH(std::size_t const & v, my_range)
     {
         hpx::async(hpx::util::protect(print_obj<std::size_t>()), v);
         ++i;

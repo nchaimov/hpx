@@ -234,7 +234,7 @@ struct HPX_EXPORT primary_namespace
         boost::atomic<boost::int64_t>& t_;
     };
 
-#if defined(HPX_HAVE_AGAS_DUMP_REFCNT_ENTRIES)
+#if defined(HPX_AGAS_DUMP_REFCNT_ENTRIES)
     /// Dump the credit counts of all matching ranges. Expects that \p l
     /// is locked.
     void dump_refcnt_matches(
@@ -438,7 +438,7 @@ struct HPX_EXPORT primary_namespace
       , parcelset::parcel const& p
         );
 
-    static serialization::binary_filter* get_serialization_filter(
+    static util::binary_filter* get_serialization_filter(
         parcelset::parcel const& p
         );
 };
@@ -475,7 +475,7 @@ namespace hpx { namespace traits
     struct action_serialization_filter<
         agas::server::primary_namespace::service_action>
     {
-        static serialization::binary_filter* call(parcelset::parcel const& p)
+        static util::binary_filter* call(parcelset::parcel const& p)
         {
             return agas::server::primary_namespace::get_serialization_filter(p);
         }

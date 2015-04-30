@@ -8,7 +8,7 @@
 #ifndef HPX_SMALL_BIG_OBJECT_HPP
 #define HPX_SMALL_BIG_OBJECT_HPP
 
-#include <hpx/runtime/serialization/serialize.hpp>
+#include <boost/serialization/access.hpp>
 
 #define ENABLE_DEBUG false
 
@@ -18,7 +18,7 @@ struct small_object
   private:
     boost::uint64_t x_;
 
-    friend class hpx::serialization::access;
+    friend class boost::serialization::access;
 
     template <
         typename Archive
@@ -143,7 +143,7 @@ struct big_object
     boost::uint64_t x_;
     boost::uint64_t y_;
 
-    friend class hpx::serialization::access;
+    friend class boost::serialization::access;
 
     template <
         typename Archive

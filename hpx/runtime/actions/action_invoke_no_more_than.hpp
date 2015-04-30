@@ -18,7 +18,6 @@
 #include <hpx/traits/action_decorate_continuation.hpp>
 
 #include <boost/static_assert.hpp>
-#include <boost/make_shared.hpp>
 
 namespace hpx { namespace actions { namespace detail
 {
@@ -88,7 +87,6 @@ namespace hpx { namespace actions { namespace detail
         call(naming::address::address_type lva, F && f, boost::mpl::false_)
         {
             typedef typename Action::component_type component_type;
-
             return util::bind(
                 util::one_shot(&action_decorate_function::thread_function),
                 util::placeholders::_1,
@@ -112,7 +110,6 @@ namespace hpx { namespace actions { namespace detail
         call(naming::address::address_type lva, F && f, boost::mpl::true_)
         {
             typedef typename Action::component_type component_type;
-
             return util::bind(
                 util::one_shot(&action_decorate_function::thread_function_future),
                 util::placeholders::_1,
@@ -219,9 +216,7 @@ namespace hpx { namespace actions { namespace detail
         template <typename Continuation>
         static bool call(Continuation& c, boost::mpl::true_)
         {
-            Continuation cont(
-                boost::make_shared<wrapped_continuation<Action, N> >(c)
-            );
+            Continuation cont(new wrapped_continuation<Action, N>(c));
             c = cont;
             return true;
         }

@@ -9,6 +9,9 @@
 #include <hpx/runtime.hpp>
 #include <hpx/util/scoped_unlock.hpp>
 
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
+
 #include <hpx/util/assert.hpp>
 
 #include <boost/bind.hpp>
@@ -136,7 +139,7 @@ namespace throttle { namespace server
 ///////////////////////////////////////////////////////////////////////////////
 typedef throttle::server::throttle throttle_type;
 
-HPX_REGISTER_COMPONENT(
+HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(
     hpx::components::simple_component<throttle_type>, throttle_throttle_type);
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -16,11 +16,15 @@
 #include <hpx/runtime/naming/name.hpp>
 #include <hpx/runtime/naming/address.hpp>
 #include <hpx/runtime/parcelset/policies/message_handler.hpp>
-#include <hpx/runtime/serialization/binary_filter.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/util/assert.hpp>
+#include <hpx/util/binary_filter.hpp>
 #include <hpx/traits/type_size.hpp>
 #include <hpx/traits/serialize_as_future.hpp>
+
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/version.hpp>
+#include <boost/serialization/is_bitwise_serializable.hpp>
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/detail/atomic_count.hpp>
@@ -137,7 +141,7 @@ namespace hpx { namespace parcelset
                 return action_->get_thread_priority();
             }
 
-            serialization::binary_filter* get_serialization_filter(parcelset::parcel const& p) const
+            util::binary_filter* get_serialization_filter(parcelset::parcel const& p) const
             {
                 return action_->get_serialization_filter(p);
             }
@@ -150,9 +154,9 @@ namespace hpx { namespace parcelset
             }
 
         protected:
-            void save(serialization::output_archive& ar, bool has_source_id, bool has_continuation) const;
+            void save(util::portable_binary_oarchive& ar, bool has_source_id, bool has_continuation) const;
 
-            void load(serialization::input_archive& ar, bool has_source_id, bool has_continuation);
+            void load(util::portable_binary_iarchive& ar, bool has_source_id, bool has_continuation);
 
         private:
             friend void intrusive_ptr_add_ref(parcel_data* p);
@@ -335,20 +339,25 @@ namespace hpx { namespace parcelset
 
             void wait_for_futures()
             {
-                actions::continuation_type const& cont = this->get_continuation();
-                if (cont)
-                    cont->wait_for_futures();
-                this->get_action()->wait_for_futures();
+                return this->get_action()->wait_for_futures();
             }
 
-            void save(serialization::output_archive& ar) const;
+            void save(util::portable_binary_oarchive& ar) const;
 
-            void load(serialization::input_archive& ar);
+            void load(util::portable_binary_iarchive& ar);
 
         private:
             friend std::ostream& operator<< (std::ostream& os,
                 single_destination_parcel_data const& req);
 
+            // serialization support
+            void save_optimized(util::portable_binary_oarchive& ar) const;
+            void save_normal(util::portable_binary_oarchive& ar) const;
+
+            void load_optimized(util::portable_binary_iarchive& ar);
+            void load_normal(util::portable_binary_iarchive& ar);
+
+        private:
             // the parcel data is wrapped into a separate struct to simplify
             // serialization
             struct parcel_buffer
@@ -362,14 +371,6 @@ namespace hpx { namespace parcelset
                 boost::uint64_t dest_size_;
                 mutable boost::uint8_t has_source_id_;
                 boost::uint8_t has_continuation_;
-
-                template <class Archive>
-                void serialize(Archive& ar, unsigned int)
-                {
-                  ar & parcel_id_ & start_time_ &
-                    creation_time_ & dest_size_ &
-                    has_source_id_ & has_continuation_;
-                }
             };
 
             parcel_buffer data_;
@@ -516,14 +517,22 @@ namespace hpx { namespace parcelset
                     this->get_action()->get_type_size(flags);      // action
             }
 
-            void save(serialization::output_archive& ar) const;
+            void save(util::portable_binary_oarchive& ar) const;
 
-            void load(serialization::input_archive& ar);
+            void load(util::portable_binary_iarchive& ar);
 
         private:
             friend std::ostream& operator<< (std::ostream& os,
                 multi_destination_parcel_data const& req);
 
+            // serialization support
+            void save_optimized(util::portable_binary_oarchive& ar) const;
+            void save_normal(util::portable_binary_oarchive& ar) const;
+
+            void load_optimized(util::portable_binary_iarchive& ar);
+            void load_normal(util::portable_binary_iarchive& ar);
+
+        private:
             // the parcel data is wrapped into a separate struct to simplify
             // serialization
             struct parcel_buffer
@@ -537,14 +546,6 @@ namespace hpx { namespace parcelset
                 boost::uint64_t dest_size_;
                 mutable boost::uint8_t has_source_id_;
                 boost::uint8_t has_continuation_;
-
-                template <class Archive>
-                void serialize(Archive& ar, unsigned int)
-                {
-                  ar & parcel_id_ & start_time_ &
-                    creation_time_ & dest_size_ &
-                    has_source_id_ & has_continuation_;
-                }
             };
             parcel_buffer data_;
 
@@ -705,7 +706,7 @@ namespace hpx { namespace parcelset
             data_->set_parcel_id(id);
         }
 
-        serialization::binary_filter* get_serialization_filter() const
+        util::binary_filter* get_serialization_filter() const
         {
             return data_->get_serialization_filter(*this);
         }
@@ -744,13 +745,13 @@ namespace hpx { namespace parcelset
         friend std::ostream& operator<< (std::ostream& os, parcel const& req);
 
         // serialization support
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
-        void save(serialization::output_archive& ar, const unsigned int version) const;
+        void save(util::portable_binary_oarchive& ar, const unsigned int version) const;
 
-        void load(serialization::input_archive& ar, const unsigned int version);
+        void load(util::portable_binary_iarchive& ar, const unsigned int version);
 
-        HPX_SERIALIZATION_SPLIT_MEMBER();
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     private:
         boost::intrusive_ptr<detail::parcel_data> data_;
@@ -775,11 +776,6 @@ namespace hpx { namespace traits
     struct serialize_as_future<hpx::parcelset::parcel>
       : boost::mpl::true_
     {
-        static bool call_if(hpx::parcelset::parcel& r)
-        {
-            return true;
-        }
-
         static void call(hpx::parcelset::parcel& p)
         {
             p.wait_for_futures();
@@ -787,7 +783,7 @@ namespace hpx { namespace traits
     };
 }}
 
-namespace hpx { namespace traits
+namespace boost { namespace serialization
 {
     template <>
     struct is_bitwise_serializable<
@@ -803,6 +799,32 @@ namespace hpx { namespace traits
     {};
 #endif
 }}
+
+///////////////////////////////////////////////////////////////////////////////
+// this is the current version of the parcel serialization format
+// this definition needs to be in the global namespace
+#if defined(__GNUG__) && !defined(__INTEL_COMPILER)
+#if defined(HPX_GCC_DIAGNOSTIC_PRAGMA_CONTEXTS)
+#pragma GCC diagnostic push
+#endif
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
+
+BOOST_CLASS_TRACKING(hpx::parcelset::parcel, boost::serialization::track_never)
+BOOST_CLASS_VERSION(hpx::parcelset::parcel, HPX_PARCEL_VERSION)
+
+BOOST_CLASS_TRACKING(hpx::parcelset::detail::single_destination_parcel_data,
+    boost::serialization::track_never)
+#if defined(HPX_SUPPORT_MULTIPLE_PARCEL_DESTINATIONS)
+BOOST_CLASS_TRACKING(hpx::parcelset::detail::multi_destination_parcel_data,
+    boost::serialization::track_never)
+#endif
+
+#if defined(__GNUG__) && !defined(__INTEL_COMPILER)
+#if defined(HPX_GCC_DIAGNOSTIC_PRAGMA_CONTEXTS)
+#pragma GCC diagnostic pop
+#endif
+#endif
 
 #include <hpx/traits/type_size.hpp>
 

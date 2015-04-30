@@ -7,8 +7,7 @@
 #define HPX_APPLY_APR_15_2012_0441PM
 
 #include <hpx/apply.hpp>
-#include <hpx/runtime/applier/detail/apply_colocated.hpp>
-#include <hpx/runtime/applier/detail/apply_colocated_callback.hpp>
+#include <hpx/runtime/applier/apply_colocated_callback.hpp>
 
 #endif
 

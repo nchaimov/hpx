@@ -143,7 +143,7 @@ distribute_component(std::vector<hpx::id_type> localities, hpx::components::comp
 
         std::size_t ct = 0, pos = 0;
 
-        for (hpx::future<result_type>& f : components_futures)
+        BOOST_FOREACH(hpx::future<result_type> & f, components_futures)
         {
             if(f.is_ready())
             {
@@ -185,12 +185,12 @@ inline std::vector<hpx::id_type> create_components(params const & p)
 
     std::vector<hpx::util::locality_result> res;
     res.reserve(result.second.size());
-    for (hpx::util::remote_locality_result const& rl : result.second)
+    BOOST_FOREACH(hpx::util::remote_locality_result const & rl, result.second)
     {
         res.push_back(rl);
     }
 
-    for (hpx::id_type const& id : hpx::util::locality_results(res))
+    BOOST_FOREACH(hpx::id_type id, hpx::util::locality_results(res))
     {
         //hpx::apply<typename Component::run_action>(id, p);
         components.push_back(id);

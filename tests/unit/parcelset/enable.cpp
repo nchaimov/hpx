@@ -9,6 +9,8 @@
 
 #include <hpx/util/lightweight_test.hpp>
 
+#include <boost/serialization/vector.hpp>
+
 void f()
 {}
 HPX_PLAIN_ACTION(f);
@@ -38,7 +40,7 @@ void test_non_disabled(std::vector<hpx::id_type> const & localities)
 
     std::vector<hpx::future<void> > futures;
     futures.reserve(localities.size());
-    for (hpx::id_type const& id : localities)
+    BOOST_FOREACH(hpx::id_type id, localities)
     {
         if(id != here)
             futures.push_back(hpx::async(f_action(), id));
@@ -61,7 +63,7 @@ void test_disable_enable(std::vector<hpx::id_type> const & localities)
 
         std::vector<hpx::future<void> > futures;
         futures.reserve(localities.size());
-        for (hpx::id_type const& id : localities)
+        BOOST_FOREACH(hpx::id_type id, localities)
         {
             if(id != here)
                 futures.push_back(hpx::async(f_action(), id));
@@ -74,7 +76,7 @@ void test_disable_enable(std::vector<hpx::id_type> const & localities)
         //HPX_TEST(received == receive_count() || received + 1 == receive_count());
 
         hpx::this_thread::yield();
-        for (hpx::future<void> const& f : futures)
+        BOOST_FOREACH(hpx::future<void> const & f, futures)
         {
             HPX_TEST(!f.is_ready());
         }
@@ -102,7 +104,7 @@ void test_disable(std::vector<hpx::id_type> const & localities)
         sent = send_count();
         received = receive_count();
 
-        for (hpx::id_type const& id : localities)
+        BOOST_FOREACH(hpx::id_type id, localities)
         {
             if(id != here)
                 futures.push_back(hpx::async(f_action(), id));
@@ -115,7 +117,7 @@ void test_disable(std::vector<hpx::id_type> const & localities)
         //HPX_TEST(received == receive_count() || received + 1 == receive_count());
 
         hpx::this_thread::yield();
-        for (hpx::future<void> const& f : futures)
+        BOOST_FOREACH(hpx::future<void> const & f, futures)
         {
             HPX_TEST(!f.is_ready());
         }
@@ -149,7 +151,7 @@ int main()
     test(localities);
     std::vector<hpx::future<void> > futures;
     futures.reserve(localities.size());
-    for (hpx::id_type const& id : localities)
+    BOOST_FOREACH(hpx::id_type id, localities)
     {
         futures.push_back(
             hpx::async(test_action(), id, localities)

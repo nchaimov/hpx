@@ -13,7 +13,6 @@ set(subdirs
     lcos
     parcelset
     performance_counters
-    serialization
     threads
     traits
     util

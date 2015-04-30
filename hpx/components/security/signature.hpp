@@ -7,12 +7,11 @@
 #define HPX_COMPONENTS_SECURITY_SERVER_SIGNATURE_HPP
 
 #include <hpx/hpx_fwd.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
-#include <hpx/runtime/serialization/array.hpp>
-#include <hpx/traits/is_bitwise_serializable.hpp>
 
 #include <boost/array.hpp>
 #include <boost/io/ios_state.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/is_bitwise_serializable.hpp>
 
 #include <sodium.h>
 
@@ -50,7 +49,7 @@ namespace hpx { namespace components { namespace security
         }
 
     private:
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template <typename Archive>
         void serialize(Archive & ar, const unsigned int)
@@ -68,7 +67,7 @@ namespace hpx { namespace components { namespace security
 #endif
 }}}
 
-namespace hpx { namespace traits
+namespace boost { namespace serialization
 {
     template <>
     struct is_bitwise_serializable<

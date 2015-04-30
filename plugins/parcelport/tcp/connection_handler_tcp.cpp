@@ -114,7 +114,8 @@ namespace hpx { namespace parcelset { namespace policies { namespace tcp
         {
             // cancel all pending read operations, close those sockets
             lcos::local::spinlock::scoped_lock l(connections_mtx_);
-            for (boost::shared_ptr<receiver> const& c : accepted_connections_)
+            BOOST_FOREACH(boost::shared_ptr<receiver> c,
+                accepted_connections_)
             {
                 c->shutdown();
             }

@@ -4,11 +4,12 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/hpx_fwd.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
 
 #include "dimension.hpp"
 
-namespace hpx { namespace serialization
+namespace boost { namespace serialization
 {
     ///////////////////////////////////////////////////////////////////////////////
     // implement the serialization functions
@@ -21,10 +22,10 @@ namespace hpx { namespace serialization
     ///////////////////////////////////////////////////////////////////////////
     // explicit instantiation for the correct archive types
     template HPX_COMPONENT_EXPORT void
-    serialize(input_archive&, interpolate1d::dimension&,
+    serialize(hpx::util::portable_binary_iarchive&, interpolate1d::dimension&,
         unsigned int const);
     template HPX_COMPONENT_EXPORT void
-    serialize(output_archive&, interpolate1d::dimension&,
+    serialize(hpx::util::portable_binary_oarchive&, interpolate1d::dimension&,
         unsigned int const);
 }}
 

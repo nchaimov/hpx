@@ -18,7 +18,7 @@ typedef hpx::components::simple_component<
     examples::server::cancelable_action
 > cancelable_action_component_type;
 
-HPX_REGISTER_COMPONENT(
+HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(
     cancelable_action_component_type, cancelable_action);
 
 ///////////////////////////////////////////////////////////////////////////////

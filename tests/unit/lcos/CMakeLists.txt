@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2015 Hartmut Kaiser
+# Copyright (c) 2007-2014 Hartmut Kaiser
 # Copyright (c) 2011-2012 Bryce Adelstein-Lelbach
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -8,13 +8,11 @@ set(tests
     apply_colocated
     apply_local
     apply_remote
-    async_cb_colocated
-    async_cb_remote
     async_continue
     async_continue_cb
-    async_continue_cb_colocated
     async_local
     async_remote
+    async_cb_remote
     broadcast
     broadcast_apply
     composable_guard
@@ -25,8 +23,6 @@ set(tests
     future_ref
     future_then
     future_wait
-    latch_local
-    latch_remote
     local_barrier
     local_dataflow
     local_event
@@ -40,11 +36,9 @@ set(tests
 
 set(apply_colocated_PARAMETERS LOCALITIES 2)
 set(apply_remote_PARAMETERS LOCALITIES 2)
-set(async_cb_colocated_PARAMETERS LOCALITIES 2)
 
 set(async_continue_PARAMETERS LOCALITIES 2)
 set(async_continue_cb_PARAMETERS LOCALITIES 2)
-set(async_continue_cb_colocated_PARAMETERS LOCALITIES 2)
 set(async_remote_PARAMETERS LOCALITIES 2)
 set(async_cb_remote_PARAMETERS LOCALITIES 2)
 
@@ -56,9 +50,6 @@ set(future_PARAMETERS THREADS_PER_LOCALITY 4)
 set(future_wait_PARAMETERS THREADS_PER_LOCALITY 4)
 
 set(local_barrier_PARAMETERS THREADS_PER_LOCALITY 4)
-
-set(latch_local_PARAMETERS THREADS_PER_LOCALITY 4)
-set(latch_remote_PARAMETERS LOCALITIES 2)
 
 set(local_event_PARAMETERS THREADS_PER_LOCALITY 4)
 

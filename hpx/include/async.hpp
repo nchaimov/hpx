@@ -9,8 +9,7 @@
 #include <hpx/async.hpp>
 #include <hpx/lcos/async_callback.hpp>
 #include <hpx/lcos/async_continue_callback.hpp>
-#include <hpx/lcos/detail/async_colocated.hpp>
-#include <hpx/lcos/detail/async_colocated_callback.hpp>
+#include <hpx/lcos/async_colocated_callback.hpp>
 
 #endif
 

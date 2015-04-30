@@ -100,7 +100,7 @@ namespace hpx { namespace threads { namespace executors { namespace detail
     inline bool starting_up(boost::ptr_vector<boost::atomic<hpx::state> >& states)
     {
         typedef boost::atomic<hpx::state> state_type;
-        for (state_type& state : states)
+        BOOST_FOREACH(state_type& state, states)
         {
             if (state.load() < running)
                 return true;
@@ -384,7 +384,7 @@ namespace hpx { namespace threads { namespace executors { namespace detail
 
 namespace hpx { namespace threads { namespace executors
 {
-#if defined(HPX_HAVE_LOCAL_SCHEDULER)
+#if defined(HPX_LOCAL_SCHEDULER)
     ///////////////////////////////////////////////////////////////////////////
     local_queue_executor::local_queue_executor()
       : scheduled_executor(new detail::thread_pool_executor<
@@ -430,7 +430,7 @@ namespace hpx { namespace threads { namespace executors
                 max_punits, min_punits))
     {}
 
-#if defined(HPX_HAVE_STATIC_PRIORITY_SCHEDULER)
+#if defined(HPX_STATIC_PRIORITY_SCHEDULER)
     ///////////////////////////////////////////////////////////////////////////
     static_priority_queue_executor::static_priority_queue_executor()
       : scheduled_executor(new detail::thread_pool_executor<

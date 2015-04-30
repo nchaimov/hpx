@@ -95,7 +95,6 @@ namespace hpx { namespace lcos { namespace local { namespace detail
         void apply()
         {
             // wait for all futures to become ready
-            traits::serialize_as_future<F>::call(f_);
             traits::serialize_as_future<Args>::call(args_);
 
             // invoke the function
@@ -142,11 +141,33 @@ namespace hpx { namespace lcos { namespace local { namespace detail
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
     template <typename F, typename ...Ts>
-    future<typename util::result_of<
-        typename util::decay<F>::type(typename util::decay<Ts>::type...)
-    >::type>
-    invoke_when_ready_delayed(F&& f, Ts&&... vs)
+    typename boost::disable_if<
+        util::detail::any_of<
+            traits::serialize_as_future<typename util::decay<Ts>::type>...>
+      , future<typename util::result_of<
+            typename util::decay<F>::type(typename util::decay<Ts>::type...)
+         >::type>
+    >::type invoke_when_ready(F&& f, Ts&&... vs)
+    {
+        typedef typename util::result_of<
+            typename util::decay<F>::type(typename util::decay<Ts>::type...)
+         >::type result_type;
+        typedef typename boost::is_void<result_type>::type is_void;
+
+        return invoke_fused_now(is_void(),
+            std::forward<F>(f), std::forward<Ts>(vs)...);
+    }
+
+    template <typename F, typename ...Ts>
+    typename boost::enable_if<
+        util::detail::any_of<
+            traits::serialize_as_future<typename util::decay<Ts>::type>...>
+      , future<typename util::result_of<
+            typename util::decay<F>::type(typename util::decay<Ts>::type...)
+         >::type>
+    >::type invoke_when_ready(F&& f, Ts&&... vs)
     {
         typedef when_ready<
             typename util::decay<F>::type
@@ -163,48 +184,6 @@ namespace hpx { namespace lcos { namespace local { namespace detail
 
         using traits::future_access;
         return future_access<typename invoker_type::type>::create(std::move(p));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    template <typename F, typename ...Ts>
-    typename boost::disable_if<
-        util::detail::any_of<
-            traits::serialize_as_future<typename util::decay<Ts>::type>...>
-      , future<typename util::result_of<
-            typename util::decay<F>::type(typename util::decay<Ts>::type...)
-         >::type>
-    >::type
-    invoke_when_ready(F&& f, Ts&&... vs)
-    {
-        typedef typename util::decay<F>::type function_type;
-
-        if (traits::serialize_as_future<function_type>::call_if(f))
-        {
-            return invoke_when_ready_delayed(std::forward<F>(f),
-                std::forward<Ts>(vs)...);
-        }
-
-        typedef typename util::result_of<
-            function_type(typename util::decay<Ts>::type...)
-        >::type result_type;
-        typedef typename boost::is_void<result_type>::type is_void;
-
-        return invoke_fused_now(is_void(),
-            std::forward<F>(f), std::forward<Ts>(vs)...);
-    }
-
-    template <typename F, typename ...Ts>
-    typename boost::enable_if<
-        util::detail::any_of<
-            traits::serialize_as_future<typename util::decay<Ts>::type>...>
-      , future<typename util::result_of<
-            typename util::decay<F>::type(typename util::decay<Ts>::type...)
-         >::type>
-    >::type
-    invoke_when_ready(F&& f, Ts&&... vs)
-    {
-        return invoke_when_ready_delayed(std::forward<F>(f),
-            std::forward<Ts>(vs)...);
     }
 }}}}
 

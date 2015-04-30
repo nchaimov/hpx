@@ -5,6 +5,8 @@
 
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/runtime/actions/action_support.hpp>
+#include <hpx/runtime/actions/guid_initialization.hpp>
+#include <hpx/util/void_cast.hpp>
 
 #include <hpx/plugins/plugin_registry.hpp>
 #include <hpx/plugins/binary_filter_factory.hpp>
@@ -15,6 +17,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 HPX_REGISTER_PLUGIN_MODULE();
 HPX_REGISTER_BINARY_FILTER_FACTORY(
+    hpx::plugins::compression::zlib_serialization_filter,
+    zlib_serialization_filter);
+
+///////////////////////////////////////////////////////////////////////////////
+HPX_SERIALIZATION_REGISTER_TYPE_DEFINITION(
+    hpx::plugins::compression::zlib_serialization_filter);
+HPX_REGISTER_BASE_HELPER(
     hpx::plugins::compression::zlib_serialization_filter,
     zlib_serialization_filter);
 
@@ -68,6 +77,17 @@ namespace hpx { namespace plugins { namespace compression
         }
     }
 
+    zlib_serialization_filter::~zlib_serialization_filter()
+    {
+        hpx::actions::detail::guid_initialization<zlib_serialization_filter>();
+    }
+
+    void zlib_serialization_filter::register_base()
+    {
+        util::void_cast_register_nonvirt<
+            zlib_serialization_filter, util::binary_filter>();
+    }
+
     void zlib_serialization_filter::set_max_length(std::size_t size)
     {
         buffer_.reserve(size);
@@ -108,9 +128,10 @@ namespace hpx { namespace plugins { namespace compression
     {
         if (current_+dst_count > buffer_.size())
         {
-            HPX_THROW_EXCEPTION(serialization_error,
-                    "zlib_serialization_filter::load",
-                    "archive data bstream is too short");
+            BOOST_THROW_EXCEPTION(
+                boost::archive::archive_exception(
+                    boost::archive::archive_exception::input_stream_error,
+                    "archive data bstream is too short"));
             return;
         }
 

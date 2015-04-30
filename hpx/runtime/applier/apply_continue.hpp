@@ -12,8 +12,6 @@
 #include <hpx/runtime/actions/action_support.hpp>
 #include <hpx/runtime/applier/apply.hpp>
 
-#include <boost/make_shared.hpp>
-
 namespace hpx
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -24,9 +22,8 @@ namespace hpx
         typedef typename action_type::result_type result_type;
 
         return apply<Action>(
-            boost::make_shared<
-                hpx::actions::typed_continuation<result_type>
-            >(std::forward<Cont>(cont)),
+            new hpx::actions::typed_continuation<result_type>(
+                std::forward<Cont>(cont)),
             gid, std::forward<Ts>(vs)...);
     }
 
@@ -49,9 +46,8 @@ namespace hpx
         typedef typename action_type::result_type result_type;
 
         return apply<Action>(
-            boost::make_shared<
-                hpx::actions::typed_continuation<result_type>
-            >(cont, make_continuation()),
+            new hpx::actions::typed_continuation<result_type>(
+                cont, make_continuation()),
             gid, std::forward<Ts>(vs)...);
     }
 

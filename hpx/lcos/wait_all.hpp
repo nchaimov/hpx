@@ -97,9 +97,8 @@ namespace hpx
 #include <boost/fusion/include/end.hpp>
 #include <boost/fusion/include/deref.hpp>
 #include <boost/fusion/include/next.hpp>
-#include <boost/range/functions.hpp>
-#include <boost/ref.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/ref.hpp>
 
 #include <algorithm>
 #include <iterator>

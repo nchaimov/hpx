@@ -6,6 +6,10 @@
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/runtime/components/component_factory.hpp>
 
+#include <boost/serialization/vector.hpp>
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
+
 #include <hpx/util/assert.hpp>
 
 #include <cmath>
@@ -375,17 +379,17 @@ namespace sheneos { namespace server
 }}
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace hpx { namespace serialization
+namespace boost { namespace serialization
 {
     ///////////////////////////////////////////////////////////////////////////
     // Implement the serialization functions.
-    void serialize(input_archive& ar,
+    void serialize(hpx::util::portable_binary_iarchive& ar,
         sheneos::sheneos_coord& coord, unsigned int const)
     {
         ar & coord.ye_ & coord.temp_ & coord.rho_;
     }
 
-    void serialize(output_archive& ar,
+    void serialize(hpx::util::portable_binary_oarchive& ar,
         sheneos::sheneos_coord& coord, unsigned int const)
     {
         ar & coord.ye_ & coord.temp_ & coord.rho_;
@@ -408,7 +412,7 @@ HPX_REGISTER_ACTION(partition3d_type::interpolate_bulk_action,
 HPX_REGISTER_ACTION(partition3d_type::interpolate_one_bulk_action,
     sheneos_partition3d_interpolate_one_bulk_action);
 
-HPX_REGISTER_COMPONENT(
+HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(
     hpx::components::simple_component<partition3d_type>,
     sheneos_partition_type);
 

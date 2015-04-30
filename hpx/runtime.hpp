@@ -26,6 +26,7 @@
 
 #include <hpx/config/warnings_prefix.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/smart_ptr/scoped_ptr.hpp>
 
 #include <memory>
@@ -123,7 +124,7 @@ namespace hpx
             typedef util::function_nonser<void()> value_type;
 
             boost::mutex::scoped_lock l(mtx_);
-            for (value_type const& f : on_exit_functions_)
+            BOOST_FOREACH(value_type f, on_exit_functions_)
                 f();
         }
 
@@ -330,9 +331,9 @@ namespace hpx
             char const* message_handler_type, char const* action,
             parcelset::parcelport* pp, std::size_t num_messages,
             std::size_t interval, error_code& ec = throws);
-        serialization::binary_filter* create_binary_filter(
+        util::binary_filter* create_binary_filter(
             char const* binary_filter_type, bool compress,
-            serialization::binary_filter* next_filter, error_code& ec = throws);
+            util::binary_filter* next_filter, error_code& ec = throws);
 
 #if defined(HPX_HAVE_SECURITY)
         components::security::signed_certificate

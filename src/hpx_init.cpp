@@ -17,6 +17,7 @@
 #include <hpx/runtime/actions/plain_action.hpp>
 #include <hpx/runtime/threads/thread_helpers.hpp>
 #include <hpx/runtime/threads/policies/schedulers.hpp>
+#include <hpx/runtime/components/plain_component_factory.hpp>
 #include <hpx/runtime/applier/applier.hpp>
 #include <hpx/runtime_impl.hpp>
 #include <hpx/util/find_prefix.hpp>
@@ -43,6 +44,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 #include <boost/assign/std/vector.hpp>
+#include <boost/foreach.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx
@@ -60,11 +62,11 @@ namespace hpx { namespace detail
 }}
 
 HPX_PLAIN_ACTION(hpx::detail::console_print,
-    console_print_action)
+    console_print_action, hpx::components::factory_enabled)
 HPX_PLAIN_ACTION(hpx::detail::list_symbolic_name,
-    list_symbolic_name_action)
+    list_symbolic_name_action, hpx::components::factory_enabled)
 HPX_PLAIN_ACTION(hpx::detail::list_component_type,
-    list_component_type_action)
+    list_component_type_action, hpx::components::factory_enabled)
 
 typedef
     hpx::util::detail::bound_action<
@@ -543,7 +545,7 @@ namespace hpx
             return rt.start();
         }
 
-#if defined(HPX_HAVE_LOCAL_SCHEDULER)
+#if defined(HPX_LOCAL_SCHEDULER)
         ///////////////////////////////////////////////////////////////////////
         // local scheduler (one queue for each OS threads)
         int run_local(startup_function_type const& startup,
@@ -606,7 +608,7 @@ namespace hpx
 
                 std::vector<std::string> bind_affinity =
                     cfg.vm_["hpx:bind"].as<std::vector<std::string> >();
-                for (std::string const& s : bind_affinity)
+                BOOST_FOREACH(std::string const& s, bind_affinity)
                 {
                     if (!affinity_desc.empty())
                         affinity_desc += ";";
@@ -744,7 +746,7 @@ namespace hpx
         }
 #endif
 
-#if defined(HPX_HAVE_STATIC_PRIORITY_SCHEDULER)
+#if defined(HPX_STATIC_PRIORITY_SCHEDULER)
         ///////////////////////////////////////////////////////////////////////
         // local static scheduler with priority queue (one queue for each OS
         // threads plus one separate queue for high priority HPX-threads). Doesn't
@@ -817,7 +819,7 @@ namespace hpx
 
                 std::vector<std::string> bind_affinity =
                     cfg.vm_["hpx:bind"].as<std::vector<std::string> >();
-                for (std::string const& s : bind_affinity)
+                BOOST_FOREACH(std::string const& s, bind_affinity)
                 {
                     if (!affinity_desc.empty())
                         affinity_desc += ";";
@@ -927,7 +929,7 @@ namespace hpx
 
                 std::vector<std::string> bind_affinity =
                     cfg.vm_["hpx:bind"].as<std::vector<std::string> >();
-                for (std::string const& s : bind_affinity)
+                BOOST_FOREACH(std::string const& s, bind_affinity)
                 {
                     if (!affinity_desc.empty())
                         affinity_desc += ";";
@@ -964,7 +966,7 @@ namespace hpx
             return 0;
         }
 
-#if defined(HPX_HAVE_ABP_SCHEDULER)
+#if defined(HPX_ABP_SCHEDULER)
         ///////////////////////////////////////////////////////////////////////
         // priority abp scheduler: local priority deques for each OS thread,
         // with work stealing from the "bottom" of each.
@@ -1017,7 +1019,7 @@ namespace hpx
         }
 #endif
 
-#if defined(HPX_HAVE_HIERARCHY_SCHEDULER)
+#if defined(HPX_HIERARCHY_SCHEDULER)
         ///////////////////////////////////////////////////////////////////////
         // hierarchical scheduler: The thread queues are built up hierarchically
         // this avoids contention during work stealing
@@ -1055,7 +1057,7 @@ namespace hpx
         }
 #endif
 
-#if defined(HPX_HAVE_PERIODIC_PRIORITY_SCHEDULER)
+#if defined(HPX_PERIODIC_PRIORITY_SCHEDULER)
         ///////////////////////////////////////////////////////////////////////
         // hierarchical scheduler: The thread queues are built up hierarchically
         // this avoids contention during work stealing
@@ -1152,7 +1154,7 @@ namespace hpx
 
                 // Initialize and start the HPX runtime.
                 if (0 == std::string("local").find(cfg.queuing_)) {
-#if defined(HPX_HAVE_LOCAL_SCHEDULER)
+#if defined(HPX_LOCAL_SCHEDULER)
                     cfg.queuing_ = "local";
                     result = detail::run_local(startup, shutdown, cfg, blocking);
 #else
@@ -1163,7 +1165,7 @@ namespace hpx
 #endif
                 }
                 else if (0 == std::string("static").find(cfg.queuing_)) {
-#if defined(HPX_HAVE_STATIC_PRIORITY_SCHEDULER)
+#if defined(HPX_STATIC_PRIORITY_SCHEDULER)
                     cfg.queuing_ = "static";
                     result = detail::run_static(startup, shutdown, cfg, blocking);
 #else
@@ -1180,7 +1182,7 @@ namespace hpx
                     result = detail::run_priority_local(startup, shutdown, cfg, blocking);
                 }
                 else if (0 == std::string("abp-priority").find(cfg.queuing_)) {
-#if defined(HPX_HAVE_ABP_SCHEDULER)
+#if defined(HPX_ABP_SCHEDULER)
                     // local scheduler with priority deque (one deque for each OS threads
                     // plus separate dequeues for high priority HPX-threads), uses
                     // abp-style stealing
@@ -1194,7 +1196,7 @@ namespace hpx
 #endif
                 }
                 else if (0 == std::string("hierarchy").find(cfg.queuing_)) {
-#if defined(HPX_HAVE_HIERARCHY_SCHEDULER)
+#if defined(HPX_HIERARCHY_SCHEDULER)
                     // hierarchy scheduler: tree of queues, with work
                     // stealing from the parent queue in that tree.
                     cfg.queuing_ = "hierarchy";
@@ -1207,7 +1209,7 @@ namespace hpx
 #endif
                 }
                 else if (0 == std::string("periodic-priority").find(cfg.queuing_)) {
-#if defined(HPX_HAVE_PERIODIC_PRIORITY_SCHEDULER)
+#if defined(HPX_PERIODIC_PRIORITY_SCHEDULER)
                     cfg.queuing_ = "periodic-priority";
                     result = detail::run_periodic(startup, shutdown, cfg, blocking);
 #else

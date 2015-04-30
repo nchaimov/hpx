@@ -14,6 +14,7 @@
 #include <hpx/performance_counters/server/arithmetics_counter.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace performance_counters { namespace server
@@ -105,7 +106,7 @@ namespace hpx { namespace performance_counters { namespace server
 
         // apply arithmetic operation
         double value = detail::init_value<Operation>::call();
-        for (counter_value const& base_value : base_values)
+        BOOST_FOREACH(counter_value const& base_value, base_values)
         {
             value = Operation()(value, base_value.get_value<double>());
         }
@@ -303,7 +304,7 @@ namespace hpx { namespace performance_counters { namespace detail
     void expand_counter_name_wildcards(std::vector<std::string>& names, error_code& ec)
     {
         std::vector<counter_info> counters;
-        for (std::string const& name : names)
+        BOOST_FOREACH(std::string const& name, names)
         {
             discover_counter_type(ensure_counter_prefix(name), counters,
                 discover_counters_full, ec);
@@ -312,7 +313,7 @@ namespace hpx { namespace performance_counters { namespace detail
 
         std::vector<std::string> result;
         result.reserve(counters.size());
-        for (counter_info const& info : counters)
+        BOOST_FOREACH(counter_info const& info, counters)
         {
             result.push_back(info.fullname_);
         }
@@ -345,7 +346,7 @@ namespace hpx { namespace performance_counters { namespace detail
                     expand_counter_name_wildcards(names, ec);
                     if (ec) return naming::invalid_gid;
 
-                    for (std::string const& name : names)
+                    BOOST_FOREACH(std::string const& name, names)
                     {
                         counter_path_elements paths;
                         if (status_valid_data != get_counter_path_elements(

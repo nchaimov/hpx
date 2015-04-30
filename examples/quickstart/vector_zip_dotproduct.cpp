@@ -9,8 +9,6 @@
 #include <hpx/include/parallel_algorithm.hpp>
 #include <hpx/include/iostreams.hpp>
 
-#include <boost/range/functions.hpp>
-
 ///////////////////////////////////////////////////////////////////////////////
 int hpx_main()
 {

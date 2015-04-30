@@ -34,14 +34,10 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
 
         struct handle_header
         {
-            handle_header(header_list::iterator it, receiver &receiver, mutex_type::scoped_lock * l)
+            handle_header(header_list::iterator it, receiver &receiver)
               : receiver_(receiver)
               , handles_(false)
-              , l_(l)
             {
-                // as handle_header tries to acquire a mutex as well, we need to
-                // ignore the headers_mtx_ here
-                util::ignore_while_checking<mutex_type::scoped_lock> il(l_);
                 mutex_type::scoped_lock lk(receiver_.handles_header_mtx_);
                 std::pair<int, int> p(it->first, it->second.tag());
                 header_handle_ = receiver_.handles_header_.find(p);
@@ -59,7 +55,6 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
             handle_header(handle_header && other)
               : receiver_(other.receiver_)
               , handles_(other.handles_)
-              , l_(other.l_)
               , header_handle_(other.header_handle_)
             {
                 other.handles_ = false;
@@ -67,9 +62,6 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
 
             ~handle_header()
             {
-                // as handle_header tries to acquire a mutex as well, we need to
-                // ignore the headers_mtx_ here
-                util::ignore_while_checking<mutex_type::scoped_lock> il(l_);
                 mutex_type::scoped_lock lk(receiver_.handles_header_mtx_);
                 if(handles_)
                 {
@@ -87,7 +79,6 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
 
             receiver &receiver_;
             bool handles_;
-            mutex_type::scoped_lock * l_;
             handles_header_type::iterator header_handle_;
             HPX_MOVABLE_BUT_NOT_COPYABLE(handle_header);
         };
@@ -141,11 +132,14 @@ namespace hpx { namespace parcelset { namespace policies { namespace mpi
                 check_num_connections chk(this);
                 if(!chk.decrement_) break;
                 mutex_type::scoped_lock l(headers_mtx_);
+                // as handle_header tries to acquire a mutex as well, we need to
+                // ignore the headers_mtx_ here
+                util::ignore_while_checking<mutex_type::scoped_lock> il(&l);
                 accept_locked();
                 iterator it = headers_.begin();
                 while(it != headers_.end())
                 {
-                    handle_header handle(it, *this, &l);
+                    handle_header handle(it, *this);
                     if(handle.handles_)
                     {
 

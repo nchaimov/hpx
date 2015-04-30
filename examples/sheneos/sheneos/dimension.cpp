@@ -4,20 +4,22 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/hpx_fwd.hpp>
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
 
 #include "dimension.hpp"
 
-namespace hpx { namespace serialization
+namespace boost { namespace serialization
 {
     ///////////////////////////////////////////////////////////////////////////
     // Implementation of the serialization function.
-    void serialize(input_archive& ar, 
+    void serialize(hpx::util::portable_binary_iarchive& ar, 
         sheneos::dimension& dim, unsigned int const)
     {
         ar & dim.offset_ & dim.count_ & dim.size_;
     }
 
-    void serialize(output_archive& ar, 
+    void serialize(hpx::util::portable_binary_oarchive& ar, 
         sheneos::dimension& dim, unsigned int const)
     {
         ar & dim.offset_ & dim.count_ & dim.size_;

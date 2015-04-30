@@ -98,7 +98,7 @@ int main()
 {
     std::vector<hpx::id_type> localities = hpx::find_all_localities();
 
-    for (hpx::id_type const& id : localities)
+    BOOST_FOREACH(hpx::id_type id, localities)
     {
         if(id != hpx::find_here())
         {

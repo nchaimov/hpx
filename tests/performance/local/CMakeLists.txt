@@ -17,13 +17,14 @@ endif()
 
 set(benchmarks
     async_overheads
-    delay_baseline
-    delay_baseline_threaded
+    timed_task_spawn
     hpx_homogeneous_timed_task_spawn_executors
     hpx_heterogeneous_timed_task_spawn
+
+    delay_baseline
+    delay_baseline_threaded
     print_heterogeneous_payloads
-    timed_task_spawn
-)
+   )
 
 if(OPENMP_FOUND)
   set(benchmarks
@@ -94,36 +95,34 @@ set(print_heterogeneous_payloads_FLAGS NOLIBS
 
 set(benchmarks ${benchmarks}
     boost_tls_overhead
-    hpx_tls_overhead
     native_tls_overhead
+    hpx_tls_overhead
    )
 
 set(benchmarks ${benchmarks}
-    coroutines_call_overhead
     function_object_wrapper_overhead
-    future_overhead
+    coroutines_call_overhead
     serialization_overhead
+    future_overhead
     sizeof
    )
 
-set(future_overhead_FLAGS DEPENDENCIES iostreams_component)
 set(serialization_overhead_FLAGS DEPENDENCIES iostreams_component)
+set(future_overhead_FLAGS DEPENDENCIES iostreams_component)
 set(sizeof_FLAGS DEPENDENCIES iostreams_component)
 
 if(HPX_WITH_CXX11_LAMBDAS)
   set(benchmarks ${benchmarks}
       foreach_scaling
+      transform_reduce_scaling
       spinlock_overhead1
       spinlock_overhead2
-      stencil3_iterators
-      transform_reduce_scaling
       vector_foreach
      )
 
-  set(foreach_scaling_FLAGS DEPENDENCIES iostreams_component)
   set(spinlock_overhead1_FLAGS DEPENDENCIES iostreams_component)
   set(spinlock_overhead2_FLAGS DEPENDENCIES iostreams_component)
-  set(stencil3_iterators_FLAGS DEPENDENCIES iostreams_component)
+  set(foreach_scaling_FLAGS DEPENDENCIES iostreams_component)
   set(transform_reduce_scaling_FLAGS DEPENDENCIES iostreams_component)
   set(vector_foreach_FLAGS DEPENDENCIES iostreams_component)
 endif()

@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2015 Hartmut Kaiser
+//  Copyright (c) 2007-2014 Hartmut Kaiser
 //  Copyright (c)      2011 Bryce Lelbach
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -29,8 +29,6 @@
 #include <hpx/runtime/actions/continuation.hpp>
 #include <hpx/runtime/actions/plain_action.hpp>
 #include <hpx/runtime/applier/apply.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
-#include <hpx/runtime/serialization/vector.hpp>
 #include <hpx/lcos/wait_all.hpp>
 
 #include <hpx/lcos/broadcast.hpp>
@@ -39,6 +37,8 @@
 #endif
 
 #include <hpx/util/assert.hpp>
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
 #include <hpx/util/parse_command_line.hpp>
 #include <hpx/util/command_line_handling.hpp>
 #include <hpx/util/coroutine/coroutine.hpp>
@@ -46,11 +46,17 @@
 #include <hpx/plugins/message_handler_factory_base.hpp>
 #include <hpx/plugins/binary_filter_factory_base.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/version.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 
 #include <algorithm>
 #include <set>
@@ -58,6 +64,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Serialization support for the runtime_support actions
+HPX_REGISTER_ACTION(
+    hpx::components::server::runtime_support::factory_properties_action,
+    factory_properties_action)
 HPX_REGISTER_ACTION(
     hpx::components::server::runtime_support::bulk_create_components_action,
     bulk_create_components_action)
@@ -244,6 +253,33 @@ namespace hpx { namespace components { namespace server
         shutdown_all_invoked_(false),
         modules_(cfg.modules())
     {}
+
+    ///////////////////////////////////////////////////////////////////////////
+    // return, whether more than one instance of the given component can be
+    // created at the same time
+    int runtime_support::factory_properties(components::component_type type)
+    {
+        // locate the factory for the requested component type
+        component_map_mutex_type::scoped_lock l(cm_mtx_);
+
+        component_map_type::const_iterator it = components_.find(type);
+        if (it == components_.end() || !(*it).second.first) {
+            // we don't know anything about this component
+            std::ostringstream strm;
+            strm << "attempt to query factory properties for components "
+                    "invalid/unknown type: "
+                 << components::get_component_type_name(type);
+
+            l.unlock();
+            HPX_THROW_EXCEPTION(hpx::bad_component_type,
+                "runtime_support::factory_properties",
+                strm.str());
+            return factory_invalid;
+        }
+
+    // ask for the factory's capabilities
+        return (*it).second.first->get_factory_properties();
+    }
 
     /// \brief Action to create N new default constructed components
     std::vector<naming::gid_type> runtime_support::bulk_create_components(
@@ -442,7 +478,7 @@ namespace hpx { namespace components { namespace server
 
 #if defined(HPX_DEBUG)
             bool found = false;
-            for (naming::address const& a : freed_components)
+            BOOST_FOREACH(naming::address const & a, freed_components)
             {
                 if(a == addr)
                 {
@@ -817,7 +853,7 @@ namespace hpx { namespace components { namespace server
         boost::uint32_t locality_id = get_locality_id();
         std::vector<lcos::future<void> > lazy_actions;
 
-        for (naming::id_type const& id : locality_ids)
+        BOOST_FOREACH(naming::id_type id, locality_ids)
         {
             if (locality_id != naming::get_locality_id_from_id(id))
             {
@@ -854,7 +890,7 @@ namespace hpx { namespace components { namespace server
             boost::uint32_t locality_id = get_locality_id();
             std::vector<lcos::future<void> > lazy_actions;
 
-            for (naming::gid_type gid : locality_ids)
+            BOOST_FOREACH(naming::gid_type gid, locality_ids)
             {
                 if (locality_id != naming::get_locality_id_from_gid(gid))
                 {
@@ -949,9 +985,9 @@ namespace hpx { namespace components { namespace server
 
             l.unlock();
             HPX_THROW_EXCEPTION(hpx::bad_component_type,
-                "runtime_support::get_instance_count",
+                "runtime_support::factory_properties",
                 strm.str());
-            return boost::int32_t(-1);
+            return factory_invalid;
         }
 
         // ask for the factory's capabilities
@@ -1131,14 +1167,14 @@ namespace hpx { namespace components { namespace server
     {
         if (pre_startup) {
             get_runtime().set_state(runtime::state_pre_startup);
-            for (util::function_nonser<void()> const& f : pre_startup_functions_)
+            BOOST_FOREACH(util::function_nonser<void()> const& f, pre_startup_functions_)
             {
                 f();
             }
         }
         else {
             get_runtime().set_state(runtime::state_startup);
-            for (util::function_nonser<void()> const& f : startup_functions_)
+            BOOST_FOREACH(util::function_nonser<void()> const& f, startup_functions_)
             {
                 f();
             }
@@ -1150,7 +1186,7 @@ namespace hpx { namespace components { namespace server
         runtime& rt = get_runtime();
         if (pre_shutdown) {
             rt.set_state(runtime::state_pre_shutdown);
-            for (util::function_nonser<void()> const& f : pre_shutdown_functions_)
+            BOOST_FOREACH(util::function_nonser<void()> const& f, pre_shutdown_functions_)
             {
                 try {
                     f();
@@ -1162,7 +1198,7 @@ namespace hpx { namespace components { namespace server
         }
         else {
             rt.set_state(runtime::state_shutdown);
-            for (util::function_nonser<void()> const& f : shutdown_functions_)
+            BOOST_FOREACH(util::function_nonser<void()> const& f, shutdown_functions_)
             {
                 try {
                     f();
@@ -1199,7 +1235,7 @@ namespace hpx { namespace components { namespace server
 
         typedef server::runtime_support::remove_from_connection_cache_action action_type;
         action_type act;
-        for (naming::id_type const& id : locality_ids)
+        BOOST_FOREACH(naming::id_type const& id, locality_ids)
         {
             apply(act, id, rt->endpoints());
         }
@@ -1256,9 +1292,9 @@ namespace hpx { namespace components { namespace server
         return mh;
     }
 
-    serialization::binary_filter* runtime_support::create_binary_filter(
+    util::binary_filter* runtime_support::create_binary_filter(
         char const* binary_filter_type, bool compress,
-        serialization::binary_filter* next_filter, error_code& ec)
+        util::binary_filter* next_filter, error_code& ec)
     {
         // locate the factory for the requested plugin type
         plugin_map_mutex_type::scoped_lock l(p_mtx_);
@@ -1282,7 +1318,7 @@ namespace hpx { namespace components { namespace server
             boost::static_pointer_cast<plugins::binary_filter_factory_base>(
                 (*it).second.first));
 
-        serialization::binary_filter* bf = factory->create(compress, next_filter);
+        util::binary_filter* bf = factory->create(compress, next_filter);
         if (0 == bf) {
             std::ostringstream strm;
             strm << "couldn't to create binary filter plugin of type: "
@@ -1516,7 +1552,7 @@ namespace hpx { namespace components { namespace server
                         isenabled, options, startup_handled);
                 }
                 else {
-#if defined(HPX_HAVE_STATIC_LINKING)
+#if defined(HPX_STATIC_LINKING)
                     HPX_THROW_EXCEPTION(service_unavailable,
                         "runtime_support::load_components",
                         "static linking configuration does not support dynamic "
@@ -1714,7 +1750,7 @@ namespace hpx { namespace components { namespace server
         return true;    // startup/shutdown functions got registered
     }
 
-#if !defined(HPX_HAVE_STATIC_LINKING)
+#if !defined(HPX_STATIC_LINKING)
     bool runtime_support::load_component_dynamic(
         util::section& ini, std::string const& instance,
         std::string const& component, boost::filesystem::path lib,
@@ -2024,7 +2060,7 @@ namespace hpx { namespace components { namespace server
                     // FIXME: implement statically linked plugins
                 }
                 else {
-#if defined(HPX_HAVE_STATIC_LINKING)
+#if defined(HPX_STATIC_LINKING)
                     HPX_THROW_EXCEPTION(service_unavailable,
                         "runtime_support::load_plugins",
                         "static linking configuration does not support dynamic "
@@ -2053,7 +2089,7 @@ namespace hpx { namespace components { namespace server
         return true;
     }
 
-#if !defined(HPX_HAVE_STATIC_LINKING)
+#if !defined(HPX_STATIC_LINKING)
     bool runtime_support::load_plugin(util::section& ini,
         std::string const& instance, std::string const& plugin,
         boost::filesystem::path const& lib, bool isenabled)

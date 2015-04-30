@@ -16,7 +16,6 @@
 #include <hpx/runtime/actions/continuation.hpp>
 #include <hpx/runtime/threads/thread_helpers.hpp>
 #include <hpx/traits/action_schedule_thread.hpp>
-#include <hpx/traits/action_stacksize.hpp>
 
 namespace hpx { namespace applier { namespace detail
 {
@@ -57,10 +56,10 @@ namespace hpx { namespace applier { namespace detail
                     std::forward<Ts>(vs)...);
             }
 
-#if defined(HPX_HAVE_THREAD_TARGET_ADDRESS)
+#if defined(HPX_THREAD_MAINTAIN_TARGET_ADDRESS)
             data.lva = lva;
 #endif
-#if defined(HPX_HAVE_THREAD_DESCRIPTION)
+#if defined(HPX_THREAD_MAINTAIN_DESCRIPTION)
             data.description = actions::detail::get_action_name<Action>();
 #endif
             data.priority = fix_priority<Action>(priority);
@@ -75,22 +74,21 @@ namespace hpx { namespace applier { namespace detail
 
         template <typename ...Ts>
         static void
-        call (actions::continuation_type const& cont, naming::id_type const& target,
+        call (actions::continuation_type& c, naming::id_type const& target,
             naming::address::address_type lva, threads::thread_priority priority,
             Ts&&... vs)
         {
             // first decorate the continuation
-            actions::continuation_type c(cont);
             traits::action_decorate_continuation<Action>::call(c);
 
             // now, schedule the thread
             threads::thread_init_data data;
             data.func = Action::construct_thread_function(c, lva,
                 std::forward<Ts>(vs)...);
-#if defined(HPX_HAVE_THREAD_TARGET_ADDRESS)
+#if defined(HPX_THREAD_MAINTAIN_TARGET_ADDRESS)
             data.lva = lva;
 #endif
-#if defined(HPX_HAVE_THREAD_DESCRIPTION)
+#if defined(HPX_THREAD_MAINTAIN_DESCRIPTION)
             data.description = actions::detail::get_action_name<Action>();
 #endif
             data.priority = fix_priority<Action>(priority);
@@ -118,7 +116,7 @@ namespace hpx { namespace applier { namespace detail
 
         template <typename ...Ts>
         static void
-        call (actions::continuation_type const& c, naming::id_type const& target,
+        call (actions::continuation_type& c, naming::id_type const& target,
             naming::address::address_type lva, threads::thread_priority,
             Ts&&... vs)
         {

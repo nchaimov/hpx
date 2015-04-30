@@ -14,10 +14,9 @@
 #include <hpx/util/move.hpp>
 
 #include <boost/mpl/bool.hpp>
-#include <boost/range/functions.hpp>
 #include <boost/range/iterator_range.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
 
 #include <vector>
 #include <iterator>
@@ -147,7 +146,7 @@ namespace hpx { namespace traits
             std::transform(boost::begin(futures), boost::end(futures),
                 std::back_inserter(values), acquire_future_disp());
 
-            return values;
+            return std::move(values);
         }
     };
 }}

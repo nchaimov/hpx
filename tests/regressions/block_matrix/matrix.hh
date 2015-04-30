@@ -8,9 +8,8 @@
 
 #include "defs.hh"
 
-#include <hpx/runtime/serialization/serialize.hpp>
-#include <hpx/runtime/serialization/shared_ptr.hpp>
-#include <hpx/runtime/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <cassert>
@@ -27,7 +26,7 @@ struct vector_t {
   std::ptrdiff_t N;
   std::vector<double> elts;
   
-  friend class hpx::serialization::access;
+  friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive& ar, unsigned int version)
   {
@@ -63,7 +62,7 @@ struct matrix_t {
   std::ptrdiff_t NI, NJ;        // interpretation: row, column
   std::vector<double> elts;
   
-  friend class hpx::serialization::access;
+  friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive& ar, unsigned int version)
   {

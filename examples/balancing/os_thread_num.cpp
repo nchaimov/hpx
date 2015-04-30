@@ -11,6 +11,8 @@
 
 #include <map>
 
+#include <boost/foreach.hpp>
+
 using boost::lockfree::queue;
 
 using boost::program_options::variables_map;
@@ -100,12 +102,12 @@ int hpx_main(variables_map& vm)
 
         sorter sort;
 
-        for (result_map::value_type const& result : results)
+        BOOST_FOREACH(result_map::value_type const& result, results)
         {
             sort.insert(sorter::value_type(result.second, result.first));
         }
 
-        for (sorter::value_type const& result : sort)
+        BOOST_FOREACH(sorter::value_type const& result, sort)
         {
             if (csv)
                 cout << ( boost::format("%1%,%2%\n")

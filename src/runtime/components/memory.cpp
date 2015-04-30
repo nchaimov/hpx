@@ -10,13 +10,21 @@
 #include <hpx/runtime/actions/continuation.hpp>
 #include <hpx/util/assert.hpp>
 
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/version.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
+
 ///////////////////////////////////////////////////////////////////////////////
 HPX_DEFINE_GET_COMPONENT_TYPE_STATIC(hpx::components::server::memory,
     hpx::components::component_memory)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Serialization support for the runtime_support actions
-HPX_REGISTER_ACTION(hpx::components::server::allocate_action, allocate_action);
+HPX_REGISTER_PLAIN_ACTION(hpx::components::server::allocate_action, allocate_action);
 
 HPX_REGISTER_ACTION(hpx::components::server::memory::store8_action, store8_action)
 HPX_REGISTER_ACTION(hpx::components::server::memory::store16_action, store16_action)

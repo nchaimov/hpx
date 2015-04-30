@@ -8,6 +8,7 @@
 #include <hpx/include/performance_counters.hpp>
 
 #include <boost/format.hpp>
+#include <boost/foreach.hpp>
 
 #include "server/sine.hpp"
 

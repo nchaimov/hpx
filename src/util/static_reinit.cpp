@@ -9,6 +9,8 @@
 #include <hpx/util/static.hpp>
 #include <hpx/util/spinlock.hpp>
 
+#include <boost/foreach.hpp>
+
 namespace hpx { namespace util
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -35,7 +37,7 @@ namespace hpx { namespace util
         void construct_all()
         {
             mutex_type::scoped_lock l(mtx_);
-            for (value_type const& val : funcs_)
+            BOOST_FOREACH(value_type const& val, funcs_)
             {
                 val.first();
             }
@@ -44,7 +46,7 @@ namespace hpx { namespace util
         void destruct_all()
         {
             mutex_type::scoped_lock l(mtx_);
-            for (value_type const& val : funcs_)
+            BOOST_FOREACH(value_type const& val, funcs_)
             {
                 val.second();
             }

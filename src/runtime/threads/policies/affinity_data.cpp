@@ -13,13 +13,14 @@
 #include <algorithm>
 
 #include <boost/format.hpp>
+#include <boost/foreach.hpp>
 
 namespace hpx { namespace threads { namespace policies { namespace detail
 {
     inline std::size_t count_initialized(std::vector<mask_type> const& masks)
     {
         std::size_t count = 0;
-        for (mask_cref_type m : masks)
+        BOOST_FOREACH(mask_cref_type m, masks)
         {
             if(any(m))
                 ++count;

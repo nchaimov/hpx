@@ -27,7 +27,9 @@ bool null_thread()
 
 // Define the boilerplate code necessary for the function 'null_thread'
 // to be invoked as an HPX action (by a HPX future)
-HPX_PLAIN_ACTION(null_thread, null_action);
+typedef hpx::actions::action<bool (*)(), null_thread> null_action;
+
+HPX_REGISTER_PLAIN_ACTION(null_action);
 
 ///////////////////////////////////////////////////////////////////////////////
 int int_thread()
@@ -37,7 +39,9 @@ int int_thread()
 
 // Define the boilerplate code necessary for the function 'int_thread'
 // to be invoked as an HPX action (by a HPX future)
-HPX_PLAIN_ACTION(int_thread, int_action);
+typedef hpx::actions::action<int (*)(), int_thread> int_action;
+
+HPX_REGISTER_PLAIN_ACTION(int_action);
 
 ///////////////////////////////////////////////////////////////////////////////
 int hpx_main(variables_map&)

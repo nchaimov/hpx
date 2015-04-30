@@ -9,7 +9,6 @@
 #include <hpx/util/lightweight_test.hpp>
 //
 #include <boost/iterator/counting_iterator.hpp>
-#include <boost/range/functions.hpp>
 
 #include "test_utils.hpp"
 

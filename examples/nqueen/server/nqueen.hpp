@@ -15,7 +15,8 @@
 #include <hpx/runtime/components/component_type.hpp>
 #include <hpx/runtime/components/server/managed_component_base.hpp>
 #include <hpx/runtime/actions/component_action.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
+
+#include <boost/serialization/vector.hpp>
 
 namespace nqueen
 {
@@ -34,7 +35,7 @@ namespace server
 
         // here board is a component
 
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version){
             ar & size_;

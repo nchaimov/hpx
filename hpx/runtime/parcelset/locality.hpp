@@ -16,6 +16,8 @@
 
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/serialization.hpp>
 #include <boost/mpl/has_xxx.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/or.hpp>
@@ -46,8 +48,8 @@ namespace hpx { namespace parcelset
             virtual bool valid() const = 0;
             virtual const char *type() const = 0;
             virtual std::ostream & print(std::ostream & os) const = 0;
-            virtual void save(serialization::output_archive & ar) const = 0;
-            virtual void load(serialization::input_archive & ar) = 0;
+            virtual void save(util::portable_binary_oarchive & ar) const = 0;
+            virtual void load(util::portable_binary_iarchive & ar) = 0;
             virtual impl_base * clone() const = 0;
             virtual impl_base * move() = 0;
 
@@ -183,15 +185,13 @@ namespace hpx { namespace parcelset
         }
 
         // serialization support
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
-        template <class T>
-        void save(T& ar, const unsigned int version) const;
+        void save(util::portable_binary_oarchive & ar, const unsigned int version) const;
 
-        template <class T>
-        void load(T& ar, const unsigned int version);
+        void load(util::portable_binary_iarchive & ar, const unsigned int version);
 
-        HPX_SERIALIZATION_SPLIT_MEMBER();
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
 
         std::unique_ptr<impl_base> impl_;
 
@@ -230,12 +230,12 @@ namespace hpx { namespace parcelset
                 return os;
             }
 
-            void save(serialization::output_archive & ar) const
+            void save(util::portable_binary_oarchive & ar) const
             {
                 impl_.save(ar);
             }
 
-            void load(serialization::input_archive & ar)
+            void load(util::portable_binary_iarchive & ar)
             {
                 impl_.load(ar);
             }

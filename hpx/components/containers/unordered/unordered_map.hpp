@@ -11,10 +11,8 @@
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/util.hpp>
 #include <hpx/include/components.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
-#include <hpx/runtime/serialization/vector.hpp>
 
-#include <hpx/components/containers/container_distribution_policy.hpp>
+#include <hpx/components/containers/unordered/unordered_distribution_policy.hpp>
 #include <hpx/components/containers/unordered/partition_unordered_map_component.hpp>
 
 #include <cstdint>
@@ -43,6 +41,11 @@ namespace hpx { namespace server
               : locality_id_(naming::invalid_locality_id)
             {}
 
+            partition_data(future<id_type> && part, boost::uint32_t locality_id)
+              : partition_(part.share()),
+                locality_id_(locality_id)
+            {}
+
             partition_data(id_type const& part, boost::uint32_t locality_id)
               : partition_(make_ready_future(part).share()),
                 locality_id_(locality_id)
@@ -57,7 +60,7 @@ namespace hpx { namespace server
             boost::uint32_t locality_id_;
 
         private:
-            friend class hpx::serialization::access;
+            friend class boost::serialization::access;
 
             template <typename Archive>
             void serialize(Archive& ar, unsigned)
@@ -76,7 +79,7 @@ namespace hpx { namespace server
         std::vector<partition_data> partitions_;
 
     private:
-        friend class hpx::serialization::access;
+        friend class boost::serialization::access;
 
         template <typename Archive>
         void serialize(Archive& ar, unsigned)
@@ -253,6 +256,10 @@ namespace hpx
         {
             typedef server::unordered_map_config_data::partition_data base_type;
 
+            partition_data(future<id_type> && part, boost::uint32_t locality_id)
+              : base_type(std::move(part), locality_id)
+            {}
+
             partition_data(id_type const& part, boost::uint32_t locality_id)
               : base_type(part, locality_id)
             {}
@@ -273,6 +280,9 @@ namespace hpx
         // This is the vector representing the base_index and corresponding
         // global ID's of the underlying partition_vectors.
         partitions_vector_type partitions_;
+
+        // will be set for created (non-attached) objects
+        std::string registered_name_;
 
         ///////////////////////////////////////////////////////////////////////
         // Connect this unordered_map to the existing unordered_mapusing the
@@ -316,44 +326,40 @@ namespace hpx
         }
 
         ///////////////////////////////////////////////////////////////////////
-        static void get_ptr_helper(std::size_t loc,
+        void get_ptr_helper(std::size_t loc,
             partitions_vector_type& partitions,
             future<boost::shared_ptr<partition_unordered_map_server> > && f)
         {
             partitions[loc].local_data_ = f.get();
         }
 
-        /// \cond NOINTERNAL
-        typedef std::pair<hpx::id_type, std::vector<hpx::id_type> >
-            bulk_locality_result;
-        /// \endcond
-
-        void init(std::vector<bulk_locality_result> const& ids)
+        void init(std::vector<id_type> const& localities,
+            std::vector<future<std::vector<id_type> > >& ids,
+            std::size_t num_parts_per_loc)
         {
+            std::size_t num_localities = localities.size();
+
             boost::uint32_t this_locality = get_locality_id();
             std::vector<future<void> > ptrs;
 
-            std::size_t l = 0;
-            for (bulk_locality_result const& r: ids)
+            for (std::size_t loc = 0; loc != num_localities; ++loc)
             {
-                using naming::get_locality_id_from_id;
-                boost::uint32_t locality = get_locality_id_from_id(r.first);
+                boost::uint32_t locality =
+                    naming::get_locality_id_from_id(localities[loc]);
+                std::vector<id_type> objs = ids[loc].get();
 
-                for (hpx::id_type const& id: r.second)
+                HPX_ASSERT(objs.size() == num_parts_per_loc);
+                for (std::size_t l = 0; l != num_parts_per_loc; ++l)
                 {
-                    partitions_.push_back(partition_data(id, locality));
+                    partitions_.push_back(partition_data(objs[l], locality));
                     if (locality == this_locality)
                     {
                         using util::placeholders::_1;
-                        ptrs.push_back(
-                            get_ptr<partition_unordered_map_server>(id).then(
+                        ptrs.push_back(get_ptr<partition_unordered_map_server>(
+                            partitions_.back().partition_.get()).then(
                                 util::bind(&unordered_map::get_ptr_helper,
-                                    l, std::ref(partitions_), _1
-                                )
-                            )
-                        );
+                                    this, l, std::ref(partitions_), _1)));
                     }
-                    ++l;
                 }
             }
 
@@ -361,41 +367,86 @@ namespace hpx
         }
 
         ///////////////////////////////////////////////////////////////////////
-        // default construct partitions
+        template <typename DistPolicy>
+        void create(std::vector<id_type> const& localities,
+            DistPolicy const& policy)
+        {
+            std::size_t num_parts = policy.get_num_partitions();
+            std::size_t num_localities = localities.size();
+            std::size_t num_parts_per_loc =
+                (num_parts + num_localities - 1) / num_localities;
+
+            // create as many partitions as required
+            std::vector<future<std::vector<id_type> > > ids;
+            ids.reserve(num_localities);
+            for (std::size_t loc = 0; loc != num_localities; ++loc)
+            {
+                // create as many partitions on a given locality as required
+                ids.push_back(
+                    partition_unordered_map_client::bulk_create_async(
+                        localities[loc], num_parts_per_loc));
+            }
+            hpx::wait_all(ids);
+
+            // now initialize our data structures
+            init(localities, ids, num_parts_per_loc);
+        }
+
+        // default construct a local partition
         template <typename DistPolicy>
         void create(DistPolicy const& policy)
         {
-            typedef partition_unordered_map_server component_type;
+            std::vector<id_type> const& localities = policy.get_localities();
+            if (localities.empty())
+                create(std::vector<id_type>(1, find_here()), policy);
+            else
+                create(localities, policy);
+        }
 
-            std::size_t num_parts =
-                traits::num_container_partitions<DistPolicy>::call(policy);
+        ///////////////////////////////////////////////////////////////////////
+        template <typename DistPolicy>
+        void create(std::vector<id_type> const& localities,
+            DistPolicy const& policy, std::size_t bucket_count,
+            Hash const& hash, KeyEqual const& equal)
+        {
+            std::size_t num_parts = policy.get_num_partitions();
+            std::size_t num_localities = localities.size();
+            std::size_t num_parts_per_loc =
+                (num_parts + num_localities - 1) / num_localities;
 
             // create as many partitions as required
-            hpx::future<std::vector<bulk_locality_result> > f =
-                policy.template bulk_create<component_type>(num_parts);
+            std::vector<future<std::vector<id_type> > > ids;
+            ids.reserve(num_localities);
+            for (std::size_t loc = 0; loc != num_localities; ++loc)
+            {
+                // create as many partitions on a given locality as required
+                ids.push_back(
+                    partition_unordered_map_client::bulk_create_async(
+                        localities[loc], num_parts_per_loc, bucket_count,
+                        hash, equal));
+            }
+            hpx::wait_all(ids);
 
             // now initialize our data structures
-            init(f.get());
+            init(localities, ids, num_parts_per_loc);
         }
 
         // This function is called when we are creating the unordered_map. It
         // initializes the partitions based on the give parameters.
         template <typename DistPolicy>
-        void create(DistPolicy const& policy, std::size_t bucket_count,
-            Hash const& hash, KeyEqual const& equal)
+        void create(std::size_t bucket_count, DistPolicy const& policy,
+            Hash const& hash = Hash(), KeyEqual const& equal = KeyEqual())
         {
-            typedef partition_unordered_map_server component_type;
-
-            std::size_t num_parts =
-                traits::num_container_partitions<DistPolicy>::call(policy);
-
-            // create as many partitions as required
-            hpx::future<std::vector<bulk_locality_result> > f =
-                policy.template bulk_create<component_type>(
-                    num_parts, bucket_count, hash, equal);
-
-            // now initialize our data structures
-            init(f.get());
+            std::vector<id_type> const& localities = policy.get_localities();
+            if (localities.empty())
+            {
+                create(std::vector<id_type>(1, find_here()), policy,
+                    bucket_count, hash, equal);
+            }
+            else
+            {
+                create(localities, policy, bucket_count, hash, equal);
+            }
         }
 
         // Perform a deep copy from the given unordered_map
@@ -423,21 +474,23 @@ namespace hpx
             {
                 boost::uint32_t locality = rhs.partitions_[i].locality_id_;
 
-                partitions.push_back(partition_data(objs[i].get(), locality));
+                partitions.push_back(partition_data(
+                    std::move(objs[i]), locality));
 
                 if (locality == this_locality)
                 {
                     using util::placeholders::_1;
                     ptrs.push_back(get_ptr<partition_unordered_map_server>(
                         partitions[i].partition_.get()).then(
-                            util::bind(&unordered_map::get_ptr_helper,
-                                i, std::ref(partitions), _1)));
+                            util::bind(&unordered_map::get_ptr_helper, this, i,
+                                std::ref(partitions), _1)));
                 }
             }
 
             wait_all(ptrs);
 
             std::swap(partitions_, partitions);
+            registered_name_.clear();
         }
 
     public:
@@ -457,6 +510,7 @@ namespace hpx
                     typename base_type::server_component_type> >(
                 hpx::find_here(), std::move(data)));
 
+            registered_name_ = symbolic_name;
             return base_type::register_as(symbolic_name);
         }
 
@@ -466,14 +520,14 @@ namespace hpx
         /// of the unordered_map is 0.
         unordered_map()
         {
-            create(container_layout);
+            create(layout);
         }
 
         template <typename DistPolicy>
         unordered_map(DistPolicy const& policy,
-            typename std::enable_if<
-                    traits::is_distribution_policy<DistPolicy>::value
-                >::type* = 0)
+                typename std::enable_if<
+                        is_unordered_distribution_policy<DistPolicy>::value
+                    >::type* = 0)
         {
             create(policy);
         }
@@ -482,27 +536,27 @@ namespace hpx
                 Hash const& hash = Hash(), KeyEqual const& equal = KeyEqual())
           : hash_base_type(hash, equal)
         {
-            create(hpx::container_layout, bucket_count, hash, equal);
+            create(bucket_count, hpx::layout, hash, equal);
         }
 
         template <typename DistPolicy>
         unordered_map(std::size_t bucket_count, DistPolicy const& policy,
-            typename std::enable_if<
-                    traits::is_distribution_policy<DistPolicy>::value
-                >::type* = 0)
+                typename std::enable_if<
+                        is_unordered_distribution_policy<DistPolicy>::value
+                    >::type* = 0)
         {
-            create(policy, bucket_count, Hash(), KeyEqual());
+            create(bucket_count, policy);
         }
 
         template <typename DistPolicy>
         unordered_map(std::size_t bucket_count,
                 Hash const& hash, DistPolicy const& policy,
                 typename std::enable_if<
-                    traits::is_distribution_policy<DistPolicy>::value
-                >::type* = 0)
+                        is_unordered_distribution_policy<DistPolicy>::value
+                    >::type* = 0)
           : hash_base_type(hash, KeyEqual())
         {
-            create(policy, bucket_count, hash, KeyEqual());
+            create(bucket_count, policy, hash);
         }
 
         template <typename DistPolicy>
@@ -510,11 +564,11 @@ namespace hpx
                 Hash const& hash, KeyEqual const& equal,
                 DistPolicy const& policy,
                 typename std::enable_if<
-                    traits::is_distribution_policy<DistPolicy>::value
-                >::type* = 0)
+                        is_unordered_distribution_policy<DistPolicy>::value
+                    >::type* = 0)
           : hash_base_type(hash, equal)
         {
-            create(policy, bucket_count, hash, equal);
+            create(bucket_count, policy, hash, equal);
         }
 
         unordered_map(unordered_map const& rhs)
@@ -526,8 +580,18 @@ namespace hpx
         unordered_map(unordered_map && rhs)
           : base_type(std::move(rhs)),
             hash_base_type(std::move(rhs)),
-            partitions_(std::move(rhs.partitions_))
+            partitions_(std::move(rhs.partitions_)),
+            registered_name_(std::move(rhs.registered_name_))
         {}
+
+        ~unordered_map()
+        {
+            if (!registered_name_.empty())
+            {
+                error_code ec;      // ignore all exceptions
+                agas::unregister_name_sync(registered_name_, ec);
+            }
+        }
 
         unordered_map& operator=(unordered_map const& rhs)
         {
@@ -543,6 +607,7 @@ namespace hpx
                 this->hash_base_type::operator=(std::move(rhs));
 
                 partitions_ = std::move(rhs.partitions_);
+                registered_name_ = std::move(rhs.registered_name_);
             }
             return *this;
         }

@@ -5,6 +5,7 @@
 
 #include <hpx/hpx.hpp>
 #include <hpx/runtime/components/component_factory_base.hpp>
+#include <hpx/components/distributing_factory/distributing_factory.hpp>
 
 #include "throttle.hpp"
 

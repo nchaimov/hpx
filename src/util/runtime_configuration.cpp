@@ -225,11 +225,6 @@ namespace hpx { namespace util
             "path = $[hpx.location]/bin/" HPX_DLL_STRING,
             "enabled = 1",
 
-            "[hpx.components.hpx_lcos_server_latch]",
-            "name = hpx",
-            "path = $[hpx.location]/bin/" HPX_DLL_STRING,
-            "enabled = 1",
-
             "[hpx.components.raw_counter]",
             "name = hpx",
             "path = $[hpx.location]/bin/" HPX_DLL_STRING,
@@ -281,7 +276,8 @@ namespace hpx { namespace util
     void runtime_configuration::load_components_static(std::vector<
         components::static_factory_load_data_type> const& static_modules)
     {
-        for (components::static_factory_load_data_type const& d : static_modules)
+        BOOST_FOREACH(components::static_factory_load_data_type const& d,
+            static_modules)
         {
             util::load_component_factory_static(*this, d.name, d.get_factory);
         }

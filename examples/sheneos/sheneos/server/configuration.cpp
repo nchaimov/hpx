@@ -5,7 +5,9 @@
 
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/runtime/components/component_factory.hpp>
-#include <hpx/runtime/serialization/serialize.hpp>
+
+#include <hpx/util/portable_binary_iarchive.hpp>
+#include <hpx/util/portable_binary_oarchive.hpp>
 
 #include <hpx/util/assert.hpp>
 
@@ -29,17 +31,17 @@ namespace sheneos { namespace server
 }}
 
 ///////////////////////////////////////////////////////////////////////////////
-namespace hpx { namespace serialization
+namespace boost { namespace serialization
 {
     ///////////////////////////////////////////////////////////////////////////
     // Implement the serialization functions.
-    void serialize(input_archive& ar,
+    void serialize(hpx::util::portable_binary_iarchive& ar,
         sheneos::config_data& cfg, unsigned int const)
     {
         ar & cfg.datafile_name_ & cfg.symbolic_name_& cfg.num_instances_;
     }
 
-    void serialize(output_archive& ar,
+    void serialize(hpx::util::portable_binary_oarchive& ar,
         sheneos::config_data& cfg, unsigned int const)
     {
         ar & cfg.datafile_name_ & cfg.symbolic_name_& cfg.num_instances_;
@@ -56,7 +58,7 @@ HPX_REGISTER_ACTION(configuration_type::init_action,
 HPX_REGISTER_ACTION(configuration_type::get_action,
     sheneos_configuration_get_action);
 
-HPX_REGISTER_COMPONENT(
+HPX_REGISTER_MINIMAL_COMPONENT_FACTORY(
     hpx::components::simple_component<configuration_type>,
     sheneos_configuration_type);
 

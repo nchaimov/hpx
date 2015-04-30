@@ -26,6 +26,7 @@
 #include <hpx/util/thread_specific_ptr.hpp>
 #include <hpx/util/init_logging.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/detail/atomic_count.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
@@ -274,7 +275,7 @@ namespace hpx
         ///            thread the number of executed HPX threads should be
         ///            returned for. If this is std::size_t(-1) the function
         ///            will return the overall number of executed HPX threads.
-#ifdef HPX_HAVE_THREAD_CUMULATIVE_COUNTS
+#ifdef HPX_THREAD_MAINTAIN_CUMULATIVE_COUNTS
         boost::int64_t get_executed_threads(std::size_t num = std::size_t(-1)) const
         {
             return thread_manager_->get_executed_threads(num);

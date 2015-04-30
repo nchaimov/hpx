@@ -137,8 +137,8 @@ namespace hpx { namespace lcos
 #include <hpx/hpx_fwd.hpp>
 #include <hpx/lcos/future.hpp>
 #include <hpx/lcos/when_all.hpp>
-#include <hpx/lcos/detail/async_colocated.hpp>
-#include <hpx/runtime/applier/detail/apply_colocated.hpp>
+#include <hpx/lcos/async_colocated.hpp>
+#include <hpx/runtime/applier/apply_colocated.hpp>
 #include <hpx/runtime/actions/plain_action.hpp>
 #include <hpx/runtime/naming/name.hpp>
 #include <hpx/util/calculate_fanout.hpp>
@@ -147,7 +147,7 @@ namespace hpx { namespace lcos
 #include <hpx/util/detail/pack.hpp>
 
 #include <boost/preprocessor/cat.hpp>
-#include <hpx/runtime/serialization/vector.hpp>
+#include <boost/serialization/vector.hpp>
 
 #include <vector>
 
@@ -510,14 +510,14 @@ namespace hpx { namespace lcos
             std::vector<Result> res;
             std::vector<hpx::future<std::vector<Result> > > fres = std::move(r.get());
 
-            for (hpx::future<std::vector<Result> >& f : fres)
+            BOOST_FOREACH(hpx::future<std::vector<Result> >& f, fres)
             {
                 std::vector<Result> t = std::move(f.get());
                 res.reserve(res.capacity() + t.size());
                 std::move(t.begin(), t.end(), std::back_inserter(res));
             }
 
-            return res;
+            return std::move(res);
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -575,7 +575,7 @@ namespace hpx { namespace lcos
 
                     hpx::id_type id(ids_next[0]);
                     broadcast_futures.push_back(
-                        hpx::detail::async_colocated<broadcast_impl_action>(
+                        hpx::async_colocated<broadcast_impl_action>(
                             id
                           , act
                           , std::move(ids_next)
@@ -657,7 +657,7 @@ namespace hpx { namespace lcos
 
                     hpx::id_type id(ids_next[0]);
                     broadcast_futures.push_back(
-                        hpx::detail::async_colocated<broadcast_impl_action>(
+                        hpx::async_colocated<broadcast_impl_action>(
                             id
                           , act
                           , std::move(ids_next)
@@ -725,7 +725,7 @@ namespace hpx { namespace lcos
                     std::vector<hpx::id_type> ids_next(it, it + next_fan);
 
                     hpx::id_type id(ids_next[0]);
-                    hpx::detail::apply_colocated<broadcast_impl_action>(
+                    hpx::apply_colocated<broadcast_impl_action>(
                         id
                       , act
                       , std::move(ids_next)
@@ -772,7 +772,7 @@ namespace hpx { namespace lcos
         }
 
         return
-            hpx::detail::async_colocated<broadcast_impl_action>(
+            hpx::async_colocated<broadcast_impl_action>(
                 ids[0]
               , Action()
               , ids
@@ -822,7 +822,7 @@ namespace hpx { namespace lcos
             return;
         }
 
-        hpx::detail::apply_colocated<broadcast_impl_action>(
+        hpx::apply_colocated<broadcast_impl_action>(
                 ids[0]
               , Action()
               , ids
@@ -955,7 +955,7 @@ namespace hpx { namespace lcos
     HPX_REGISTER_BROADCAST_APPLY_ACTION_2(Action, Action)                     \
 /**/
 #define HPX_REGISTER_BROADCAST_APPLY_ACTION_2(Action, Name)                   \
-    HPX_REGISTER_ACTION(                                                      \
+    HPX_REGISTER_PLAIN_ACTION(                                                \
         ::hpx::lcos::detail::make_broadcast_apply_action<Action>::type        \
       , BOOST_PP_CAT(broadcast_apply_, Name)                                  \
     )                                                                         \
@@ -1011,7 +1011,7 @@ namespace hpx { namespace lcos
     HPX_REGISTER_BROADCAST_APPLY_WITH_INDEX_ACTION_2(Action, Action)          \
 /**/
 #define HPX_REGISTER_BROADCAST_APPLY_WITH_INDEX_ACTION_2(Action, Name)        \
-    HPX_REGISTER_ACTION(                                                      \
+    HPX_REGISTER_PLAIN_ACTION(                                                \
         ::hpx::lcos::detail::make_broadcast_apply_action<                     \
             ::hpx::lcos::detail::broadcast_with_index<Action>                 \
         >::type                                                               \
@@ -1064,7 +1064,7 @@ namespace hpx { namespace lcos
     HPX_REGISTER_BROADCAST_ACTION_2(Action, Action)                           \
 /**/
 #define HPX_REGISTER_BROADCAST_ACTION_2(Action, Name)                         \
-    HPX_REGISTER_ACTION(                                                      \
+    HPX_REGISTER_PLAIN_ACTION(                                                \
         ::hpx::lcos::detail::make_broadcast_action<Action>::type              \
       , BOOST_PP_CAT(broadcast_, Name)                                        \
     )                                                                         \
@@ -1118,7 +1118,7 @@ namespace hpx { namespace lcos
     HPX_REGISTER_BROADCAST_WITH_INDEX_ACTION_2(Action, Action)                \
 /**/
 #define HPX_REGISTER_BROADCAST_WITH_INDEX_ACTION_2(Action, Name)              \
-    HPX_REGISTER_ACTION(                                                      \
+    HPX_REGISTER_PLAIN_ACTION(                                                \
         ::hpx::lcos::detail::make_broadcast_action<                           \
             ::hpx::lcos::detail::broadcast_with_index<Action>                 \
         >::type                                                               \

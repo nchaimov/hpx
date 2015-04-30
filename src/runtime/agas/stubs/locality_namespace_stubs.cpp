@@ -9,6 +9,8 @@
 #include <hpx/runtime/applier/apply.hpp>
 #include <hpx/runtime/agas/stubs/locality_namespace.hpp>
 
+#include <boost/serialization/vector.hpp>
+
 namespace hpx { namespace agas { namespace stubs
 {
 template <typename Result>
