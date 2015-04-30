@@ -27,6 +27,7 @@
 #include <boost/format.hpp>
 
 #include <apex.hpp>
+#include <apex_api.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Command-line variables

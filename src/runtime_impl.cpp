@@ -345,6 +345,9 @@ namespace hpx {
         // set thread name as shown in Visual Studio
         util::set_thread_name("main-thread#wait_helper");
 
+#if defined(HPX_HAVE_APEX)
+        apex::register_thread("main-thread#wait_helper");
+#endif
         // wait for termination
         runtime_support_->wait();
 
@@ -591,6 +594,10 @@ namespace hpx {
 
             // set thread name as shown in Visual Studio
             util::set_thread_name(name);
+
+#if defined(HPX_HAVE_APEX)
+            apex::register_thread(name);
+#endif
         }
 
         // if this is a service thread, set its service affinity

@@ -20,6 +20,7 @@
 #include <hpx/runtime/threads/policies/affinity_data.hpp>
 #include <hpx/runtime/threads/policies/scheduler_base.hpp>
 #include <apex.hpp>
+#include <apex_api.hpp>
 
 #include <boost/noncopyable.hpp>
 #include <boost/atomic.hpp>

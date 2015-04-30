@@ -29,6 +29,7 @@
 #include <boost/format.hpp>
 
 #include <apex.hpp>
+#include <apex_api.hpp>
 
 using hpx::naming::id_type;
 using hpx::performance_counters::get_counter;
@@ -289,8 +290,8 @@ int main(int argc, char* argv[])
         ( "no-header", "do not print out the csv header row")
     ;
 
-    hpx::register_startup_function(&setup_counters);
-    hpx::register_startup_function(&register_policies);
+    //hpx::register_startup_function(&setup_counters);
+    //hpx::register_startup_function(&register_policies);
 
     // Initialize and run HPX
     return hpx::init(desc_commandline, argc, argv);

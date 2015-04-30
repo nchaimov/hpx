@@ -85,8 +85,6 @@ namespace hpx { namespace parcelset { namespace policies { namespace tcp
                     new receiver(io_service, *this));
 
                 tcp::endpoint ep = *it;
-                std::cerr << "Initial port: " << HPX_INITIAL_IP_PORT << std::endl;
-                std::cerr << "Endpoint: " << ep << std::endl;
                 acceptor_->open(ep.protocol());
                 acceptor_->set_option(tcp::acceptor::reuse_address(true));
                 acceptor_->bind(ep);

@@ -13,6 +13,7 @@
 #include <hpx/include/actions.hpp>
 #include <hpx/include/util.hpp>
 #include <apex.hpp>
+#include <apex_api.hpp>
 
 #include <iostream>
 

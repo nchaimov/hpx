@@ -12,6 +12,7 @@
 #include <hpx/include/util.hpp>
 #include <hpx/util/lightweight_test.hpp>
 #include <apex.hpp>
+#include <apex_api.hpp>
 
 #include <iostream>
 
@@ -94,16 +95,14 @@ int main(int argc, char* argv[])
           "n value for the Fibonacci function")
         ;
 
-    hpx::register_pre_shutdown_function([](){
-        std::cout << "Calls to fibonacci_action: " << count << std::endl;
-        apex_profile * prof = apex::get_profile("fibonacci_action");
-        std::cout << "APEX measured calls to fibonacci_action: " << prof->calls << std::endl;
-        HPX_TEST_EQ(count,(uint64_t)prof->calls);
-    });
-
     // Initialize and run HPX
     int status =  hpx::init(desc_commandline, argc, argv);
     HPX_TEST_EQ(status,0);
+
+    std::cout << "Calls to fibonacci_action: " << count << std::endl;
+    apex_profile * prof = apex::get_profile("fibonacci_action");
+    std::cout << "APEX measured calls to fibonacci_action: " << prof->calls << std::endl;
+    HPX_TEST_EQ(count,(uint64_t)prof->calls);
 
     return hpx::util::report_errors();
 }

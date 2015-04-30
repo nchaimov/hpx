@@ -4,54 +4,55 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/hpx_fwd.hpp>
-#include <hpx/include/runtime.hpp>
-#include <iostream>
 
 #ifdef HPX_HAVE_APEX
 #include <apex.hpp>
+#include "apex_api.hpp"
 #endif
 
-#ifdef HPX_HAVE_APEX
-#ifdef HPX_HAVE_ITTNOTIFY
-extern bool use_ittnotify_api;
-#else
-static bool const use_ittnotify_api = true;
-#endif
-#endif
 
 namespace hpx { namespace util
 {
 #ifdef HPX_HAVE_APEX
     inline void apex_init()
     {
-        if (use_ittnotify_api)
-        {
-            apex::init(NULL);
-            apex::set_node_id(hpx::get_locality_id());
-        }
+        apex::init(NULL);
+        apex::set_node_id(hpx::get_locality_id());
     }
 
     inline void apex_finalize()
     {
-        if (use_ittnotify_api)
-            apex::finalize();
+        apex::finalize();
     }
 
     struct apex_wrapper
     {
         apex_wrapper(char const* const name)
-          : name_(name)
+          : name_(name), stopped(false)
         {
-            if (use_ittnotify_api)
-                profiler_ = apex::start(name_);
+            profiler_ = apex::start(name_);
         }
         ~apex_wrapper()
         {
-            if (use_ittnotify_api)
+            stop();
+        }
+
+        void stop() {
+            if(!stopped) {
+                stopped = true;
                 apex::stop(profiler_);
+            }
+        }
+
+        void yield() {
+            if(!stopped) {
+                stopped = true;
+                apex::yield(profiler_);
+            }
         }
 
         char const* const name_;
+        bool stopped;
         apex::profiler * profiler_;
     };
 
