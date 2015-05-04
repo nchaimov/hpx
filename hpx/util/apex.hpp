@@ -31,6 +31,9 @@ namespace hpx { namespace util
           : name_(name), stopped(false)
         {
             profiler_ = apex::start(name_);
+            if(profiler_ == nullptr) {
+                stopped = true;
+            }
         }
         ~apex_wrapper()
         {
