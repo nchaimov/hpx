@@ -77,6 +77,8 @@ namespace hpx { namespace util
     struct apex_wrapper
     {
         apex_wrapper(char const* const name) {}
+        void stop() {}
+        void yield() {}
         ~apex_wrapper() {}
     };
 
