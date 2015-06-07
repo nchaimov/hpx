@@ -1,0 +1,3 @@
+[submodule "libfoo"]
+    path = apex
+    url = https://github.com/khuck/xpress-apex.git
