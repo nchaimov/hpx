@@ -303,7 +303,6 @@ int hpx_main(boost::program_options::variables_map& vm)
         boost::uint64_t parts = divisors[np_index];
         boost::uint64_t size_per_part = nx / parts;
         boost::uint64_t total_size = parts * size_per_part;
-        apex::set_thread_cap(parts);
         std::cerr << "parts: " << parts << " Per part: " << size_per_part << " Overall: " << total_size << std::endl;
         // Measure execution time.
         boost::uint64_t t = hpx::util::high_resolution_clock::now();
