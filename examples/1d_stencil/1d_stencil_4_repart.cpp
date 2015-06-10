@@ -281,6 +281,7 @@ int hpx_main(boost::program_options::variables_map& vm)
             divisors.push_back(nx/i);
         }
     }
+    divisors.push_back(sqrt(nx));
     std::sort(divisors.begin(), divisors.end());
 
     // Set up APEX tuning
@@ -303,7 +304,10 @@ int hpx_main(boost::program_options::variables_map& vm)
         boost::uint64_t parts = divisors[np_index];
         boost::uint64_t size_per_part = nx / parts;
         boost::uint64_t total_size = parts * size_per_part;
-        std::cerr << "parts: " << parts << " Per part: " << size_per_part << " Overall: " << total_size << std::endl;
+
+        //std::cerr << "parts: " << parts << " Per part: " << size_per_part
+        //std::cerr << " Overall: " << total_size << std::endl;
+
         // Measure execution time.
         boost::uint64_t t = hpx::util::high_resolution_clock::now();
 
@@ -336,8 +340,8 @@ int hpx_main(boost::program_options::variables_map& vm)
         }
 
         boost::uint64_t const os_thread_count = hpx::get_os_thread_count();
-        print_time_results(os_thread_count, elapsed, size_per_part*parts, parts, nt, header);
-
+        print_time_results(os_thread_count, elapsed, size_per_part, parts, nt, header);
+        header = false; // only print header once
     }
 
     return hpx::finalize();
