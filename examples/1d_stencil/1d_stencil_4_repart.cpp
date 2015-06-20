@@ -281,7 +281,9 @@ int hpx_main(boost::program_options::variables_map& vm)
             divisors.push_back(nx/i);
         }
     }
-    divisors.push_back(sqrt(nx));
+    if ( nx%(int)sqrt(nx) == 0 ) {
+        divisors.push_back(sqrt(nx));
+    }
     std::sort(divisors.begin(), divisors.end());
 
     // Set up APEX tuning
@@ -356,8 +358,8 @@ int main(int argc, char* argv[])
 
     desc_commandline.add_options()
         ("results", "print generated results (default: false)")
-        ("nx", value<boost::uint64_t>()->default_value(10),
-         "Local x dimension (of each partition)")
+        ("nx", value<boost::uint64_t>()->default_value(100),
+         "Total number of grid points")
         ("nt", value<boost::uint64_t>()->default_value(45),
          "Number of time steps")
         ("nr", value<boost::uint64_t>()->default_value(10),
