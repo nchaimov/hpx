@@ -185,9 +185,14 @@ struct stepper
         std::size_t size = middle.size();
         partition_data next(size);
 
+        if(size == 1) {
+            next[0] = heat(left[0], middle[0], right[0]);
+            return next;
+        }
+
         next[0] = heat(left[size-1], middle[0], middle[1]);
 
-        for(std::size_t i = 1; i != size-1; ++i)
+        for(std::size_t i = 1; i < size-1; ++i)
         {
             next[i] = heat(middle[i-1], middle[i], middle[i+1]);
         }
@@ -274,6 +279,10 @@ int hpx_main(boost::program_options::variables_map& vm)
     // Number of runs (repartition between runs).
     boost::uint64_t nr = vm["nr"].as<boost::uint64_t>();
 
+    //std::cerr << "nx = " << nx << std::endl;
+    //std::cerr << "nt = " << nt << std::endl;
+    //std::cerr << "nr = " << nr << std::endl;
+
     if (vm.count("no-header"))
         header = false;
 
@@ -281,14 +290,29 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     // Find divisors of nx
     std::vector<boost::uint64_t> divisors;
+    // Start with os_thread_count so we have at least as many 
+    // partitions as we have HPX threads.
     for(boost::uint64_t i = os_thread_count; i < std::sqrt(nx); ++i) {
         if(nx % i == 0) {
             divisors.push_back(i);
             divisors.push_back(nx/i);
         }
     }
-    divisors.push_back(static_cast<boost::uint64_t>(std::sqrt(nx)));
+    // This is not necessarily correct (sqrt(x) does not always evenly divide x)
+    // and leads to partition size = 1 which we want to avoid
+    //divisors.push_back(static_cast<boost::uint64_t>(std::sqrt(nx)));
     std::sort(divisors.begin(), divisors.end());
+
+    if(divisors.size() == 0) {
+        std::cerr << "ERROR: No possible divisors for " << nx << " data elements with at least " << os_thread_count << " partitions and at least two elements per partition." << std::endl;
+        return hpx::finalize();
+    }
+
+    //std::cerr << "Divisors: ";
+    //for(boost::uint64_t d : divisors) {
+    //    std::cerr << d << " ";
+    //}
+    //std::cerr << std::endl;
 
     // Set up APEX tuning
     // The tunable parameter -- how many partitions to divide data into
@@ -312,7 +336,7 @@ int hpx_main(boost::program_options::variables_map& vm)
         boost::uint64_t size_per_part = nx / parts;
         boost::uint64_t total_size = parts * size_per_part;
 
-        //std::cerr << "parts: " << parts << " Per part: " << size_per_part
+        //std::cerr << "parts: " << parts << " Per part: " << size_per_part;
         //std::cerr << " Overall: " << total_size << std::endl;
 
         // Measure execution time.
