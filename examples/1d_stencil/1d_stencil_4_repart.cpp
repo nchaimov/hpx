@@ -39,51 +39,45 @@ using hpx::performance_counters::counter_value;
 using hpx::performance_counters::status_is_valid;
 
 static bool counters_initialized = false;
-static const char * counter_name = "/threads{locality#%d/total}/idle-rate";
+static std::string counter_name = "";
 static apex_event_type end_iteration_event = APEX_CUSTOM_EVENT_1;
 static hpx::naming::id_type counter_id;
 
-
-id_type get_counter_id() {
-    // Resolve the GID of the performances counter using it's symbolic name.
-    boost::uint32_t const prefix = hpx::get_locality_id();
-    boost::format active_threads(counter_name);
-    id_type id = get_counter(boost::str(active_threads % prefix));
-    return id;
-}
-
 void setup_counters() {
     try {
-        id_type id = get_counter_id();
+        id_type id = get_counter(counter_name);
         // We need to explicitly start all counters before we can use them. For
         // certain counters this could be a no-op, in which case start will return
         // 'false'.
         performance_counter::start(id);
-        std::cout << "Counters initialized! " << id << std::endl;
+        std::cout << "Counter " << counter_name << " initialized " << id << std::endl;
         counter_value value = performance_counter::get_value(id);
-        std::cout << "Idle Rate " << value.get_value<boost::int64_t>() << std::endl;
+        std::cout << "Counter value " << value.get_value<boost::int64_t>() << std::endl;
         counter_id = id;
         end_iteration_event = apex::register_custom_event("Repartition");
+        counters_initialized = true;
     }
     catch(hpx::exception const& e) {
-        std::cerr << "apex_policy_engine_active_thread_count: caught exception: "
+        std::cerr << "1d_stencil_4_repart: caught exception: "
             << e.what() << std::endl;
         counter_id = hpx::naming::invalid_id;
         return;
     }
-    counters_initialized = true;
 }
 
-double get_idle_rate() {
-    if (!counters_initialized) return false;
+double get_counter_value() {
+    if (!counters_initialized) { 
+        std::cerr << "get_counter_value(): ERROR: counter was not initialized" << std::endl;
+        return false;
+    }
     try {
         counter_value value1 = performance_counter::get_value(counter_id, true);
-        boost::int64_t idle_rate = value1.get_value<boost::int64_t>();
-        std::cerr << "idle rate " << idle_rate << std::endl;
-        return (double)(idle_rate);
+        boost::int64_t counter_value = value1.get_value<boost::int64_t>();
+        std::cerr << "counter_value " << counter_value << std::endl;
+        return (double)(counter_value);
     }
     catch(hpx::exception const& e) {
-        std::cerr << "get_idle_rate(): caught exception: " << e.what() << std::endl;
+        std::cerr << "get_counter_value(): caught exception: " << e.what() << std::endl;
         return (std::numeric_limits<double>::max)();
     }
 }
@@ -283,9 +277,11 @@ int hpx_main(boost::program_options::variables_map& vm)
     if (vm.count("no-header"))
         header = false;
 
+    boost::uint64_t const os_thread_count = hpx::get_os_thread_count();
+
     // Find divisors of nx
     std::vector<boost::uint64_t> divisors;
-    for(boost::uint64_t i = 1; i < std::sqrt(nx); ++i) {
+    for(boost::uint64_t i = os_thread_count; i < std::sqrt(nx); ++i) {
         if(nx % i == 0) {
             divisors.push_back(i);
             divisors.push_back(nx/i);
@@ -303,12 +299,11 @@ int hpx_main(boost::program_options::variables_map& vm)
     long maxs[1]  = { (long)divisors.size() };
     long steps[1] = { 1 };
     tune_params[0] = &np_index;
-    apex::setup_custom_tuning(get_idle_rate, end_iteration_event, num_params,
+    apex::setup_custom_tuning(get_counter_value, end_iteration_event, num_params,
             tune_params, mins, maxs, steps);
 
     // Create the stepper object
     stepper step;
-    boost::uint64_t const os_thread_count = hpx::get_os_thread_count();
 
     std::vector<double> data;
     for(boost::uint64_t i = 0; i < nr; ++i)
@@ -378,6 +373,7 @@ int main(int argc, char* argv[])
         ("dx", value<double>(&dx)->default_value(1.0),
          "Local x dimension")
         ( "no-header", "do not print out the csv header row")
+        ("counter", value<std::string>(&counter_name)->default_value("/threads{locality#0/total}/idle-rate"), "HPX Counter to minimize for repartitioning")
     ;
 
     hpx::register_startup_function(&setup_counters);
