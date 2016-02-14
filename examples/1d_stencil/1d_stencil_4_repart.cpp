@@ -316,7 +316,7 @@ int hpx_main(boost::program_options::variables_map& vm)
 
     // Set up APEX tuning
     // The tunable parameter -- how many partitions to divide data into
-    long np_index = 1;
+    long np_index = 0;
     long * tune_params[1] = { 0L };
     long num_params = 1;
     long mins[1]  = { 0 };
