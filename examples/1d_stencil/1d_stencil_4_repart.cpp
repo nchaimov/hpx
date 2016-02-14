@@ -119,13 +119,13 @@ public:
             data_[i] = base_value + double(i);
     }
 
-    partition_data(std::size_t size, std::vector<double> const& other,
-            std::size_t base_idx)
-      : data_(new double[size]),
-        size_(size)
+    partition_data(std::size_t size, const double * other)
+         : data_(new double[size]),
+         size_(size)
     {
-        for(std::size_t i = 0; i != size; ++i)
-            data_[i] = other[base_idx+i];
+        for(std::size_t i = 0; i != size; ++i) {
+            data_[i] = other[i];
+        }
     }
 
     partition_data(partition_data && other)
@@ -136,11 +136,13 @@ public:
     double& operator[](std::size_t idx) { return data_[idx]; }
     double operator[](std::size_t idx) const { return data_[idx]; }
 
-    void copy_into_array(std::vector<double>& a, std::size_t base_idx) const
+    void copy_into_array(double * a) const
     {
-        for(std::size_t i = 0; i != size(); ++i)
-            a[base_idx+i] = data_[i];
+        for(std::size_t i = 0; i != size(); ++i) {
+            a[i] = data_[i];
+        }
     }
+
 
     std::size_t size() const { return size_; }
 
@@ -205,7 +207,7 @@ struct stepper
     // do all the work on 'np' partitions, 'nx' data points each, for 'nt'
     // time steps
     hpx::future<space> do_work(std::size_t np, std::size_t nx, std::size_t nt,
-        std::vector<double>& data)
+        double * data)
     {
         using hpx::lcos::local::dataflow;
         using hpx::util::unwrapped;
@@ -215,7 +217,7 @@ struct stepper
         for (space& s: U)
             s.resize(np);
 
-        if (data.empty()) {
+        if (data == nullptr) {
             // Initial conditions: f(0, i) = i
             std::size_t b = 0;
             auto range = boost::irange(b, np);
@@ -237,7 +239,7 @@ struct stepper
                 par, boost::begin(range), boost::end(range),
                 [&U, nx, data](std::size_t i)
                 {
-                    U[0][i] = hpx::make_ready_future(partition_data(nx, data, i*nx));
+                    U[0][i] = hpx::make_ready_future(partition_data(nx, data+(i*nx)));
                 }
             );
         }
@@ -329,7 +331,8 @@ int hpx_main(boost::program_options::variables_map& vm)
     // Create the stepper object
     stepper step;
 
-    std::vector<double> data;
+    
+    double * data = nullptr;
     for(boost::uint64_t i = 0; i < nr; ++i)
     {
         boost::uint64_t parts = divisors[np_index];
@@ -355,10 +358,11 @@ int hpx_main(boost::program_options::variables_map& vm)
         apex::custom_event(end_iteration_event, 0);
 
         // Gather data together
-        data.resize(total_size);
+        if(data == nullptr) {
+            data = new double[total_size];
+        }
         for(boost::uint64_t partition = 0; partition != parts; ++partition) {
-            solution[partition].get().copy_into_array(
-                data, partition*size_per_part);
+            solution[partition].get().copy_into_array(data+(partition*size_per_part));
         }
 
         // Print the final solution
@@ -370,6 +374,9 @@ int hpx_main(boost::program_options::variables_map& vm)
 
         print_time_results(os_thread_count, elapsed, size_per_part, parts, nt, header);
         header = false; // only print header once
+    }
+    if(data != nullptr) {
+        delete[] data;
     }
 
     return hpx::finalize();
