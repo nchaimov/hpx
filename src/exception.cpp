@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2013 Hartmut Kaiser
+//  Copyright (c) 2007-2016 Hartmut Kaiser
 //  Copyright (c)      2011 Bryce Lelbach
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -16,9 +16,9 @@
 #include <hpx/util/backtrace.hpp>
 #include <hpx/util/command_line_handling.hpp>
 
-#if defined(BOOST_WINDOWS)
+#if defined(HPX_WINDOWS)
 #  include <process.h>
-#elif defined(BOOST_HAS_UNISTD_H)
+#elif defined(HPX_HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
@@ -35,7 +35,7 @@
 #ifdef __APPLE__
 #include <crt_externs.h>
 #define environ (*_NSGetEnviron())
-#elif !defined(BOOST_WINDOWS)
+#elif !defined(HPX_WINDOWS)
 extern char **environ;
 #endif
 
@@ -83,7 +83,7 @@ namespace hpx { namespace detail
     {
         std::vector<std::string> env;
 
-#if defined(BOOST_WINDOWS)
+#if defined(HPX_WINDOWS)
         std::size_t len = get_arraylen(_environ);
         env.reserve(len);
         std::copy(&_environ[0], &_environ[len], std::back_inserter(env));
@@ -249,7 +249,7 @@ namespace hpx { namespace detail
 
         std::size_t shepherd = std::size_t(-1);
         threads::thread_id_type thread_id;
-        std::string thread_name;
+        util::thread_description thread_name;
 
         threads::thread_self* self = threads::get_self_ptr();
         if (NULL != self)
@@ -265,8 +265,10 @@ namespace hpx { namespace detail
         std::string config(configuration_string());
 
         return construct_exception(e, func, file, line, back_trace, node,
-            hostname, pid, shepherd, reinterpret_cast<std::size_t>(thread_id.get()),
-            thread_name, env, config, state_name, auxinfo);
+            hostname, pid, shepherd,
+            reinterpret_cast<std::size_t>(thread_id.get()),
+            util::as_string(thread_name), env, config,
+            state_name, auxinfo);
     }
 
     template <typename Exception>
@@ -306,7 +308,6 @@ namespace hpx { namespace detail
     template HPX_ATTRIBUTE_NORETURN HPX_EXPORT void
         throw_exception(hpx::detail::bad_exception const&,
         std::string const&, std::string const&, long);
-#ifndef BOOST_NO_TYPEID
     template HPX_ATTRIBUTE_NORETURN HPX_EXPORT void
         throw_exception(std::bad_typeid const&,
         std::string const&, std::string const&, long);
@@ -319,7 +320,6 @@ namespace hpx { namespace detail
     template HPX_ATTRIBUTE_NORETURN HPX_EXPORT void
         throw_exception(hpx::detail::bad_cast const&,
         std::string const&, std::string const&, long);
-#endif
     template HPX_ATTRIBUTE_NORETURN HPX_EXPORT void
         throw_exception(std::bad_alloc const&,
         std::string const&, std::string const&, long);
@@ -570,7 +570,7 @@ namespace hpx
             return hpx::diagnostic_information(be);
         }
         catch (...) {
-            return std::string();
+            return std::string("<unknown>");
         }
     }
 
@@ -591,7 +591,7 @@ namespace hpx
         // Try a cast to std::exception - this should handle boost.system
         // error codes in addition to the standard library exceptions.
         std::exception const* se = dynamic_cast<std::exception const*>(&e);
-        return se ? se->what() : std::string();
+        return se ? se->what() : std::string("<unknown>");
     }
 
     std::string get_error_what(boost::exception_ptr const& e)
@@ -605,7 +605,7 @@ namespace hpx
             return hpx::get_error_what(be);
         }
         catch (...) {
-            return std::string();
+            return std::string("<unknown>");
         }
     }
 
@@ -684,7 +684,10 @@ namespace hpx
             return he.get_error();
         }
         catch (boost::system::system_error const& e) {
-            return static_cast<hpx::error>(e.code().value());
+            int code = e.code().value();
+            if (code < success || code >= last_error)
+                code |= system_error_flag;
+            return static_cast<hpx::error>(code);
         }
         catch (...) {
             return unknown_error;
@@ -1133,6 +1136,18 @@ namespace hpx
     std::string get_error_state(hpx::error_code const& e)
     {
         return get_error_state(detail::access_exception(e));
+    }
+
+    void assertion_failed(char const* expr, char const* function,
+        char const* file, long line)
+    {
+        hpx::detail::assertion_failed(expr, function, file, line);
+    }
+
+    void assertion_failed_msg(char const* msg, char const* expr,
+        char const* function, char const* file, long line)
+    {
+        hpx::detail::assertion_failed_msg(msg, expr, function, file, line);
     }
 }
 

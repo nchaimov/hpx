@@ -23,7 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace threads
 {
-    struct thread_init_data;
+    class thread_init_data;
 
     namespace executors
     {
@@ -159,15 +159,19 @@ namespace hpx { namespace threads
     ///                   throw but returns the result code using the
     ///                   parameter \a ec. Otherwise it throws an instance
     ///                   of hpx#exception.
-    HPX_API_EXPORT char const* get_thread_description(thread_id_type const& id,
+    HPX_API_EXPORT util::thread_description get_thread_description(
+        thread_id_type const& id, error_code& ec = throws);
+    HPX_API_EXPORT util::thread_description set_thread_description(
+        thread_id_type const& id,
+        util::thread_description const& desc = util::thread_description(),
         error_code& ec = throws);
-    HPX_API_EXPORT char const* set_thread_description(thread_id_type const& id,
-        char const* desc = 0, error_code& ec = throws);
 
-    HPX_API_EXPORT char const* get_thread_lco_description(thread_id_type const& id,
+    HPX_API_EXPORT util::thread_description get_thread_lco_description(
+        thread_id_type const& id, error_code& ec = throws);
+    HPX_API_EXPORT util::thread_description set_thread_lco_description(
+        thread_id_type const& id,
+        util::thread_description const& desc = util::thread_description(),
         error_code& ec = throws);
-    HPX_API_EXPORT char const* set_thread_lco_description(thread_id_type const& id,
-        char const* desc = 0, error_code& ec = throws);
 
     ///////////////////////////////////////////////////////////////////////////
     /// The function get_thread_backtrace is part of the thread related API
@@ -410,6 +414,7 @@ namespace hpx { namespace threads
 #endif
 
     HPX_API_EXPORT std::size_t& get_continuation_recursion_count();
+    HPX_API_EXPORT void reset_continuation_recursion_count();
 
     /// Returns a reference to the executor which was used to create
     /// the given thread.
@@ -455,7 +460,8 @@ namespace hpx { namespace this_thread
     ///
     HPX_API_EXPORT threads::thread_state_ex_enum suspend(
         threads::thread_state_enum state = threads::pending,
-        char const* description = "this_thread::suspend",
+        util::thread_description const& description =
+            util::thread_description("this_thread::suspend"),
         error_code& ec = throws);
 
     /// The function \a suspend will return control to the thread manager
@@ -477,7 +483,8 @@ namespace hpx { namespace this_thread
     ///
     HPX_API_EXPORT threads::thread_state_ex_enum suspend(
         util::steady_time_point const& abs_time,
-        char const* description = "this_thread::suspend",
+        util::thread_description const& description =
+            util::thread_description("this_thread::suspend"),
         error_code& ec = throws);
 
     /// The function \a suspend will return control to the thread manager
@@ -499,7 +506,8 @@ namespace hpx { namespace this_thread
     ///
     inline threads::thread_state_ex_enum suspend(
         util::steady_duration const& rel_time,
-        char const* description = "this_thread::suspend",
+        util::thread_description const& description =
+            util::thread_description("this_thread::suspend"),
         error_code& ec = throws)
     {
         return suspend(rel_time.from_now(), description, ec);
@@ -522,8 +530,9 @@ namespace hpx { namespace this_thread
     ///         running, it will throw an \a hpx#exception with an error code of
     ///         \a hpx#invalid_status.
     ///
-    inline threads::thread_state_ex_enum suspend(
-        boost::uint64_t ms, char const* description = "this_thread::suspend",
+    inline threads::thread_state_ex_enum suspend(boost::uint64_t ms,
+        util::thread_description const& description =
+            util::thread_description("this_thread::suspend"),
         error_code& ec = throws)
     {
         return suspend(boost::chrono::milliseconds(ms), description, ec);
@@ -544,6 +553,9 @@ namespace hpx { namespace this_thread
     ///
     HPX_EXPORT threads::executors::current_executor
         get_executor(error_code& ec = throws);
+
+    // returns the remaining available stack space
+    HPX_EXPORT std::ptrdiff_t get_available_stack_space();
 }}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -612,7 +624,7 @@ namespace hpx { namespace applier
     ///                   of hpx#exception.
     HPX_API_EXPORT threads::thread_id_type register_thread_plain(
         threads::thread_function_type && func,
-        char const* description = 0,
+        util::thread_description const& description = util::thread_description(),
         threads::thread_state_enum initial_state = threads::pending,
         bool run_now = true,
         threads::thread_priority priority = threads::thread_priority_normal,
@@ -635,7 +647,7 @@ namespace hpx { namespace applier
     ///
     HPX_API_EXPORT threads::thread_id_type register_thread(
         util::unique_function_nonser<void(threads::thread_state_ex_enum)> && func,
-        char const* description = 0,
+        util::thread_description const& description = util::thread_description(),
         threads::thread_state_enum initial_state = threads::pending,
         bool run_now = true,
         threads::thread_priority priority = threads::thread_priority_normal,
@@ -657,7 +669,7 @@ namespace hpx { namespace applier
     ///
     HPX_API_EXPORT threads::thread_id_type register_thread_nullary(
         util::unique_function_nonser<void()> && func,
-        char const* description = 0,
+        util::thread_description const& description = util::thread_description(),
         threads::thread_state_enum initial_state = threads::pending,
         bool run_now = true,
         threads::thread_priority priority = threads::thread_priority_normal,
@@ -728,7 +740,7 @@ namespace hpx { namespace applier
     ///
     HPX_API_EXPORT void register_work_plain(
         threads::thread_function_type && func,
-        char const* description = 0,
+        util::thread_description const& description = util::thread_description(),
         boost::uint64_t /*naming::address_type*/ lva = 0,
         threads::thread_state_enum initial_state = threads::pending,
         threads::thread_priority priority = threads::thread_priority_normal,
@@ -738,8 +750,8 @@ namespace hpx { namespace applier
 
 #if !defined(DOXYGEN)
     HPX_API_EXPORT void register_work_plain(
-        threads::thread_function_type && func,
-        naming::id_type const& target, char const* description = 0,
+        threads::thread_function_type && func, naming::id_type const& target,
+        util::thread_description const& description = util::thread_description(),
         boost::uint64_t /*naming::address_type*/ lva = 0,
         threads::thread_state_enum initial_state = threads::pending,
         threads::thread_priority priority = threads::thread_priority_normal,
@@ -763,7 +775,7 @@ namespace hpx { namespace applier
     ///
     HPX_API_EXPORT void register_work(
         util::unique_function_nonser<void(threads::thread_state_ex_enum)> && func,
-        char const* description = 0,
+        util::thread_description const& description = util::thread_description(),
         threads::thread_state_enum initial_state = threads::pending,
         threads::thread_priority priority = threads::thread_priority_normal,
         std::size_t os_thread = std::size_t(-1),
@@ -784,7 +796,7 @@ namespace hpx { namespace applier
     ///
     HPX_API_EXPORT void register_work_nullary(
         util::unique_function_nonser<void()> && func,
-        char const* description = 0,
+        util::thread_description const& description = util::thread_description(),
         threads::thread_state_enum initial_state = threads::pending,
         threads::thread_priority priority = threads::thread_priority_normal,
         std::size_t os_thread = std::size_t(-1),
@@ -804,48 +816,6 @@ namespace hpx { namespace applier
         threads::thread_init_data& data,
         threads::thread_state_enum initial_state = threads::pending,
         error_code& ec = throws);
-
-    ///////////////////////////////////////////////////////////////////////////
-    /// The \a create function initiates the creation of a new
-    /// component instance using the runtime_support as given by targetgid.
-    /// This function is non-blocking as it returns a \a lcos#future. The
-    /// caller of this create is responsible to call
-    /// \a lcos#future#get to obtain the result.
-    ///
-    /// \param targetgid
-    /// \param type
-    /// \param count
-    ///
-    /// \returns    The function returns a \a lcos#future instance
-    ///             returning the the global id of the newly created
-    ///             component when used to call get.
-    ///
-    /// \note       For synchronous operation use the function
-    ///             \a threads#create_sync.
-    HPX_API_EXPORT lcos::future<naming::id_type>
-        create(naming::id_type const& targetgid,
-            boost::uint32_t /*components::component_type*/ type,
-            std::size_t count = 1);
-
-    ///////////////////////////////////////////////////////////////////////////
-    /// The \a create_sync function creates a new component instance using the
-    /// \a runtime_support as given by targetgid. This function is blocking
-    /// for the component to be created and until the global id of the new
-    /// component has been returned.
-    ///
-    /// \param targetgid
-    /// \param type
-    /// \param count
-    ///
-    /// \returns    The function returns the global id of the newly created
-    ///             component.
-    ///
-    /// \note       For asynchronous operation use the function
-    ///             \a threads#create.
-    HPX_API_EXPORT naming::id_type
-        create_sync(naming::id_type const& targetgid,
-            boost::uint32_t /*components::component_type*/ type,
-            std::size_t count = 1);
 }}
 
 ///////////////////////////////////////////////////////////////////////////////

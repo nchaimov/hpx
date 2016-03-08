@@ -654,6 +654,14 @@ namespace hpx { namespace threads
             },
 #endif
 #endif
+            // /threads{locality#%d/total}/time/overall
+            // /threads{locality#%d/worker-thread%d}/time/overall
+            { "time/overall",
+              util::bind(&ti::get_cumulative_duration, this, -1, _1),
+              util::bind(&ti::get_cumulative_duration, this,
+                  static_cast<std::size_t>(paths.instanceindex_), _1),
+              "worker-thread", shepherd_count
+            },
             // /threads{locality#%d/total}/count/instantaneous/all
             // /threads{locality#%d/worker-thread%d}/count/instantaneous/all
             { "count/instantaneous/all",
@@ -719,7 +727,7 @@ namespace hpx { namespace threads
               util::bind(&coroutine_type::impl_type::get_stack_recycle_count, _1),
               util::function_nonser<boost::uint64_t(bool)>(), "", 0
             },
-#if !defined(BOOST_WINDOWS) && !defined(HPX_HAVE_GENERIC_CONTEXT_COROUTINES)
+#if !defined(HPX_WINDOWS) && !defined(HPX_HAVE_GENERIC_CONTEXT_COROUTINES)
             // /threads{locality#%d/total}/count/stack-unbinds
             { "count/stack-unbinds",
               util::bind(&coroutine_type::impl_type::get_stack_unbind_count, _1),
@@ -924,6 +932,12 @@ namespace hpx { namespace threads
             },
 #endif
 #endif
+            { "/threads/time/overall", performance_counters::counter_raw,
+              "returns the overall time spent running the scheduler on a core",
+              HPX_PERFORMANCE_COUNTER_V1, counts_creator,
+              &performance_counters::locality_thread_counter_discoverer,
+              "ns"
+            },
             { "/threads/count/instantaneous/all", performance_counters::counter_raw,
               "returns the overall current number of HPX-threads instantiated at the "
               "referenced locality", HPX_PERFORMANCE_COUNTER_V1, counts_creator,
@@ -973,7 +987,7 @@ namespace hpx { namespace threads
               counts_creator, &performance_counters::locality_counter_discoverer,
               ""
             },
-#if !defined(BOOST_WINDOWS) && !defined(HPX_HAVE_GENERIC_CONTEXT_COROUTINES)
+#if !defined(HPX_WINDOWS) && !defined(HPX_HAVE_GENERIC_CONTEXT_COROUTINES)
             { "/threads/count/stack-unbinds", performance_counters::counter_raw,
               "returns the total number of HPX-thread unbind (madvise) operations "
               "performed for the referenced locality", HPX_PERFORMANCE_COUNTER_V1,
@@ -1141,6 +1155,13 @@ namespace hpx { namespace threads
     }
 #endif
 #endif
+
+    template <typename SchedulingPolicy>
+    boost::int64_t threadmanager_impl<SchedulingPolicy>::
+        get_cumulative_duration(std::size_t num, bool reset)
+    {
+        return pool_.get_cumulative_duration(num, reset);
+    }
 
 #ifdef HPX_HAVE_THREAD_IDLE_RATES
     ///////////////////////////////////////////////////////////////////////////

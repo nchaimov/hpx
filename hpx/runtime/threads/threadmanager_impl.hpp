@@ -26,9 +26,9 @@
 
 #include <boost/atomic.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/mpl/bool.hpp>
 
 #include <vector>
 #include <memory>
@@ -234,6 +234,9 @@ namespace hpx { namespace threads
             std::size_t num = std::size_t(-1), bool reset = false);
 #endif
 #endif
+
+        boost::int64_t get_cumulative_duration(
+            std::size_t num = std::size_t(-1), bool reset = false);
 
     protected:
         ///

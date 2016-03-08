@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2013 Hartmut Kaiser
+//  Copyright (c) 2007-2016 Hartmut Kaiser
 //  Copyright (c)      2011 Bryce Lelbach
 //  Copyright (c) 2008-2009 Chirag Dekate, Anshul Tandon
 //
@@ -21,6 +21,7 @@
 #include <hpx/util/spinlock_pool.hpp>
 #include <hpx/util/assert.hpp>
 #include <hpx/util/backtrace.hpp>
+#include <hpx/util/thread_description.hpp>
 #include <hpx/util/coroutine/coroutine.hpp>
 #include <hpx/util/lockfree/freelist.hpp>
 
@@ -28,7 +29,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/lockfree/detail/branch_hints.hpp>
 #include <boost/lockfree/stack.hpp>
 
 #include <stack>
@@ -289,42 +289,43 @@ namespace hpx { namespace threads
         }
 
 #ifndef HPX_HAVE_THREAD_DESCRIPTION
-        char const* get_description() const
+        util::thread_description get_description() const
         {
-            return "<unknown>";
+            return util::thread_description("<unknown>");
         }
-        char const* set_description(char const* /*value*/)
+        util::thread_description set_description(util::thread_description /*value*/)
         {
-            return "<unknown>";
+            return util::thread_description("<unknown>");
         }
 
-        char const* get_lco_description() const
+        util::thread_description get_lco_description() const
         {
-            return "<unknown>";
+            return util::thread_description("<unknown>");
         }
-        char const* set_lco_description(char const* /*value*/)
+        util::thread_description set_lco_description(util::thread_description /*value*/)
         {
-            return "<unknown>";
+            return util::thread_description("<unknown>");
         }
 #else
-        char const* get_description() const
+        util::thread_description get_description() const
         {
             mutex_type::scoped_lock l(this);
-            return description_ ? description_ : "<unknown>";
+            return description_;
         }
-        char const* set_description(char const* value)
+        util::thread_description set_description(util::thread_description value)
         {
             mutex_type::scoped_lock l(this);
             std::swap(description_, value);
             return value;
         }
 
-        char const* get_lco_description() const
+        util::thread_description get_lco_description() const
         {
             mutex_type::scoped_lock l(this);
-            return lco_description_ ? lco_description_ : "<unknown>";
+            return lco_description_;
         }
-        char const* set_lco_description(char const* value)
+        util::thread_description set_lco_description(
+            util::thread_description value)
         {
             mutex_type::scoped_lock l(this);
             std::swap(lco_description_, value);
@@ -370,7 +371,7 @@ namespace hpx { namespace threads
         }
 #endif
 
-#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_HAVE_THREAD_MINIMAL_DEADLOCK_DETECTION
         void set_marked_state(thread_state mark) const
         {
             marked_state_ = mark;
@@ -592,15 +593,15 @@ namespace hpx { namespace threads
             component_id_(init_data.lva),
 #endif
 #ifdef HPX_HAVE_THREAD_DESCRIPTION
-            description_(init_data.description ? init_data.description : ""),
-            lco_description_(""),
+            description_(init_data.description),
+            lco_description_(),
 #endif
 #ifdef HPX_HAVE_THREAD_PARENT_REFERENCE
             parent_locality_id_(init_data.parent_locality_id),
             parent_thread_id_(init_data.parent_id),
             parent_thread_phase_(init_data.parent_phase),
 #endif
-#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_HAVE_THREAD_MINIMAL_DEADLOCK_DETECTION
             marked_state_(unknown),
 #endif
 #ifdef HPX_HAVE_THREAD_BACKTRACE_ON_SUSPENSION
@@ -648,15 +649,15 @@ namespace hpx { namespace threads
             component_id_ = init_data.lva;
 #endif
 #ifdef HPX_HAVE_THREAD_DESCRIPTION
-            description_ = (init_data.description ? init_data.description : "");
-            lco_description_ = "";
+            description_ = (init_data.description);
+            lco_description_ = util::thread_description();
 #endif
 #ifdef HPX_HAVE_THREAD_PARENT_REFERENCE
             parent_locality_id_ = init_data.parent_locality_id;
             parent_thread_id_ = init_data.parent_id;
             parent_thread_phase_ = init_data.parent_phase;
 #endif
-#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_HAVE_THREAD_MINIMAL_DEADLOCK_DETECTION
             set_marked_state(thread_state(unknown));
 #endif
 #ifdef HPX_HAVE_THREAD_BACKTRACE_ON_SUSPENSION
@@ -700,8 +701,8 @@ namespace hpx { namespace threads
 #endif
 
 #ifdef HPX_HAVE_THREAD_DESCRIPTION
-        char const* description_;
-        char const* lco_description_;
+        util::thread_description description_;
+        util::thread_description lco_description_;
 #endif
 
 #ifdef HPX_HAVE_THREAD_PARENT_REFERENCE
@@ -710,7 +711,7 @@ namespace hpx { namespace threads
         std::size_t parent_thread_phase_;
 #endif
 
-#ifdef HPX_THREAD_MINIMAL_DEADLOCK_DETECTION
+#ifdef HPX_HAVE_THREAD_MINIMAL_DEADLOCK_DETECTION
         mutable thread_state marked_state_;
 #endif
 

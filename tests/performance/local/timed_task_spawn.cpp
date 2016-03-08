@@ -357,7 +357,7 @@ int hpx_main(
 
         ///////////////////////////////////////////////////////////////////////
         boost::uint64_t tasks_per_feeder = 0;
-        boost::uint64_t total_tasks = 0;
+        //boost::uint64_t total_tasks = 0;
         boost::uint64_t suspended_tasks_per_feeder = 0;
         boost::uint64_t total_suspended_tasks = 0;
 
@@ -373,14 +373,14 @@ int hpx_main(
                     "count\n");
 
             tasks_per_feeder = tasks / os_thread_count;
-            total_tasks      = tasks;
+            //total_tasks      = tasks;
             suspended_tasks_per_feeder = suspended_tasks / os_thread_count;
             total_suspended_tasks      = suspended_tasks;
         }
         else if ("weak" == scaling)
         {
             tasks_per_feeder = tasks;
-            total_tasks      = tasks * os_thread_count;
+            //total_tasks      = tasks * os_thread_count;
             suspended_tasks_per_feeder = suspended_tasks;
             total_suspended_tasks      = suspended_tasks * os_thread_count;
         }

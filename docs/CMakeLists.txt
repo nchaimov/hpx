@@ -89,6 +89,7 @@ set(doxygen_dependencies
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/set_symmetric_difference.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/set_union.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/sort.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/sort_by_key.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/swap_ranges.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/transform.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/transform_exclusive_scan.hpp"
@@ -96,6 +97,16 @@ set(doxygen_dependencies
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/transform_reduce.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/uninitialized_copy.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/algorithms/uninitialized_fill.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/copy.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/for_each.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/generate.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/minmax.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/remove_copy.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/replace.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/reverse.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/rotate.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/sort.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/parallel/container_algorithms/transform.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/executors/auto_chunk_size.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/executors/dynamic_chunk_size.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/executors/executor_traits.hpp"
@@ -107,7 +118,11 @@ set(doxygen_dependencies
     "${PROJECT_SOURCE_DIR}/hpx/parallel/executors/static_chunk_size.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/executors/thread_pool_executors.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/parallel/executors/timed_executor_traits.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/runtime_fwd.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/runtime/agas_fwd.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/runtime/applier_fwd.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/basename_registration.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/runtime/components_fwd.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/get_ptr.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/get_locality_name.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/get_locality_id.hpp"
@@ -115,6 +130,7 @@ set(doxygen_dependencies
     "${PROJECT_SOURCE_DIR}/hpx/runtime/get_worker_thread_num.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/find_here.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/launch_policy.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/runtime/naming_fwd.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/parcelset_fwd.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/runtime_mode.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/runtime/set_parcel_write_handler.hpp"
@@ -135,6 +151,7 @@ set(doxygen_dependencies
     "${PROJECT_SOURCE_DIR}/hpx/runtime/threads_fwd.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/lcos/broadcast.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/lcos/fold.hpp"
+    "${PROJECT_SOURCE_DIR}/hpx/lcos/gather.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/lcos/reduce.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/lcos/wait_all.hpp"
     "${PROJECT_SOURCE_DIR}/hpx/lcos/when_all.hpp"
@@ -208,7 +225,7 @@ if(BOOSTAUTOINDEX_FOUND)
 endif()
 
 set(image
-    images/hpx_${HPX_MAJOR_VERSION}_${HPX_MINOR_VERSION}_${HPX_PATCH_LEVEL}.png)
+    images/hpx_${HPX_MAJOR_VERSION}_${HPX_MINOR_VERSION}_${HPX_PATCH_LEVEL}_draft.png)
 
 set(HPX_CMAKE_OPTIONS "")
 foreach(_cat ${HPX_OPTION_CATEGORIES})
@@ -304,8 +321,8 @@ hpx_quickbook_to_html(hpx
                 toc.max.depth=4
                 generate.section.toc.level=4
                 boost.image.src=${image}
-                boost.image.w=466
-                boost.image.h=120
+                boost.image.w=479
+                boost.image.h=104
                 boost.image.alt="HPX - High Performance ParalleX"
                 ${auto_index_xsl_param}
   QUICKBOOK_ARGS ${quickbook_fixme_mode} ${auto_index_mode}
@@ -339,10 +356,15 @@ else()
     SOURCES ${documentation_files})
 endif()
 
+set_target_properties(docs
+    PROPERTIES FOLDER "Documentation/")
+
 if(HPX_WITH_DOCUMENTATION_SINGLEPAGE)
   add_custom_target(singlepage_docs
     DEPENDS hpx_singlepage_HTML.manifest
     SOURCES ${documentation_files})
+  set_target_properties(singlepage_docs
+      PROPERTIES FOLDER "Documentation/")
 endif()
 
 # Create links to properly view the docs in the build directory
@@ -383,7 +405,11 @@ add_custom_target(git_docs
     -P "${CMAKE_SOURCE_DIR}/cmake/HPX_UpdateGitDocs.cmake")
 #  VERBATIM)
 
+set_target_properties(git_docs
+    PROPERTIES FOLDER "Documentation/")
+
 add_dependencies(git_docs docs)
 if(HPX_WITH_DOCUMENTATION_SINGLEPAGE)
   add_dependencies(git_docs singlepage_docs)
 endif()
+

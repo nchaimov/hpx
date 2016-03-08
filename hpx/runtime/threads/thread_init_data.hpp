@@ -11,6 +11,7 @@
 #include <hpx/runtime/naming/name.hpp>
 #include <hpx/runtime/naming/address.hpp>
 #include <hpx/util/move.hpp>
+#include <hpx/util/thread_description.hpp>
 
 namespace hpx { namespace threads
 {
@@ -18,15 +19,18 @@ namespace hpx { namespace threads
     HPX_API_EXPORT std::ptrdiff_t get_stack_size(thread_stacksize);
 
     ///////////////////////////////////////////////////////////////////////////
-    struct thread_init_data
+    class thread_init_data
     {
+        HPX_MOVABLE_BUT_NOT_COPYABLE(thread_init_data)
+
+    public:
         thread_init_data()
           : func(),
 #if defined(HPX_HAVE_THREAD_TARGET_ADDRESS)
             lva(0),
 #endif
 #if defined(HPX_HAVE_THREAD_DESCRIPTION)
-            description(0),
+            description(),
 #endif
 #if defined(HPX_HAVE_THREAD_PARENT_REFERENCE)
             parent_locality_id(0), parent_id(0), parent_phase(0),
@@ -57,7 +61,7 @@ namespace hpx { namespace threads
         {}
 
         template <typename F>
-        thread_init_data(F && f, char const* desc,
+        thread_init_data(F && f, util::thread_description const& desc,
                 naming::address::address_type lva_ = 0,
                 thread_priority priority_ = thread_priority_normal,
                 std::size_t os_thread = std::size_t(-1),
@@ -87,7 +91,7 @@ namespace hpx { namespace threads
         naming::address::address_type lva;
 #endif
 #if defined(HPX_HAVE_THREAD_DESCRIPTION)
-        char const* description;
+        util::thread_description description;
 #endif
 #if defined(HPX_HAVE_THREAD_PARENT_REFERENCE)
         boost::uint32_t parent_locality_id;
@@ -102,11 +106,6 @@ namespace hpx { namespace threads
         naming::id_type target;
 
         policies::scheduler_base* scheduler_base;
-
-    private:
-        // we don't use the assignment operator
-        thread_init_data(thread_init_data const& rhs);
-        thread_init_data& operator=(thread_init_data const& rhs);
     };
 }}
 

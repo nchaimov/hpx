@@ -8,6 +8,7 @@
 #define HPX_UTIL_REINITIALIZABLE_STATIC_OCT_25_2012_1129AM
 
 #include <hpx/config.hpp>
+#include <hpx/util/assert.hpp>
 #include <hpx/util/static_reinit.hpp>
 
 #include <boost/noncopyable.hpp>
@@ -25,7 +26,7 @@
 
 #include <memory>   // for placement new
 
-#if !defined(BOOST_WINDOWS)
+#if !defined(HPX_WINDOWS)
 #  define HPX_EXPORT_REINITIALIZABLE_STATIC HPX_EXPORT
 #else
 #  define HPX_EXPORT_REINITIALIZABLE_STATIC

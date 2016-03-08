@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2015 Hartmut Kaiser
+//  Copyright (c) 2007-2016 Hartmut Kaiser
 //  Copyright (c)      2011 Bryce Lelbach
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -55,6 +55,7 @@
 #include <boost/filesystem/convenience.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <algorithm>
 #include <set>
@@ -1093,7 +1094,6 @@ namespace hpx { namespace components { namespace server
                     if (timeout >= 0.0 && timeout < (t.elapsed() - start_time))
                     {
                         // we waited long enough
-                        timed_out = true;
                         break;
                     }
                 }
@@ -1297,14 +1297,25 @@ namespace hpx { namespace components { namespace server
 
         plugin_map_type::const_iterator it = plugins_.find(message_handler_type);
         if (it == plugins_.end() || !(*it).second.first) {
-            // we don't know anything about this component
-            std::ostringstream strm;
-            strm << "attempt to create message handler plugin instance of "
-                    "invalid/unknown type: " << message_handler_type;
-            l.unlock();
-            HPX_THROWS_IF(ec, hpx::bad_plugin_type,
-                "runtime_support::create_message_handler",
-                strm.str());
+            if (ec.category() != hpx::get_lightweight_hpx_category())
+            {
+                // we don't know anything about this component
+                std::ostringstream strm;
+                strm << "attempt to create message handler plugin instance of "
+                        "invalid/unknown type: " << message_handler_type;
+                l.unlock();
+                HPX_THROWS_IF(ec, hpx::bad_plugin_type,
+                    "runtime_support::create_message_handler",
+                    strm.str());
+            }
+            else
+            {
+                // lightweight error handling
+                HPX_THROWS_IF(ec, hpx::bad_plugin_type,
+                    "runtime_support::create_message_handler",
+                    "attempt to create message handler plugin instance of "
+                    "invalid/unknown type");
+            }
             return 0;
         }
 
@@ -1585,10 +1596,26 @@ namespace hpx { namespace components { namespace server
 
             fs::path lib;
             try {
+                std::string component_path;
                 if (sect.has_entry("path"))
-                    lib = hpx::util::create_path(sect.get_entry("path"));
+                    component_path = sect.get_entry("path");
                 else
-                    lib = hpx::util::create_path(HPX_DEFAULT_COMPONENT_PATH);
+                    component_path = HPX_DEFAULT_COMPONENT_PATH;
+
+                typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+                boost::char_separator<char> sep(HPX_INI_PATH_DELIMITER);
+                tokenizer tokens(component_path, sep);
+                boost::system::error_code fsec;
+                for(tokenizer::iterator it = tokens.begin(); it != tokens.end(); ++it)
+                {
+                    lib = hpx::util::create_path(*it);
+                    fs::path lib_path = lib / std::string(HPX_MAKE_DLL_STRING(component));
+                    if(fs::exists(lib_path, fsec))
+                    {
+                        break;
+                    }
+                    lib.clear();
+                }
 
                 if (sect.get_entry("static", "0") == "1") {
                     load_component_static(ini, instance,
@@ -1630,18 +1657,33 @@ namespace hpx { namespace components { namespace server
                 boost::program_options::variables_map vm;
 
                 util::commandline_error_mode mode = util::rethrow_on_error;
-                std::string allow_unknown(ini.get_entry("hpx.commandline.allow_unknown",
-                    "0"));
+                std::string allow_unknown(
+                    ini.get_entry("hpx.commandline.allow_unknown", "0"));
                 if (allow_unknown != "0") mode = util::allow_unregistered;
 
+                std::vector<std::string> still_unregistered_options;
                 util::parse_commandline(ini, options, unknown_cmd_line, vm,
                     std::size_t(-1), mode,
-                    get_runtime_mode_from_name(runtime_mode));
+                    get_runtime_mode_from_name(runtime_mode), 0,
+                    &still_unregistered_options);
+
+                std::string still_unknown_commandline;
+                for (std::string const& s: still_unregistered_options)
+                    still_unknown_commandline += " " + util::detail::enquote(s);
+
+                if (!still_unknown_commandline.empty())
+                {
+                    util::section* s = ini.get_section("hpx");
+                    HPX_ASSERT(s != 0);
+                    s->add_entry("unknown_cmd_line_option",
+                        still_unknown_commandline);
+                }
             }
 
             std::string fullhelp(ini.get_entry("hpx.cmd_line_help", ""));
             if (!fullhelp.empty()) {
-                std::string help_option(ini.get_entry("hpx.cmd_line_help_option", ""));
+                std::string help_option(
+                    ini.get_entry("hpx.cmd_line_help_option", ""));
                 if (0 == std::string("full").find(help_option)) {
                     std::cout << decode_string(fullhelp);
                     std::cout << options << std::endl;
@@ -2096,10 +2138,26 @@ namespace hpx { namespace components { namespace server
 
             fs::path lib;
             try {
+                std::string component_path;
                 if (sect.has_entry("path"))
-                    lib = hpx::util::create_path(sect.get_entry("path"));
+                    component_path = sect.get_entry("path");
                 else
-                    lib = hpx::util::create_path(HPX_DEFAULT_COMPONENT_PATH);
+                    component_path = HPX_DEFAULT_COMPONENT_PATH;
+
+                typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+                boost::char_separator<char> sep(HPX_INI_PATH_DELIMITER);
+                tokenizer tokens(component_path, sep);
+                boost::system::error_code fsec;
+                for(tokenizer::iterator it = tokens.begin(); it != tokens.end(); ++it)
+                {
+                    lib = hpx::util::create_path(*it);
+                    fs::path lib_path = lib / std::string(HPX_MAKE_DLL_STRING(component));
+                    if(fs::exists(lib_path, fsec))
+                    {
+                        break;
+                    }
+                    lib.clear();
+                }
 
                 if (sect.get_entry("static", "0") == "1") {
                     // FIXME: implement statically linked plugins

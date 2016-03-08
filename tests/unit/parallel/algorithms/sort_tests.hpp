@@ -25,6 +25,14 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 
+#if !defined(HPX_SORT_TEST_SIZE_STRINGS)
+#define HPX_SORT_TEST_SIZE_STRINGS 1000000
+#endif
+
+#if !defined(HPX_SORT_TEST_SIZE)
+#define HPX_SORT_TEST_SIZE 5000000
+#endif
+
 // --------------------------------------------------------------------
 // Fill a vector with random numbers in the range [lower, upper]
 template <typename T>
@@ -59,8 +67,9 @@ std::string random_string( size_t length )
 
 // --------------------------------------------------------------------
 // fill a vector with random strings
-void rnd_strings(std::vector<std::string> &V) {
-    const std::size_t test_size = 1000000;
+void rnd_strings(std::vector<std::string> &V)
+{
+    const std::size_t test_size = HPX_SORT_TEST_SIZE_STRINGS;
     // Fill vector with random strings
     V.clear();
     V.reserve(test_size);
@@ -111,11 +120,13 @@ int verify(const std::vector <IA> &A, Compare comp, boost::uint64_t elapsed,
 template <typename ExPolicy, typename T>
 void test_sort1(ExPolicy && policy, T)
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), "default", sync, random);
 
     // Fill vector with random values
-    std::vector<T> c(5000000);
+    std::vector<T> c(HPX_SORT_TEST_SIZE);
     rnd_fill<T>(c, (std::numeric_limits<T>::min)(),
         (std::numeric_limits<T>::max)(), T(std::rand()));
 
@@ -132,14 +143,16 @@ void test_sort1(ExPolicy && policy, T)
 ////////////////////////////////////////////////////////////////////////////////
 // call sort with a comparison operator
 template <typename ExPolicy, typename T, typename Compare = std::less<T>>
-        void test_sort1_comp(ExPolicy && policy, T, Compare comp = Compare())
+void test_sort1_comp(ExPolicy && policy, T, Compare comp = Compare())
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), typeid(Compare).name(),
         sync, random);
 
     // Fill vector with random values
-    std::vector<T> c(5000000);
+    std::vector<T> c(HPX_SORT_TEST_SIZE);
     rnd_fill<T>(c, (std::numeric_limits<T>::min)(),
         (std::numeric_limits<T>::max)(), T(std::rand()));
 
@@ -156,14 +169,16 @@ template <typename ExPolicy, typename T, typename Compare = std::less<T>>
 ////////////////////////////////////////////////////////////////////////////////
 // async sort
 template <typename ExPolicy, typename T, typename Compare = std::less<T>>
-        void test_sort1_async(ExPolicy && policy, T, Compare comp = Compare())
+void test_sort1_async(ExPolicy && policy, T, Compare comp = Compare())
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), typeid(Compare).name(),
         async, random);
 
     // Fill vector with random values
-    std::vector<T> c(5000000);
+    std::vector<T> c(HPX_SORT_TEST_SIZE);
     rnd_fill<T>(c, (std::numeric_limits<T>::min)(),
         (std::numeric_limits<T>::max)(), T(std::rand()));
 
@@ -182,7 +197,9 @@ template <typename ExPolicy, typename T, typename Compare = std::less<T>>
 template <typename ExPolicy, typename T>
 void test_sort_exception(ExPolicy && policy, T)
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), "default", sync, random);
 
     // Fill vector with random values
@@ -254,7 +271,9 @@ void test_sort_exception(ExPolicy && policy, T)
 template <typename ExPolicy, typename T, typename Compare>
 void test_sort_exception(ExPolicy && policy, T, Compare comp)
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), typeid(Compare).name(),
         sync, random);
 
@@ -330,7 +349,9 @@ void test_sort_exception(ExPolicy && policy, T, Compare comp)
 template <typename ExPolicy, typename T>
 void test_sort_exception_async(ExPolicy && policy, T)
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), "default", async, random);
 
     // Fill vector with random values
@@ -414,7 +435,9 @@ void test_sort_exception_async(ExPolicy && policy, T)
 template <typename ExPolicy, typename T, typename Compare>
 void test_sort_exception_async(ExPolicy && policy, T, Compare comp)
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), typeid(Compare).name(),
         async, random);
 
@@ -503,11 +526,13 @@ void test_sort_exception_async(ExPolicy && policy, T, Compare comp)
 template <typename ExPolicy, typename T>
 void test_sort2(ExPolicy && policy, T)
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), "default", sync, sorted);
 
     // Fill vector with increasing values
-    std::vector<T> c(5000000);
+    std::vector<T> c(HPX_SORT_TEST_SIZE);
     std::iota(boost::begin(c), boost::end(c), 0);
 
     boost::uint64_t t = hpx::util::high_resolution_clock::now();
@@ -524,12 +549,14 @@ void test_sort2(ExPolicy && policy, T)
 template <typename ExPolicy, typename T, typename Compare = std::less<T> >
 void test_sort2_comp(ExPolicy && policy, T, Compare comp = Compare())
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), typeid(Compare).name(),
         sync, sorted);
 
     // Fill vector with increasing values
-    std::vector<T> c(5000000);
+    std::vector<T> c(HPX_SORT_TEST_SIZE);
     std::iota(boost::begin(c), boost::end(c), 0);
 
     boost::uint64_t t = hpx::util::high_resolution_clock::now();
@@ -546,12 +573,14 @@ void test_sort2_comp(ExPolicy && policy, T, Compare comp = Compare())
 template <typename ExPolicy, typename T, typename Compare = std::less<T> >
 void test_sort2_async(ExPolicy && policy, T, Compare comp = Compare())
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(T).name(), typeid(Compare).name(),
         async, sorted);
 
     // Fill vector with random values
-    std::vector<T> c(5000000);
+    std::vector<T> c(HPX_SORT_TEST_SIZE);
     std::iota(boost::begin(c), boost::end(c), T(0));
 
     boost::uint64_t t = hpx::util::high_resolution_clock::now();
@@ -571,7 +600,9 @@ void test_sort2_async(ExPolicy && policy, T, Compare comp = Compare())
 template <typename ExPolicy>
 void test_sort1(ExPolicy && policy, const std::string &)
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(std::string).name(), "default", sync, random);
 
     // Fill vector with random strings
@@ -595,7 +626,9 @@ template <typename ExPolicy, typename Compare = std::less<std::string>>
         void test_sort1_comp(ExPolicy && policy, const std::string &,
         Compare comp = Compare())
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(std::string).name(), typeid(Compare).name(),
         sync, random);
 
@@ -616,11 +649,12 @@ template <typename ExPolicy, typename Compare = std::less<std::string>>
 ////////////////////////////////////////////////////////////////////////////////
 // overload of test routine 1 for strings
 // async sort
-template <typename ExPolicy, typename Compare = std::less<std::string>>
-        void test_sort1_async(ExPolicy && policy, const std::string &,
-        Compare comp = Compare())
+template <typename ExPolicy, typename Compare = std::less<std::string> >
+void test_sort1_async_str(ExPolicy && policy, Compare comp = Compare())
 {
-    BOOST_STATIC_ASSERT(hpx::parallel::is_execution_policy<ExPolicy>::value);
+    static_assert(
+        hpx::parallel::is_execution_policy<ExPolicy>::value,
+        "hpx::parallel::is_execution_policy<ExPolicy>::value");
     msg(typeid(ExPolicy).name(), typeid(std::string).name(), typeid(Compare).name(),
         async, random);
 
